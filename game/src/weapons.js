@@ -397,6 +397,7 @@
     if (d.id === 'shotgun' && Wp.pump > 0) u.armL.el.rotation.x -= Math.sin(Wp.pump * 12) * 0.4;
   }
 
+  const uiOpen = () => !!((CW.shops && CW.shops.menu) || (CW.solfeed && CW.solfeed.open) || (CW.story && CW.story.talk));
   // ---- per-frame: player control ----------------------------------------------------------------------------------------------
   Wp.update = function (dt) {
     Wp.frame++;
@@ -411,7 +412,7 @@
     // wheel
     if (I.pressed('KeyQ')) Wp.openWheel();
     if (Wp.wheelOpen) { wopenT += dt / 0.25; if (!I.isDown('KeyQ')) Wp.closeWheel(true); else wheelUpdate(I); }
-    else for (let i = 0; i < 6; i++) if (I.pressed('Digit' + (i + 1))) Wp.equip(ORDER[i]);
+    else if (!uiOpen()) for (let i = 0; i < 6; i++) if (I.pressed('Digit' + (i + 1))) Wp.equip(ORDER[i]);
     const d = DEFS[Wp.cur], a = Wp.ammo[d.id];
     Wp.cd = Math.max(0, Wp.cd - dt); Wp.drawT += dt; Wp.kick = Math.max(0, Wp.kick - dt * 3.2); Wp.recent = Math.max(0, Wp.recent - dt); Wp.hitT = Math.max(0, Wp.hitT - dt); Wp.pump = Math.max(0, (Wp.pump || 0) - dt);
     gunCrimeT = Math.min(gunCrimeT + dt * 0.5, 14);
@@ -422,7 +423,7 @@
     const wantAim = (gun || d.throw) && (I.isDown('Mouse2') || Wp.recent > 0.05 || (d.throw && Wp.throwT > 0));
     Wp.aimK = CW.damp(Wp.aimK, wantAim ? 1 : 0, wantAim ? 14 : 5, dt);
     if (gun && I.pressed('KeyR')) startReload(d);
-    const fire = !Wp.wheelOpen && (d.auto ? I.isDown('Mouse0') : I.pressed('Mouse0'));
+    const fire = !Wp.wheelOpen && !uiOpen() && (d.auto ? I.isDown('Mouse0') : I.pressed('Mouse0'));
     if (fire && Wp.cd <= 0 && canAct) {
       if (d.melee) { if (swing <= 0) startMelee(e, d); }
       else if (d.throw) { if (a.mag > 0) throwMolotov(e); else if (a.res > 0) { a.mag = 1; a.res--; } else if (I.pressed('Mouse0')) { CW.sfx.play('click', 0.5); CW.hud.toast('NO MOLOTOVS'); Wp.cd = 0.3; } }

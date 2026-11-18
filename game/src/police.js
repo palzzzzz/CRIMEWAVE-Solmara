@@ -10,7 +10,7 @@
   const W = (CW.police = { level: 0, heat: 0, cops: [], officers: [], seen: false, lostT: 0, seenT: 0, last: { x: 0, z: 0 }, bust: 0, ended: null, active: false, time: 0 });
   const rnd = CW.makeRng(99);
   const COMPASS = ['SOUTH', 'EAST', 'NORTH', 'WEST'];   // +z is south on the minimap (north = -z)
-  const head = (vx, vz) => (Math.hypot(vx, vz) < 1 ? 'NOWHERE' : COMPASS[(Math.round(Math.atan2(vx, vz) / (Math.PI / 2)) + 4) % 4]);
+  const head = (vx, vz) => (Math.hypot(vx, vz) < 1 ? '' : COMPASS[(Math.round(Math.atan2(vx, vz) / (Math.PI / 2)) + 4) % 4]);
 
   // ---- line of sight through static obstacles --------------------------------------------------------
   function los(x0, z0, x1, z1) {
@@ -91,6 +91,7 @@
   W.raise = function (sev, kind, src) {
     if (W.ended) return;
     const p = who(), was = W.level;
+    if (CW.solfeed) sev *= CW.solfeed.gain();   // going viral on SolFeed makes every crime heat up faster
     W.heat = Math.min(5, W.heat + sev); W.level = Math.min(5, Math.ceil(W.heat - 0.001));
     W.lostT = 0; W.last = { x: p.x, z: p.z };
     if (src) W.seen = true;
@@ -425,8 +426,8 @@
       for (let i = 0; i < W.officers.length && !seen; i++) { const o = W.officers[i]; if (o.on && Math.hypot(o.x - p.x, o.z - p.z) < 70) seen = true; }
       if (CW.air && CW.air.policeSees && CW.air.policeSees(p)) seen = true;
       const spotter = W.cops.find((c) => !c.hidden && c.cs !== 'idle' && c.cs !== 'dead');
-      if (seen && !W.seen && W.level > 0) W.say(spotter ? spotter.call : 'DISPATCH', 'Visual on suspect — ' + carName() + ', heading ' + head(p.vx, p.vz) + '.', 'vis', 9);
-      if (!seen && W.seen && W.level > 0) W.say('DISPATCH', 'Lost visual. Last seen heading ' + head(p.vx, p.vz) + '. Set up a search.', 'lost', 8);
+      if (seen && !W.seen && W.level > 0) W.say(spotter ? spotter.call : 'DISPATCH', 'Visual on suspect — ' + carName() + (head(p.vx, p.vz) ? ', heading ' + head(p.vx, p.vz) : ', stationary') + '.', 'vis', 9);
+      if (!seen && W.seen && W.level > 0) W.say('DISPATCH', head(p.vx, p.vz) ? 'Lost visual. Last seen heading ' + head(p.vx, p.vz) + '. Set up a search.' : 'Lost visual. Last seen on foot near the scene. Set up a search.', 'lost', 8);
       W.seen = seen && W.level > 0;
     }
     // heat bookkeeping

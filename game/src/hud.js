@@ -36,6 +36,7 @@
   };
 
   H.show = function (v) { H.shown = v; $('hud').style.display = v ? 'block' : 'none'; };
+  H.banner = function (t, s) { $('banner').textContent = t; $('bannersub').textContent = s || ''; bannerT = 3.6; };
   H.toast = function (t) { $('toast').textContent = t; $('toast').style.opacity = 1; toastT = 2.6; };
 
   function drawMinimap(P, cam) {
@@ -49,6 +50,8 @@
     mctx.drawImage(map, -340, -340, 680, 680);
     if (CW.enemies) CW.enemies.drawMap(mctx, scale, { x: px, z: pz });
     if (CW.police) CW.police.drawMap(mctx, scale, { x: px, z: pz });
+    if (CW.shops) CW.shops.drawMap(mctx, scale, { x: px, z: pz });
+    if (CW.story) CW.story.drawMap(mctx, scale, { x: px, z: pz });
     if (CW.air) {   // the helicopter pad, and the police helicopter as a flashing wedge
       const hp = CW.air.heli; mctx.save(); mctx.fillStyle = '#ffffff'; mctx.strokeStyle = '#0b2a33'; mctx.lineWidth = 1.5 / scale; mctx.beginPath(); mctx.arc(hp.x, hp.z, 5.5 / scale, 0, 7); mctx.fill(); mctx.stroke();
       mctx.translate(hp.x, hp.z); mctx.rotate(-cam.yaw); mctx.fillStyle = '#0b2a33'; mctx.font = '900 ' + 8 / scale + 'px Impact, sans-serif'; mctx.textAlign = 'center'; mctx.textBaseline = 'middle'; mctx.fillText('H', 0, 0.4 / scale); mctx.restore();

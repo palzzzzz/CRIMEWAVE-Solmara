@@ -102,7 +102,9 @@
     h.turn += (turn - h.turn) * Math.min(1, dt * 4);
     h.h += h.turn * 1.2 * dt * ready;
     h.up = up;
-    const vyT = up * (up > 0 ? 14 : 15) * ready; h.vy += (vyT - h.vy) * Math.min(1, dt * 2.4);
+    let vyT = up * (up > 0 ? 14 : 15) * ready;
+    if (vyT < 0 && alt < 14) vyT = Math.max(vyT, -(2.2 + alt * 0.85));   // flare: holding SHIFT settles gently onto the ground
+    h.vy += (vyT - h.vy) * Math.min(1, dt * 2.4);
     const s = Math.sin(h.h), c = Math.cos(h.h);
     h.vx = s * h.fs - c * h.ls; h.vz = c * h.fs + s * h.ls;
     h.x += h.vx * dt; h.z += h.vz * dt; h.y += h.vy * dt;

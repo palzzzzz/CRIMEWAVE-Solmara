@@ -114,6 +114,32 @@
   #h-title { font-size: 15px; letter-spacing: .22em; color: var(--gold); margin-bottom: 6px; }
   .hrow { display: flex; justify-content: space-around; } .hrow span { font-size: 42px; line-height: 1; color: #fff; } .hrow small { display: block; font-size: 10px; letter-spacing: .2em; color: var(--gold); }
   #h-state { margin: 6px 0 4px; color: #d8f6f0; } #h-hp { background: linear-gradient(90deg, #ff6b4a, #ffc83d); } .hkeys { font-size: 11px; letter-spacing: .06em; opacity: .85; margin-top: 7px; }
+  /* ---------- story: mission panel, dialogue, phone, shops, radio ---------- */
+  #mission { position: absolute; right: 22px; top: 318px; width: 300px; padding: 9px 13px 10px; display: none; border-color: rgba(255,200,61,.7); }
+  #m-chapter { color: var(--gold); } #m-title { font-size: 22px; color: #fff; margin: 1px 0 3px; } #m-obj { font-size: 13px; line-height: 1.4; color: #d8f6f0; }
+  #m-pips { margin-top: 6px; display: flex; gap: 6px; } #m-pips i { width: 22px; height: 8px; border-radius: 4px; background: rgba(255,255,255,.22); } #m-pips i.on { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+  #m-timer { font-size: 38px; color: #ff9d7a; margin-top: 2px; display: none; } #m-timer.low { color: #ff3b3b; animation: blink .5s steps(2) infinite; }
+  #solhud { position: absolute; left: 22px; top: 120px; padding: 4px 10px; font-size: 11px; letter-spacing: .16em; font-weight: bold; display: none; background: rgba(60,10,50,.7); border: 2px solid #ff6bd6; border-radius: 6px; color: #ffd6f6; }
+  #solhud.hot { border-color: #ffd23f; color: #fff2a8; animation: blink 1s steps(2) infinite; } #solhud.cool { background: rgba(10,50,60,.7); border-color: #7fd4ff; color: #d8f6ff; }
+  #radiohud { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); padding: 5px 16px; display: none; font-size: 14px; letter-spacing: .1em; white-space: nowrap; }
+  #radiohud b { color: var(--gold); margin-right: 8px; } #radiohud small { opacity: .65; margin-left: 10px; letter-spacing: .14em; font-size: 10px; }
+  #dlg { position: absolute; left: 41%; top: 24%; transform: translateX(-50%); width: min(640px, 62vw); display: none; gap: 14px; padding: 10px 16px 10px 10px; background: rgba(8,22,30,.9); border: 3px solid var(--gold); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,.55); pointer-events: auto; z-index: 12; }
+  #dlg canvas { width: 112px; height: 112px; flex: 0 0 112px; border-radius: 8px; border: 2px solid rgba(255,241,214,.45); background: #123; }
+  #dlg-name { font-size: 24px; color: var(--gold); } #dlg-role { font-size: 10px; letter-spacing: .24em; opacity: .7; margin-bottom: 5px; } #dlg-text { font-size: 18px; line-height: 1.4; min-height: 50px; color: var(--cream); } #dlg-hint { font-size: 10px; letter-spacing: .24em; opacity: .6; text-align: right; }
+  #dlg.phone::before { content: '\260E  PHONE'; position: absolute; top: -13px; left: 18px; background: var(--teal); color: #05222a; font-weight: bold; font-size: 11px; letter-spacing: .2em; padding: 1px 10px; border-radius: 4px; }
+  #callin { position: absolute; left: 50%; top: 76px; transform: translateX(-50%); display: none; padding: 9px 20px; text-align: center; border-color: var(--teal); animation: blink .8s steps(2) infinite; font-size: 17px; letter-spacing: .1em; }
+  #callin b { color: var(--gold); } #callin small { display: block; letter-spacing: .24em; font-size: 10px; opacity: .8; }
+  #phone { position: fixed; right: 4vw; top: 50%; transform: translateY(-50%); width: 330px; height: min(580px, 92vh); z-index: 16; display: none; flex-direction: column; background: #101c24; border: 6px solid #0a1217; border-radius: 34px; box-shadow: 0 0 0 3px #3b4f5b, 0 24px 70px rgba(0,0,0,.7); overflow: hidden; pointer-events: auto; }
+  #ph-top { display: flex; justify-content: space-between; padding: 10px 22px 4px; font-size: 12px; letter-spacing: .1em; background: linear-gradient(90deg, #c0267a, #ff6b4a); } #ph-app { padding: 4px 22px 8px; font-size: 24px; background: linear-gradient(90deg, #c0267a, #ff6b4a); color: #fff; }
+  #ph-tabs { display: flex; background: #0a1217; } #ph-tabs div { flex: 1; text-align: center; padding: 7px 0; font-size: 12px; letter-spacing: .12em; cursor: pointer; opacity: .55; border-bottom: 3px solid transparent; } #ph-tabs div.on { opacity: 1; border-color: var(--gold); color: var(--gold); }
+  #ph-body { flex: 1; overflow-y: auto; padding: 8px 10px; font-size: 13px; line-height: 1.35; text-shadow: none; } #ph-body::-webkit-scrollbar { width: 0; }
+  .post { background: #1a2b35; border-radius: 10px; padding: 7px 10px; margin-bottom: 7px; } .post .u { color: #ff8fd0; font-weight: bold; font-size: 12px; } .post .t { opacity: .5; font-size: 10px; margin-left: 6px; } .post .lk { font-size: 11px; color: #ffd23f; margin-top: 3px; } .post.viral { border: 1px solid #ffd23f; } .post.news .u { color: #7fd4ff; }
+  .msg { background: #12404a; border-radius: 10px; padding: 7px 10px; margin-bottom: 7px; } .msg .u { color: var(--gold); font-weight: bold; font-size: 12px; }
+  #ph-foot { padding: 6px; text-align: center; font-size: 10px; letter-spacing: .2em; opacity: .6; background: #0a1217; }
+  #shopui { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(620px, 94vw); z-index: 17; display: none; padding: 16px 22px 14px; background: linear-gradient(160deg, #1b3a44, #12262e); border: 3px solid var(--gold); border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.65); pointer-events: auto; }
+  #shopui h2 { margin: 0; font-size: 34px; color: var(--gold); } #shop-sub { font-size: 11px; letter-spacing: .22em; opacity: .75; margin-bottom: 8px; } #shop-cash { position: absolute; right: 22px; top: 18px; font-size: 28px; color: #8dff9c; }
+  .it { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-bottom: 1px solid rgba(255,255,255,.12); cursor: pointer; } .it:hover { background: rgba(255,200,61,.14); } .it .k { width: 26px; height: 26px; line-height: 26px; text-align: center; background: var(--coral); border-radius: 5px; font-weight: bold; } .it .n { flex: 1; font-size: 16px; } .it .n small { display: block; font-size: 11px; opacity: .7; } .it .p { font-size: 18px; color: #8dff9c; font-weight: bold; } .it.lock { opacity: .4; } .it.lock .p { color: #ff9d7a; font-size: 12px; } .it.own .p { color: var(--gold); }
+  #shop-foot { margin-top: 9px; font-size: 11px; letter-spacing: .2em; opacity: .65; text-align: center; }
   #status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 </style>
 </head>
@@ -147,6 +173,11 @@
     <tr><td>HOLD Q &middot; 1-6</td><td>Weapon wheel (time slows) &middot; or pick directly: fists, knife, pistol, SMG, shotgun, molotov</td></tr>
     <tr><td>SPACE (on foot)</td><td>Jump. Sprinting (SHIFT) drains stamina</td></tr>
     <tr><td>HELICOPTER</td><td>Walk to the pad in the harbour (marked H) and press E. SPACE up, SHIFT down, W/S, A/D, arrows strafe</td></tr>
+    <tr><td>P</td><td>Phone: SolFeed (citizens post about your crimes, go viral and the heat climbs faster), messages and the mission log</td></tr>
+    <tr><td>ENTER</td><td>Answer a phone call / advance dialogue. Missions arrive as calls from Luna, Teo and Roxy</td></tr>
+    <tr><td>E at a shop counter</td><td>Walk into the boutique, gun store or minimart on the boardwalk and buy. REP unlocks the big guns</td></tr>
+    <tr><td>G in a car</td><td>In Roxy's yard: repaint (clears stars), upgrades, store your personal car. In the harbour Fence yard: sell a stolen car</td></tr>
+    <tr><td>R in a car</td><td>Next radio station (four stations, track titles on the HUD). M mutes</td></tr>
     <tr><td>L</td><td>Call or clear the rain</td></tr>
     <tr><td>M</td><td>Mute sound</td></tr>
     <tr><td>TAB</td><td>Switch between Ray and Luna (on foot)</td></tr>
@@ -188,7 +219,15 @@
   <div id="radio"><span id="radio-unit">DISPATCH</span><span id="radio-text"></span></div>
   <div id="bustwrap"><div class="lab imp">BUSTED  &mdash;  ESCAPE OR BE ARRESTED</div><div class="bar"><i id="bustbar"></i></div></div>
   <div id="hurt"></div>
+  <div id="mission" class="panel"><div class="lab" id="m-chapter">CHAPTER 1</div><div id="m-title" class="imp"></div><div id="m-obj"></div><div id="m-pips"></div><div id="m-timer" class="imp"></div></div>
+  <div id="solhud"></div>
+  <div id="radiohud" class="panel"></div>
+  <div id="callin" class="panel"><small>INCOMING CALL</small><b id="call-name"></b> &nbsp; <span>ENTER TO ANSWER</span></div>
+  <div id="dlg"><canvas id="portrait" width="128" height="128"></canvas><div style="flex:1"><div id="dlg-name" class="imp"></div><div id="dlg-role"></div><div id="dlg-text"></div><div id="dlg-hint">ENTER  ·  CONTINUE</div></div></div>
 </div>
+<div id="phone"><div id="ph-top"><span id="ph-clock">17:00</span><span>SOLMARA 5G &#9679;&#9679;&#9679;&#9679;</span></div><div id="ph-app" class="imp">SolFeed</div>
+  <div id="ph-tabs"><div data-t="0" class="on">1 FEED</div><div data-t="1">2 MESSAGES</div><div data-t="2">3 MISSION</div></div><div id="ph-body"></div><div id="ph-foot">P OR ESC TO CLOSE</div></div>
+<div id="shopui"><h2 id="shop-title" class="imp"></h2><div id="shop-sub"></div><div id="shop-cash" class="imp"></div><div id="shop-list"></div><div id="shop-foot">PRESS A NUMBER OR CLICK  ·  ESC / E TO LEAVE</div></div>
 <div id="wheel"><canvas id="wheelc" width="600" height="600"></canvas><div id="wheeldot"></div><div id="wheelhint">MOVE THE MOUSE &middot; 1-6 PICKS &middot; RELEASE Q TO EQUIP</div></div>
 <div id="endscreen"><h1 id="end-title" class="imp">BUSTED</h1><div id="end-sub"></div><div id="end-hint" class="imp">PRESS ENTER TO CONTINUE</div></div>
 <p id="status" role="status" aria-live="polite"></p>
@@ -210,6 +249,10 @@
 <script src="src/weather.js"></script>
 <script src="src/player.js"></script>
 <script src="src/hud.js"></script>
+<script src="src/story.js"></script>
+<script src="src/phone.js"></script>
+<script src="src/shops.js"></script>
+<script src="src/radio.js"></script>
 <script src="src/title.js"></script>
 <script src="src/main.js"></script>
 </body>

@@ -45,8 +45,9 @@
     for (let k = 1; k <= 10; k++) {
       const t = (k / 10) * dist, x = tx + dir.x * t, y = ty + dir.y * t, z = tz + dir.z * t;
       if (y < 0.4) { d = Math.min(d, Math.max(1, t - 0.4)); break; }
-      const r = CW.world.resolve(x, z, 0.35);
-      if (r.hit && y < 60) { d = Math.max(1.2, t - 0.6); break; }
+      let hit = false;   // only obstacles taller than the camera block it, so it can look down over open-top shop walls
+      CW.world.forNear(x, z, 0.5, (o) => { if (hit || o.h <= y) return; if (o.t === 0) { const cx = CW.clamp(x, o.x0, o.x1), cz = CW.clamp(z, o.z0, o.z1); if ((x - cx) * (x - cx) + (z - cz) * (z - cz) < 0.12) hit = true; } else if (Math.hypot(x - o.x, z - o.z) < o.r + 0.35) hit = true; });
+      if (hit) { d = Math.max(1.2, t - 0.6); break; }
     }
     return d;
   };
@@ -66,6 +67,7 @@
     if (!wheel) { cam.yaw -= I.mdx * 0.0035; cam.pitch = CW.clamp(cam.pitch + I.mdy * 0.003, -0.45, 1.2); }
     if (I.isDown('ArrowLeft')) cam.yaw += 1.8 * dt; if (I.isDown('ArrowRight')) cam.yaw -= 1.8 * dt;
     cam.dist = CW.clamp(cam.dist + I.wheel * 0.6, 3, 11);
+    if (CW.shops && CW.shops.inside(e.x, e.z)) { cam.pitch = CW.damp(cam.pitch, 0.78, 3, dt); cam.dist = CW.damp(cam.dist, 8.5, 3, dt); }   // shops are open-top: look down into them
     const f = I.axis(['KeyS', 'ArrowDown'], ['KeyW', 'ArrowUp']), s = I.axis(['KeyA'], ['KeyD']);
     let mx = -Math.sin(cam.yaw) * f + Math.cos(cam.yaw) * s, mz = -Math.cos(cam.yaw) * f - Math.sin(cam.yaw) * s;
     const len = Math.hypot(mx, mz);

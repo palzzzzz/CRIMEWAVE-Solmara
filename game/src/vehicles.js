@@ -114,7 +114,7 @@
 
   function damage(car, amt) {
     if (amt <= 0) return;
-    car.hp = Math.max(0, car.hp - amt);
+    car.hp = Math.max(0, car.hp - amt * (car.arm || 1));
     car.hitFlash = 0.2;
   }
 
@@ -123,9 +123,9 @@
     let fs = car.vx * s + car.vz * c, ls = car.vx * -c + car.vz * s;
     const fs0 = fs;
     const alive = car.hp > 0, healthF = 0.65 + 0.35 * (car.hp / 100);
-    const max = t.max * healthF;
+    const eng = car.eng || 1, max = t.max * healthF * eng;
     if (ctl && alive) {
-      if (ctl.throttle > 0) { if (fs < -0.5) fs = Math.min(0, fs + 32 * dt); else fs += t.acc * Math.max(0, 1 - fs / max) * dt; }
+      if (ctl.throttle > 0) { if (fs < -0.5) fs = Math.min(0, fs + 32 * dt); else fs += t.acc * eng * Math.max(0, 1 - fs / max) * dt; }
       else if (ctl.throttle < 0) { if (fs > 0.5) fs = Math.max(0, fs - 34 * dt); else if (fs > -max * 0.3) fs -= t.acc * 0.6 * dt; }
       else { fs *= Math.exp(-0.32 * dt); fs -= Math.sign(fs) * Math.min(Math.abs(fs), 1.4 * dt); }
       if (ctl.brake) fs *= Math.exp(-1.6 * dt);

@@ -244,11 +244,11 @@
   };
 
   // ---- spawn / update ----------------------------------------------------------------------------------
-  const TYPES = [['sedan', 26], ['hatch', 20], ['suv', 14], ['taxi', 12], ['van', 10], ['sports', 8]];
+  const TYPES = [['sedan', 24], ['hatch', 18], ['suv', 12], ['taxi', 12], ['van', 8], ['sports', 8], ['pickup', 12], ['bike', 6]];
   T.init = function () {
     CW.vehicles.list.slice(0, 3).forEach((c) => (c.owned = true));   // the cars the story hands you
     for (let k = 0; k < 22; k++) {
-      let r = rnd() * 92, key = 'sedan';
+      let r = rnd() * 100, key = 'sedan';
       for (const [n, w] of TYPES) { r -= w; if (r <= 0) { key = n; break; } }
       const t = CW.CAR_TYPES[key], car = CW.vehicles.add(key, t.colors[Math.floor(rnd() * t.colors.length)], 0, 0, 0);
       car.hidden = true; car.traffic = true; T.cars.push(car);

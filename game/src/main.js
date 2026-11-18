@@ -26,12 +26,17 @@
   CW.traffic.init();
   CW.police.init();
   CW.player.init(scene);
+  CW.weapons.init(scene);
+  CW.enemies.init();
+  CW.air.init(scene);
+  CW.weather.init(scene);
   CW.hud.init();
   CW.title.bind();
 
   game.start = function (cont) {
     CW.title.leave();
     CW.player.startNew();
+    CW.weapons.reset(); CW.air.reset(); CW.enemies.reset(); CW.weather.set('clear');
     CW.sky.hour = CW.C.START_HOUR;
     const st = CW.hud.state;
     if (cont) {
@@ -66,14 +71,17 @@
   let last = performance.now(), simT = 0, fpsAcc = 0, fpsN = 0;
   function frame(now) {
     requestAnimationFrame(frame);
-    let dt = Math.min(0.05, (now - last) / 1000); last = now; simT += dt;
+    let dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (CW.weapons.wheelOpen) dt *= 0.22;   // the weapon wheel slows the world right down
+    simT += dt;
     fpsAcc += dt; fpsN++; if (fpsAcc > 1) { CW.fps = Math.round(fpsN / fpsAcc); fpsAcc = 0; fpsN = 0; }
     const playing = game.state === 'play';
     if (game.state === 'title') CW.title.update(dt);
     const live = playing || game.state === 'ended';
     const sdt = game.state === 'ended' ? dt * 0.3 : dt;
-    if (playing) CW.player.update(dt);
-    if (live) { const F0 = CW.player.focus(); CW.traffic.update(sdt, F0); CW.police.update(dt, F0); }
+    if (playing) { CW.player.update(dt); CW.weapons.update(dt); }
+    if (live) { const F0 = CW.player.focus(); CW.traffic.update(sdt, F0); CW.police.update(dt, F0); CW.enemies.update(sdt); CW.weapons.simulate(sdt); CW.air.update(sdt); }
+    CW.weather.update(dt, playing);
     CW.vehicles.update(sdt, playing);
     CW.world.update(dt, simT);
     const focus = playing ? CW.player.focus() : { x: 245, z: 40 };

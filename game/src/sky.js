@@ -86,6 +86,8 @@
     CW.mats.win.emissiveIntensity = sky.night * 0.95;
     if (CW.world.glowMat) CW.world.glowMat.opacity = sky.night;
     CW.world.billboards.forEach((m) => { m.material.emissiveIntensity = 0.2 + 0.8 * sky.night; });
+    sky.scene.fog.near = 130; sky.scene.fog.far = 820;
+    if (CW.weather && CW.weather.tint) CW.weather.tint(sky);
   };
 
   const ldir = new THREE.Vector3();

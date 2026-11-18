@@ -66,12 +66,14 @@
   V.spawnParked = function () {
     const r = CW.makeRng(4242), slots = CW.world.parkSlots.slice();
     for (let i = slots.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); const t = slots[i]; slots[i] = slots[j]; slots[j] = t; }
-    const weights = [['sedan', 28], ['hatch', 20], ['suv', 14], ['taxi', 8], ['van', 10], ['sports', 10]];
-    const pick = () => { let n = r() * 90; for (const [k, w] of weights) { n -= w; if (n <= 0) return k; } return 'sedan'; };
+    const weights = [['sedan', 26], ['hatch', 18], ['suv', 12], ['taxi', 8], ['van', 8], ['sports', 10], ['pickup', 12], ['bike', 8]];
+    const pick = () => { let n = r() * 102; for (const [k, w] of weights) { n -= w; if (n <= 0) return k; } return 'sedan'; };
     // the cover car, and a couple of rides near the on-foot spawn
     const hero = V.add('sports', 0xff5a3c, 246.4, 40, Math.PI); V.hero = hero;
     V.add('sports', 0xffc23a, 233.6, 44, 0);
     V.add('hatch', 0x7fc8e8, 233.6, 56, 0);
+    V.add('bike', 0xe0407a, 233.6, 34.5, 0.1);
+    V.add('pickup', 0xc2523a, 233.6, 68, 0);
     let n = 0;
     for (const s of slots) {
       if (n >= 90) break;
@@ -128,7 +130,8 @@
       else { fs *= Math.exp(-0.32 * dt); fs -= Math.sign(fs) * Math.min(Math.abs(fs), 1.4 * dt); }
       if (ctl.brake) fs *= Math.exp(-1.6 * dt);
     } else { fs *= Math.exp(-(car.driven ? 0.8 : 2.6) * dt); fs -= Math.sign(fs) * Math.min(Math.abs(fs), 2.2 * dt); }
-    const grip = ctl && ctl.brake ? 1.5 : t.grip * (ctl ? 1 : 1.6);
+    const wet = CW.weather ? CW.weather.grip : 1;
+    const grip = ctl && ctl.brake ? 1.5 : t.grip * (ctl ? wet : 1.6);
     const gl = ls; ls *= Math.exp(-grip * dt);
     const steerT = ctl ? ctl.steer : 0;
     car.steer += (steerT - car.steer) * Math.min(1, dt * 8);

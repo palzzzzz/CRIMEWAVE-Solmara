@@ -9,7 +9,8 @@
       const def = CW.CREW[id];
       const model = CW.makePerson(def);
       scene.add(model);
-      P.crew[id] = { def, id, model, x: 0, z: 0, h: 0, vx: 0, vz: 0, speed: 0, hp: 100 };
+      model.rotation.order = 'YXZ';
+      P.crew[id] = { def, id, model, x: 0, z: 0, h: 0, vx: 0, vz: 0, speed: 0, hp: 100, y: 0, vy: 0 };
     });
     // Ray's cigarette (ember tip) for the title scene
     const cig = new THREE.Group();
@@ -20,7 +21,8 @@
     P.active = P.crew.ray;
   };
 
-  P.place = function (e, x, z, h) { e.x = x; e.z = z; e.h = h; e.vx = e.vz = 0; e.model.position.set(x, 0, z); e.model.rotation.y = h; };
+  P.stamina = 100; P.winded = false; P.staT = 0;
+  P.place = function (e, x, z, h) { e.x = x; e.z = z; e.h = h; e.vx = e.vz = 0; e.y = 0; e.vy = 0; e.model.position.set(x, 0, z); e.model.rotation.set(0, h, 0); };
 
   P.startNew = function () {
     const S = CW.world.spawn;
@@ -60,45 +62,59 @@
   }
 
   function onFoot(dt) {
-    const e = P.active, I = CW.input;
-    cam.yaw -= I.mdx * 0.0035; cam.pitch = CW.clamp(cam.pitch + I.mdy * 0.003, -0.15, 1.2);
+    const e = P.active, I = CW.input, Wp = CW.weapons, wheel = Wp.wheelOpen;
+    if (!wheel) { cam.yaw -= I.mdx * 0.0035; cam.pitch = CW.clamp(cam.pitch + I.mdy * 0.003, -0.45, 1.2); }
     if (I.isDown('ArrowLeft')) cam.yaw += 1.8 * dt; if (I.isDown('ArrowRight')) cam.yaw -= 1.8 * dt;
     cam.dist = CW.clamp(cam.dist + I.wheel * 0.6, 3, 11);
     const f = I.axis(['KeyS', 'ArrowDown'], ['KeyW', 'ArrowUp']), s = I.axis(['KeyA'], ['KeyD']);
     let mx = -Math.sin(cam.yaw) * f + Math.cos(cam.yaw) * s, mz = -Math.cos(cam.yaw) * f - Math.sin(cam.yaw) * s;
     const len = Math.hypot(mx, mz);
-    const run = I.isDown('ShiftLeft') || I.isDown('ShiftRight');
-    const sp = len > 0 ? (run ? 6.6 : 3.4) : 0;
+    // sprint costs stamina; run dry and you are winded until it climbs back
+    const want = (I.isDown('ShiftLeft') || I.isDown('ShiftRight')) && len > 0, run = want && P.stamina > 0 && !P.winded;
+    if (run) { P.stamina = Math.max(0, P.stamina - 24 * dt); P.staT = 0.8; if (P.stamina <= 0) { P.winded = true; P.toast = 'OUT OF BREATH'; } }
+    else { P.staT -= dt; if (P.staT <= 0) P.stamina = Math.min(100, P.stamina + (len > 0 ? 14 : 22) * dt); if (P.winded && P.stamina >= 30) P.winded = false; }
+    let sp = len > 0 ? (run ? 6.6 : P.winded && want ? 2.6 : 3.4) : 0;
+    if (Wp.aimK > 0.5) sp *= 0.72;
     if (len > 0) { mx /= len; mz /= len; }
-    e.vx = CW.damp(e.vx, mx * sp, 14, dt); e.vz = CW.damp(e.vz, mz * sp, 14, dt);
+    // jump (Space): costs a little stamina, short hop with gravity
+    if (I.pressed('Space') && e.y <= 0.001 && !wheel && P.stamina >= 8) { e.vy = 6.6; P.stamina -= 8; P.staT = 0.8; }
+    e.vy -= 20 * dt; e.y += e.vy * dt; if (e.y <= 0) { e.y = 0; e.vy = 0; }
+    const air = e.y > 0.02;
+    e.vx = CW.damp(e.vx, mx * sp, air ? 3 : 14, dt); e.vz = CW.damp(e.vz, mz * sp, air ? 3 : 14, dt);
     e.x += e.vx * dt; e.z += e.vz * dt;
     pushFromCars(e);
     const r = CW.world.resolve(e.x, e.z, 0.4); e.x = r.x; e.z = r.z;
     e.speed = Math.hypot(e.vx, e.vz);
-    if (e.speed > 0.3) e.h = CW.dampAngle(e.h, Math.atan2(e.vx, e.vz), 14, dt);
-    e.model.position.set(e.x, 0, e.z); e.model.rotation.y = e.h;
-    e.model.userData.update(dt, e.speed);
+    if (Wp.aimFace !== null) e.h = CW.dampAngle(e.h, Wp.aimFace, 18, dt);
+    else if (e.speed > 0.3) e.h = CW.dampAngle(e.h, Math.atan2(e.vx, e.vz), 14, dt);
+    e.model.position.set(e.x, e.y, e.z); e.model.rotation.set(0, e.h, 0);
+    e.model.userData.update(dt, air ? 2 : e.speed);
+    if (air) { e.model.userData.legL.rotation.x = -0.9; e.model.userData.legR.rotation.x = 0.4; e.model.userData.armL.sh.rotation.x = -2.2; e.model.userData.armR.sh.rotation.x = -2.2; }
     const o = P.other();
     o.model.userData.update(dt, 0);
-    // enter car
-    const car = CW.vehicles.nearest(e.x, e.z, 3.6);
-    P.prompt = car ? 'E  ENTER ' + car.type.name : null;
+    // enter helicopter / car
+    const car = CW.vehicles.nearest(e.x, e.z, 3.6), heli = CW.air.canEnter(e);
+    P.prompt = heli ? 'E  FLY HELICOPTER' : car ? 'E  ' + (car.type.id === 'bike' ? 'RIDE ' : 'ENTER ') + car.type.name : null;
+    if (I.pressed('KeyE') && heli) { CW.air.enter(); return; }
     if (I.pressed('KeyE') && car) {
-      CW.vehicles.enter(car); e.model.visible = false; P.mode = 'car'; P.car = car; cam.carYaw = car.h; cam.look = 0; P.prompt = null;
+      CW.vehicles.enter(car); P.mode = 'car'; P.car = car; cam.carYaw = car.h; cam.look = 0; P.prompt = null;
+      if (car.type.id === 'bike') e.model.userData.setPose('bike'); else e.model.visible = false;
     }
     if (I.pressed('Tab')) {
       P.active = o; P.toast = 'NOW PLAYING: ' + o.def.name;
       cam.yaw = cam.yaw;
     }
     // camera target / boom
-    cam.tx = CW.damp(cam.tx, e.x, 11, dt); cam.tz = CW.damp(cam.tz, e.z, 11, dt); cam.ty = CW.damp(cam.ty, 1.55, 6, dt);
+    // over-the-shoulder offset while a gun is up
+    const sh = Wp.shoulder * 1.15, tx0 = e.x + Math.cos(cam.yaw) * sh, tz0 = e.z - Math.sin(cam.yaw) * sh;
+    cam.tx = CW.damp(cam.tx, tx0, 11, dt); cam.tz = CW.damp(cam.tz, tz0, 11, dt); cam.ty = CW.damp(cam.ty, 1.55 + e.y * 0.6, 6, dt);
     const dir = { x: Math.sin(cam.yaw) * Math.cos(cam.pitch), y: Math.sin(cam.pitch), z: Math.cos(cam.yaw) * Math.cos(cam.pitch) };
-    const d = clampBoom(cam.tx, cam.ty, cam.tz, dir, cam.dist);
+    const d = clampBoom(cam.tx, cam.ty, cam.tz, dir, cam.dist * (1 - 0.22 * Wp.shoulder));
     cam.cd = cam.cd === undefined ? d : (d < cam.cd ? d : CW.damp(cam.cd, d, 5, dt));
     const c = CW.camera;
     c.position.set(cam.tx + dir.x * cam.cd, Math.max(0.5, cam.ty + dir.y * cam.cd), cam.tz + dir.z * cam.cd);
     c.lookAt(cam.tx, cam.ty + 0.1, cam.tz);
-    cam.fov = CW.damp(cam.fov, 62, 4, dt); c.fov = cam.fov; c.updateProjectionMatrix();
+    cam.fov = CW.damp(cam.fov, 62 - 6 * Wp.aimK, 4, dt); c.fov = cam.fov; c.updateProjectionMatrix();
   }
 
   function inCar(dt) {
@@ -122,10 +138,12 @@
     c.lookAt(cam.tx, 1.2, cam.tz);
     cam.fov = CW.damp(cam.fov, 62 + Math.min(sp, 50) * 0.32, 3, dt); c.fov = cam.fov; c.updateProjectionMatrix();
     cam.yaw = yaw + Math.PI;
-    e.x = car.x; e.z = car.z; e.h = car.h;
+    e.x = car.x; e.z = car.z; e.h = car.h; e.vx = car.vx; e.vz = car.vz; e.speed = sp; e.y = 0; e.vy = 0;
+    if (car.type.id === 'bike') { e.model.visible = true; e.model.position.set(car.x, 0.02, car.z); e.model.rotation.set(car.pitch, car.h, car.roll); }
     if (I.pressed('KeyE') && sp < 8) {
       const p = CW.vehicles.exit();
       e.model.visible = true; e.x = p.x; e.z = p.z; e.vx = e.vz = 0; e.h = car.h;
+      e.model.userData.setPose('none'); e.model.rotation.set(0, car.h, 0);
       e.model.position.set(e.x, 0, e.z);
       cam.yaw = car.h + Math.PI; cam.tx = car.x; cam.tz = car.z; cam.cd = undefined; cam.pitch = 0.3;
       P.mode = 'foot'; P.car = null;
@@ -135,7 +153,7 @@
 
   P.other = () => (P.active === P.crew.ray ? P.crew.luna : P.crew.ray);
 
-  P.update = function (dt) { if (P.mode === 'car') inCar(dt); else onFoot(dt); };
+  P.update = function (dt) { if (P.mode === 'car') inCar(dt); else if (P.mode === 'heli') CW.air.fly(dt); else onFoot(dt); };
 
   // focus for sky/shadow follow
   P.focus = () => (P.mode === 'car' && P.car ? { x: P.car.x, z: P.car.z } : { x: P.active.x, z: P.active.z });

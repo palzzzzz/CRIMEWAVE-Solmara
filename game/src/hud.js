@@ -47,7 +47,13 @@
     mctx.fillStyle = '#2fbfc9'; mctx.fillRect(0, 0, mm.width, mm.height);
     mctx.translate(R, R); mctx.rotate(cam.yaw); mctx.scale(scale, scale); mctx.translate(-px, -pz);
     mctx.drawImage(map, -340, -340, 680, 680);
+    if (CW.enemies) CW.enemies.drawMap(mctx, scale, { x: px, z: pz });
     if (CW.police) CW.police.drawMap(mctx, scale, { x: px, z: pz });
+    if (CW.air) {   // the helicopter pad, and the police helicopter as a flashing wedge
+      const hp = CW.air.heli; mctx.save(); mctx.fillStyle = '#ffffff'; mctx.strokeStyle = '#0b2a33'; mctx.lineWidth = 1.5 / scale; mctx.beginPath(); mctx.arc(hp.x, hp.z, 5.5 / scale, 0, 7); mctx.fill(); mctx.stroke();
+      mctx.translate(hp.x, hp.z); mctx.rotate(-cam.yaw); mctx.fillStyle = '#0b2a33'; mctx.font = '900 ' + 8 / scale + 'px Impact, sans-serif'; mctx.textAlign = 'center'; mctx.textBaseline = 'middle'; mctx.fillText('H', 0, 0.4 / scale); mctx.restore();
+      const ph = CW.air.policeHeli; if (ph.active) { const dx = ph.x - px, dz = ph.z - pz, d = Math.hypot(dx, dz), lim = 97; let x = ph.x, z = ph.z; if (d > lim) { x = px + (dx / d) * lim; z = pz + (dz / d) * lim; } mctx.save(); mctx.fillStyle = Math.floor(performance.now() / 250) % 2 ? '#ff3030' : '#3a7bff'; mctx.strokeStyle = '#fff'; mctx.lineWidth = 1.4 / scale; mctx.beginPath(); mctx.moveTo(x, z - 6 / scale); mctx.lineTo(x + 5 / scale, z + 4 / scale); mctx.lineTo(x - 5 / scale, z + 4 / scale); mctx.closePath(); mctx.fill(); mctx.stroke(); mctx.restore(); }
+    }
     // player arrow
     mctx.translate(px, pz); mctx.rotate(-hd); mctx.scale(1 / scale, 1 / scale);
     mctx.fillStyle = '#fff'; mctx.strokeStyle = '#0b2a33'; mctx.lineWidth = 2;
@@ -64,7 +70,8 @@
     const P = CW.player, st = H.state, e = P.active;
     drawMinimap(P, CW.cam);
     setText('cash', '$' + st.cash.toLocaleString('en-US'));
-    setText('clock', CW.sky.clock());
+    setText('clock', CW.sky.clock() + (CW.weather && CW.weather.wet > 0.3 ? '  ·  RAIN' : ''));
+    setW('stbar', P.stamina); $('stbar').style.opacity = P.winded ? 0.55 : 1;
     setText('who', e.def.name);
     setW('hpbar', st.hp); setW('arbar', st.armour); setW('repbar', (st.repXp / st.repNeed) * 100);
     setText('replv', 'REP LV ' + st.rep + '   ' + st.repXp + '/' + st.repNeed);

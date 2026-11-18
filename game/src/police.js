@@ -31,6 +31,7 @@
   // ---- player helpers ---------------------------------------------------------------------------------
   function who() {
     const P = CW.player, car = P.mode === 'car' ? P.car : null, e = P.active;
+    if (P.mode === 'heli') { const h = CW.air.heli, hs = Math.hypot(h.vx, h.vz); return { x: h.x, z: h.z, vx: h.vx, vz: h.vz, speed: h.y > h.floor + 3 ? Math.max(hs, 20) : hs, car: null, foot: false, heli: true }; }
     return car ? { x: car.x, z: car.z, vx: car.vx, vz: car.vz, speed: car.speed, car, foot: false } : { x: e.x, z: e.z, vx: e.vx, vz: e.vz, speed: e.speed, car: null, foot: true };
   }
 
@@ -81,8 +82,11 @@
     runover: (c) => 'Pedestrian struck! Hit and run in a ' + c + '.',
     assault: () => 'Officer under attack! Suspect rammed a unit.',
     crime: () => 'Disturbance reported. All units respond.',
+    shots: () => 'Shots fired! Multiple callers report gunfire.',
+    murder: () => 'Homicide reported. Suspect is armed and dangerous.',
+    arson: () => 'Petrol bomb! Someone is torching the street.',
   };
-  function carName() { const p = who(); return p.car ? p.car.type.name : 'unknown vehicle'; }
+  function carName() { const p = who(); return p.car ? p.car.type.name : p.heli ? 'stolen helicopter' : 'unknown vehicle'; }
 
   W.raise = function (sev, kind, src) {
     if (W.ended) return;
@@ -283,7 +287,7 @@
   function updateOfficers(dt, p) {
     W.officers.forEach((o) => {
       if (!o.on) return;
-      const dx = p.x - o.x, dz = p.z - o.z, d = Math.hypot(dx, dz), sp = d > 1.4 ? 5.3 + W.level * 0.25 : 0;
+      const dx = p.x - o.x, dz = p.z - o.z, d = Math.hypot(dx, dz), hold = W.level >= 3 ? 11 : 1.4, sp = d > hold ? 5.3 + W.level * 0.25 : 0;
       o.vx = CW.damp(o.vx, (dx / (d || 1)) * sp, 10, dt); o.vz = CW.damp(o.vz, (dz / (d || 1)) * sp, 10, dt);
       o.x += o.vx * dt; o.z += o.vz * dt; const r = CW.world.resolve(o.x, o.z, 0.4); o.x = r.x; o.z = r.z;
       if (sp > 0) o.h = CW.dampAngle(o.h, Math.atan2(dx, dz), 12, dt);
@@ -295,7 +299,8 @@
   // ---- busted / wasted ----------------------------------------------------------------------------------
   W.hurt = function (amount, cause) {
     const st = CW.hud.state; if (W.ended) return;
-    st.hp = Math.max(0, st.hp - amount); W.hurtFlash = 0.6;
+    if (st.armour > 0) { const a = Math.min(st.armour, amount * 0.7); st.armour -= a; amount -= a; }
+    st.hp = Math.max(0, st.hp - amount); W.hurtFlash = Math.max(W.hurtFlash || 0, Math.min(0.6, 0.15 + amount * 0.05));
     if (st.hp <= 0) W.wasted(cause);
   };
 
@@ -323,6 +328,9 @@
   function respawn() {
     const P = CW.player, V = CW.vehicles, st = CW.hud.state, e = P.active, kind = W.ended.kind;
     st.cash = Math.max(0, st.cash - W.ended.fine);
+    if (CW.air) CW.air.onRespawn();
+    if (CW.weapons) CW.weapons.reset();
+    e.model.userData.setPose('none'); e.model.rotation.set(0, 0, 0);
     if (P.mode === 'car' && P.car) { const car = P.car; car.driven = false; V.driven = null; e.model.visible = true; P.mode = 'foot'; P.car = null; if (kind === 'busted') car.hidden = false; }
     const lm = CW.world.landmarks[kind === 'busted' ? 'police' : 'hospital'];
     P.place(e, lm.x, lm.z, Math.PI);

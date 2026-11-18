@@ -95,6 +95,25 @@
   #endscreen.wasted #end-title { color: #e8312f; text-shadow: 0 6px 0 #4a0707, 0 0 40px rgba(255,30,30,.55); }
   #end-sub { margin-top: 14px; font-size: 22px; letter-spacing: .08em; } #end-hint { margin-top: 26px; font-size: 16px; letter-spacing: .3em; color: var(--gold); transition: opacity .4s; }
   @keyframes endin { from { transform: scale(1.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  /* ---------- combat + air ---------- */
+  #weap { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; margin-top: 4px; width: 300px; margin-left: auto; }
+  .slot { min-width: 90px; padding: 4px 6px; text-align: center; font-size: 11px; letter-spacing: .06em; background: rgba(10,30,38,.62); border: 2px solid rgba(255,241,214,.2); border-radius: 6px; opacity: .6; }
+  .slot b { display: inline-block; margin-right: 5px; font-size: 14px; color: var(--gold); } .slot.on { opacity: 1; border-color: var(--gold); background: rgba(255,107,74,.35); } .slot.na { opacity: .28; }
+  .slot .am { display: block; font-size: 14px; font-weight: bold; color: #fff; font-family: Impact, sans-serif; letter-spacing: .05em; }
+  #cross { position: absolute; left: 50%; top: 50%; width: 0; height: 0; opacity: 0; --sp: 14px; transition: opacity .15s; }
+  #cross i { position: absolute; background: #fff; box-shadow: 0 0 3px #000; width: 2px; height: 8px; left: -1px; top: calc(var(--sp) * -1 - 8px); }
+  #cross i:nth-child(2) { top: var(--sp); } #cross i:nth-child(3), #cross i:nth-child(4) { width: 8px; height: 2px; left: calc(var(--sp) * -1 - 8px); top: -1px; } #cross i:nth-child(4) { left: var(--sp); }
+  #cross u { position: absolute; width: 4px; height: 4px; left: -2px; top: -2px; border-radius: 50%; background: #ff4a3a; box-shadow: 0 0 4px #000; } #cross.rl i, #cross.rl u { background: #ffc83d; }
+  #hitm { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 34px; color: #fff; opacity: 0; text-shadow: 0 0 6px #f00; }
+  #reloadbar { position: absolute; left: 50%; top: 56%; transform: translateX(-50%); width: 150px; opacity: 0; text-align: center; } #reloadbar .lab { font-size: 12px; color: #ffc83d; } #reloadbar .bar i { width: 0; background: #ffc83d; }
+  #stbar { background: linear-gradient(90deg, #7be06a, #e8ff8a); }
+  #wheel { position: fixed; inset: 0; z-index: 15; display: none; align-items: center; justify-content: center; background: radial-gradient(circle at center, rgba(5,18,24,.55), rgba(5,12,16,.82)); pointer-events: none; }
+  #wheel canvas { width: 600px; height: 600px; max-height: 92vh; max-width: 92vh; } #wheeldot { position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 3px #ff6b4a, 0 0 14px #fff; }
+  #wheelhint { position: absolute; bottom: 5vh; left: 0; right: 0; text-align: center; letter-spacing: .25em; font-size: 13px; color: var(--gold); }
+  #heli { position: absolute; right: 22px; bottom: 22px; width: 350px; padding: 10px 16px 12px; display: none; text-align: center; border-color: rgba(255,200,61,.6); }
+  #h-title { font-size: 15px; letter-spacing: .22em; color: var(--gold); margin-bottom: 6px; }
+  .hrow { display: flex; justify-content: space-around; } .hrow span { font-size: 42px; line-height: 1; color: #fff; } .hrow small { display: block; font-size: 10px; letter-spacing: .2em; color: var(--gold); }
+  #h-state { margin: 6px 0 4px; color: #d8f6f0; } #h-hp { background: linear-gradient(90deg, #ff6b4a, #ffc83d); } .hkeys { font-size: 11px; letter-spacing: .06em; opacity: .85; margin-top: 7px; }
   #status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 </style>
 </head>
@@ -124,6 +143,11 @@
     <tr><td>W / S &middot; A / D</td><td>Driving: accelerate &amp; brake / reverse, steer</td></tr>
     <tr><td>SPACE</td><td>Handbrake &mdash; slide round corners for drift cash</td></tr>
     <tr><td>E on a moving car</td><td>Carjack it &mdash; the driver is dragged out. Witnessed crimes raise your WANTED level; break line of sight and hide in the red search zone to shake the police</td></tr>
+    <tr><td>LEFT MOUSE &middot; RIGHT MOUSE</td><td>Fire / throw / swing &middot; hold to aim (camera goes over the shoulder). R reloads</td></tr>
+    <tr><td>HOLD Q &middot; 1-6</td><td>Weapon wheel (time slows) &middot; or pick directly: fists, knife, pistol, SMG, shotgun, molotov</td></tr>
+    <tr><td>SPACE (on foot)</td><td>Jump. Sprinting (SHIFT) drains stamina</td></tr>
+    <tr><td>HELICOPTER</td><td>Walk to the pad in the harbour (marked H) and press E. SPACE up, SHIFT down, W/S, A/D, arrows strafe</td></tr>
+    <tr><td>L</td><td>Call or clear the rain</td></tr>
     <tr><td>M</td><td>Mute sound</td></tr>
     <tr><td>TAB</td><td>Switch between Ray and Luna (on foot)</td></tr>
     <tr><td>MOUSE WHEEL</td><td>Camera distance on foot</td></tr>
@@ -138,14 +162,23 @@
     <div class="lab">CASH</div><div id="cash" class="imp">$2,500</div>
     <div id="clock" class="imp">17:00</div>
     <div class="lab" style="margin-top:6px">WANTED LEVEL</div><div id="stars"></div>
-    <div id="weap"><div class="slot on"><b>1</b>FISTS</div><div class="slot"><b>2</b>PISTOL</div><div class="slot"><b>3</b>SMG</div><div class="slot"><b>4</b>SHOTGUN</div></div>
+    <div class="lab" style="margin-top:6px">WEAPONS &middot; HOLD Q FOR WHEEL</div>
+    <div id="weap"></div>
   </div>
   <div id="mmwrap"><canvas id="mm" width="214" height="214"></canvas><span id="dname" class="imp">BEACHFRONT</span></div>
   <div id="bars" class="panel">
     <div class="row"><div class="lab">HEALTH</div><div class="bar"><i id="hpbar"></i></div></div>
     <div class="row"><div class="lab">ARMOUR</div><div class="bar"><i id="arbar"></i></div></div>
     <div class="row"><div class="lab" id="replv">REP LV 1</div><div class="bar"><i id="repbar"></i></div></div>
+    <div class="row"><div class="lab">STAMINA &middot; SPACE JUMPS</div><div class="bar"><i id="stbar"></i></div></div>
   </div>
+  <div id="cross"><i></i><i></i><i></i><i></i><u></u></div>
+  <div id="hitm">&#10006;</div>
+  <div id="reloadbar"><div class="lab imp">RELOADING</div><div class="bar"><i></i></div></div>
+  <div id="heli" class="panel"><div id="h-title" class="imp">SOLMARA AIR  ·  HELICOPTER</div>
+    <div class="hrow"><div><span id="h-alt" class="imp">0</span><small>ALT M</small></div><div><span id="h-spd" class="imp">0</span><small>KM/H</small></div><div><span id="h-rpm" class="imp">0%</span><small>ROTOR</small></div></div>
+    <div class="lab" id="h-state">SPINNING UP…</div><div class="bar"><i id="h-hp"></i></div>
+    <div class="hkeys">SPACE up &middot; SHIFT down &middot; W/S fwd/back &middot; A/D turn &middot; &larr;/&rarr; strafe &middot; E exit (landed)</div></div>
   <div id="carpanel" class="panel"><div id="carname" class="imp">VESPER GT</div><div><span id="spd" class="imp">0</span> <span id="spdu">KM/H</span></div><div class="lab" id="carcond" style="margin-top:6px">CONDITION GOOD</div><div class="bar"><i id="carhp"></i></div></div>
   <div id="drift" class="imp">DRIFT!</div>
   <div id="bannerwrap"><div id="banner" class="imp"></div><div id="bannersub"></div></div>
@@ -156,6 +189,7 @@
   <div id="bustwrap"><div class="lab imp">BUSTED  &mdash;  ESCAPE OR BE ARRESTED</div><div class="bar"><i id="bustbar"></i></div></div>
   <div id="hurt"></div>
 </div>
+<div id="wheel"><canvas id="wheelc" width="600" height="600"></canvas><div id="wheeldot"></div><div id="wheelhint">MOVE THE MOUSE &middot; 1-6 PICKS &middot; RELEASE Q TO EQUIP</div></div>
 <div id="endscreen"><h1 id="end-title" class="imp">BUSTED</h1><div id="end-sub"></div><div id="end-hint" class="imp">PRESS ENTER TO CONTINUE</div></div>
 <p id="status" role="status" aria-live="polite"></p>
 
@@ -169,6 +203,11 @@
 <script src="src/vehicles.js"></script>
 <script src="src/traffic.js"></script>
 <script src="src/police.js"></script>
+<script src="src/sfx.js"></script>
+<script src="src/weapons.js"></script>
+<script src="src/enemies.js"></script>
+<script src="src/air.js"></script>
+<script src="src/weather.js"></script>
 <script src="src/player.js"></script>
 <script src="src/hud.js"></script>
 <script src="src/title.js"></script>

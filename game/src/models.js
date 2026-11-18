@@ -23,9 +23,18 @@
     const glass = 0x1f3a48, dark = 0x23282c, lightF = 0xfff3b8, lightR = 0xff3b30;
     const y0 = 0.3, top = y0 + t.bh, roof = top + t.ch;
     const hw = t.w / 2, hl = t.l / 2;
-    const isVan = typeId === 'van', isSuv = typeId === 'suv';
+    const isVan = typeId === 'van', isSuv = typeId === 'suv', isPick = typeId === 'pickup';
+    if (typeId === 'bike') {
+      const bl = t.l / 2, wr0 = 0.36;
+      [1, -1].forEach((s) => { b.cyl(0, wr0, s * (bl - 0.4), wr0, wr0, 0.16, 12, 0x15181a, 0, 0, Math.PI / 2); b.cyl(0, wr0, s * (bl - 0.4), wr0 * 0.55, wr0 * 0.55, 0.18, 8, 0xc9ced1, 0, 0, Math.PI / 2); });
+      b.box(0, 0.55, -0.05, 0.2, 0.2, 1.1, dark); b.box(0, 0.86, 0.22, 0.34, 0.3, 0.58, color); b.box(0, 0.78, -0.4, 0.3, 0.1, 0.72, 0x1c1f22);
+      b.box(0, 0.62, -0.82, 0.22, 0.08, 0.5, color); b.box(0.22, 0.4, -0.3, 0.09, 0.09, 0.85, 0xc9ced1); b.box(0, 0.5, 0.2, 0.3, 0.3, 0.4, 0x30363b);
+      cylAlong(b, [0, 1.0, 0.55], [0, 0.4, 0.7], 0.04, 0.05, 6, 0xc9ced1); b.box(0, 1.08, 0.52, 0.72, 0.06, 0.06, dark);
+      b.box(0, 0.92, 0.74, 0.22, 0.2, 0.12, lightF); b.box(0, 0.86, -1.02, 0.22, 0.09, 0.05, lightR); b.box(0, 0.5, 0.74, 0.06, 0.35, 0.06, 0xc9ced1);
+      const gb = b.build(CW.mats.solid).geometry; carGeoCache[key] = gb; return gb;
+    }
     // wheels
-    const wr = isSuv || isVan ? 0.42 : 0.36;
+    const wr = isSuv || isVan || isPick ? 0.42 : 0.36;
     [[1, 1], [-1, 1], [1, -1], [-1, -1]].forEach(([sx, sz]) => {
       b.cyl(sx * (hw - 0.1), wr, sz * hl * 0.62, wr, wr, 0.28, 10, 0x15181a, 0, 0, Math.PI / 2);
       b.cyl(sx * (hw - 0.0), wr, sz * hl * 0.62, wr * 0.55, wr * 0.55, 0.3, 8, 0xc9ced1, 0, 0, Math.PI / 2);
@@ -62,6 +71,13 @@
     if (typeId === 'taxi') {
       b.box(0, roof + 0.2, t.cz, 0.7, 0.2, 0.32, 0xfff3d0);
       b.box(0, y0 + t.bh * 0.5, 0, t.w * 1.003, 0.1, t.l * 0.8, 0x1d1d1d);
+    }
+    if (isPick) {
+      const bz = -hl + 1.3, bl = 2.5;   // load bed behind the cab: dark floor, three walls, a roll bar
+      b.box(0, top + 0.02, bz, t.w * 0.84, 0.03, bl - 0.1, 0x2a2e32);
+      [1, -1].forEach((s) => b.box(s * (hw - 0.05), top + 0.17, bz, 0.1, 0.34, bl, color));
+      b.box(0, top + 0.17, -hl + 0.06, t.w, 0.34, 0.1, color); b.box(0, top + 0.17, bz + bl / 2 - 0.05, t.w, 0.34, 0.1, color);
+      b.box(0, roof + 0.2, bz + bl / 2 + 0.05, t.w * 0.9, 0.08, 0.08, dark);
     }
     if (isSuv) {
       b.box(0, roof + 0.12, t.cz, 0.08, 0.06, t.cl * 0.8, dark);
@@ -162,6 +178,9 @@
         armL.sh.rotation.set(-0.75, 0, -0.55); armL.el.rotation.x = -1.9;
         armR.sh.rotation.set(-0.75, 0, 0.55); armR.el.rotation.x = -1.9;
         head.rotation.set(0.03, 0.15, 0.04);
+      } else if (pose === 'bike') {
+        body.rotation.x = 0.3; body.position.y = -0.18; legL.rotation.set(-1.1, 0, -0.1); legR.rotation.set(-1.1, 0, 0.1);
+        armL.sh.rotation.set(-1.15, 0, -0.1); armL.el.rotation.x = -0.35; armR.sh.rotation.set(-1.15, 0, 0.1); armR.el.rotation.x = -0.35; head.rotation.x = -0.25;
       } else if (pose === 'luna-lean') {
         body.rotation.x = -0.09; legR.rotation.x = 0.3; legR.rotation.z = 0.1; legL.rotation.x = -0.04;
         armL.sh.rotation.set(-0.75, 0, -0.55); armL.el.rotation.x = -1.9;

@@ -67,12 +67,13 @@
     hatch: { id: 'hatch', name: 'PICO RUNABOUT', l: 3.6, w: 1.75, bh: 0.58, ch: 0.58, cz: -0.15, cl: 2.0, max: 34, acc: 13, steer: 2.15, grip: 6.5, mass: 0.9, colors: [0xffb347, 0x7fc8e8, 0xff7a8a, 0xa5d56a, 0xf6efe0] },
     suv: { id: 'suv', name: 'BULWARK 4X4', l: 4.8, w: 2.05, bh: 0.8, ch: 0.72, cz: -0.35, cl: 2.9, max: 37, acc: 12, steer: 1.5, grip: 5.5, mass: 1.7, colors: [0x2c4a52, 0xd7c9a3, 0x7a2e2e, 0x33373d, 0x5f8f6d] },
     taxi: { id: 'taxi', name: 'SOL CAB', l: 4.6, w: 1.9, bh: 0.62, ch: 0.55, cz: -0.2, cl: 2.4, max: 39, acc: 14, steer: 1.8, grip: 6.0, mass: 1.3, colors: [0xffd21f] },
+    cruiser: { id: 'cruiser', name: 'SOLMARA PD CRUISER', l: 4.7, w: 1.95, bh: 0.62, ch: 0.55, cz: -0.2, cl: 2.4, max: 50, acc: 21, steer: 2.0, grip: 6.8, mass: 1.5, colors: [0xf2f6f8] },
     van: { id: 'van', name: 'HAULER VAN', l: 5.3, w: 2.05, bh: 1.0, ch: 0.95, cz: -0.1, cl: 4.0, max: 31, acc: 8.5, steer: 1.35, grip: 5.0, mass: 2.0, colors: [0xf2f0e6, 0x3d7e91, 0xc2523a, 0xd9b84a] },
   };
 
   // ---- protagonists --------------------------------------------------------
   CW.CREW = {
-    ray: { id: 'ray', name: 'RAY', skin: 0xd9a070, hair: 0x20160f, shirt: 0xff7b54, pants: 0xefe3c8, shoes: 0xf5f1e6, female: false, shades: false },
+    ray: { id: 'ray', name: 'RAY', skin: 0x5a3822, hair: 0x120c08, bandana: 0xff6b4a, shirt: 0xff7b54, pants: 0xefe3c8, shoes: 0xf5f1e6, female: false, shades: false },
     luna: { id: 'luna', name: 'LUNA', skin: 0xb9805a, hair: 0x1a1018, shirt: 0x37c9b8, pants: 0xf3efe4, shoes: 0xff9f43, female: true, shades: true },
   };
 

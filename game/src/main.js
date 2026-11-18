@@ -23,6 +23,8 @@
   CW.sky.init(scene);
   CW.fx.init(scene);
   CW.vehicles.spawnParked();
+  CW.traffic.init();
+  CW.police.init();
   CW.player.init(scene);
   CW.hud.init();
   CW.title.bind();
@@ -44,6 +46,10 @@
       }
     } else { st.cash = 2500; st.rep = 1; st.repXp = 0; }
     CW.hud.show(true);
+    st.hp = 100; st.wanted = 0;
+    const F = CW.player.focus();
+    CW.traffic.activate(F.x, F.z);
+    CW.police.start(F);
     game.state = 'play';
     CW.hud.toast('WELCOME TO SOLMARA');
     canvas.addEventListener('click', lock);
@@ -64,8 +70,11 @@
     fpsAcc += dt; fpsN++; if (fpsAcc > 1) { CW.fps = Math.round(fpsN / fpsAcc); fpsAcc = 0; fpsN = 0; }
     const playing = game.state === 'play';
     if (game.state === 'title') CW.title.update(dt);
+    const live = playing || game.state === 'ended';
+    const sdt = game.state === 'ended' ? dt * 0.3 : dt;
     if (playing) CW.player.update(dt);
-    CW.vehicles.update(dt, playing);
+    if (live) { const F0 = CW.player.focus(); CW.traffic.update(sdt, F0); CW.police.update(dt, F0); }
+    CW.vehicles.update(sdt, playing);
     CW.world.update(dt, simT);
     const focus = playing ? CW.player.focus() : { x: 245, z: 40 };
     CW.sky.update(dt, focus, CW.camera);

@@ -119,7 +119,18 @@
     head.add(bx(0.24, 0.26, 0.25, def.skin, 0, 0.1, 0));
     head.add(bx(0.27, 0.1, 0.29, def.hair, 0, 0.26, -0.01));
     if (f) { head.add(bx(0.27, 0.46, 0.1, def.hair, 0, -0.03, -0.14)); head.add(bx(0.06, 0.3, 0.2, def.hair, 0.14, 0.05, -0.03)); head.add(bx(0.06, 0.3, 0.2, def.hair, -0.14, 0.05, -0.03)); }
-    else { head.add(bx(0.26, 0.14, 0.1, def.hair, 0, 0.2, -0.12)); }
+    else if (def.id === 'ray') {
+      // afro: a rounded stack of dark boxes, with a coral bandana band and a knot at the back
+      head.add(bx(0.4, 0.2, 0.4, def.hair, 0, 0.3, -0.03));
+      head.add(bx(0.34, 0.14, 0.34, def.hair, 0, 0.45, -0.03));
+      head.add(bx(0.44, 0.16, 0.3, def.hair, 0, 0.26, -0.05));
+      head.add(bx(0.3, 0.1, 0.1, def.hair, 0, 0.3, -0.2));
+      const band = def.bandana;
+      head.add(bx(0.285, 0.07, 0.285, band, 0, 0.21, -0.005));
+      head.add(bx(0.09, 0.09, 0.07, band, 0, 0.21, -0.19));
+      head.add(bx(0.05, 0.14, 0.03, band, 0.05, 0.12, -0.22));
+      head.add(bx(0.05, 0.12, 0.03, band, -0.05, 0.13, -0.22));
+    } else { head.add(bx(0.26, 0.14, 0.1, def.hair, 0, 0.2, -0.12)); }
     if (def.shades) head.add(bx(0.27, 0.06, 0.05, 0x0c0c10, 0, 0.12, 0.13));
     else { head.add(bx(0.05, 0.04, 0.03, 0x1a1210, 0.06, 0.12, 0.13)); head.add(bx(0.05, 0.04, 0.03, 0x1a1210, -0.06, 0.12, 0.13)); }
     body.add(head);

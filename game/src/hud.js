@@ -47,6 +47,7 @@
     mctx.fillStyle = '#2fbfc9'; mctx.fillRect(0, 0, mm.width, mm.height);
     mctx.translate(R, R); mctx.rotate(cam.yaw); mctx.scale(scale, scale); mctx.translate(-px, -pz);
     mctx.drawImage(map, -340, -340, 680, 680);
+    if (CW.police) CW.police.drawMap(mctx, scale, { x: px, z: pz });
     // player arrow
     mctx.translate(px, pz); mctx.rotate(-hd); mctx.scale(1 / scale, 1 / scale);
     mctx.fillStyle = '#fff'; mctx.strokeStyle = '#0b2a33'; mctx.lineWidth = 2;

@@ -86,7 +86,7 @@
   V.nearest = function (x, z, maxd) {
     let best = null, bd = maxd;
     V.list.forEach((c) => {
-      if (c.driven) return;
+      if (c.driven || c.hidden || c.cop || c.hp <= 0) return;
       const d = Math.hypot(c.x - x, c.z - z) - c.type.l * 0.25;
       if (d < bd) { bd = d; best = c; }
     });
@@ -94,7 +94,8 @@
   };
 
   V.enter = function (car) {
-    V.driven = car; car.driven = true; car.awake = true;
+    if (CW.traffic) CW.traffic.onEnter(car);   // jacking / theft bookkeeping, crime witnesses
+    V.driven = car; car.driven = true; car.awake = true; car.ai = null; car.aiCtl = null;
   };
   V.exit = function () {
     const car = V.driven; if (!car) return null;
@@ -139,7 +140,7 @@
     car.fs = fs; car.ls = ls; car.speed = Math.hypot(car.vx, car.vz);
     car.drift = Math.abs(ls) > 3.2 && car.speed > 9 ? Math.min(1, (Math.abs(ls) - 3.2) / 4) : 0;
     car.ax = (fs - fs0) / Math.max(dt, 1e-3);
-    if (car.speed > 0.2) car.awake = true; else if (!car.driven) { car.awake = false; car.vx = car.vz = 0; }
+    if (car.speed > 0.2 || car.ai) car.awake = true; else if (!car.driven) { car.awake = false; car.vx = car.vz = 0; }
   }
 
   function collideWorld(car) {
@@ -189,9 +190,11 @@
     const I = CW.input, night = CW.sky.night;
     V.list.forEach((car) => {
       let ctl = null;
+      if (car.hidden) { car.mesh.visible = false; return; }
+      car.mesh.visible = true;
       if (car.driven && active) {
         ctl = { throttle: I.axis(['KeyS', 'ArrowDown'], ['KeyW', 'ArrowUp']), steer: I.axis(['KeyD', 'ArrowRight'], ['KeyA', 'ArrowLeft']), brake: I.isDown('Space') };
-      }
+      } else if (car.ai && car.hp > 0) ctl = car.aiCtl;
       if (!car.driven && !car.awake) { car.speed = 0; }
       else {
         stepCar(car, dt, ctl);
@@ -202,9 +205,9 @@
     // car-vs-car (only pairs where one is moving)
     const L = V.list;
     for (let i = 0; i < L.length; i++) {
-      const a = L[i]; if (!a.awake && !a.driven) continue;
+      const a = L[i]; if (a.hidden || (!a.awake && !a.driven)) continue;
       for (let j = 0; j < L.length; j++) {
-        if (i === j) continue; const b = L[j];
+        if (i === j) continue; const b = L[j]; if (b.hidden) continue;
         if (Math.abs(a.x - b.x) > 7 || Math.abs(a.z - b.z) > 7) continue;
         if (j < i && (b.awake || b.driven)) continue;   // handle awake pairs once
         collideCars(a, b);
@@ -212,6 +215,7 @@
     }
     // visuals
     L.forEach((car) => {
+      if (car.hidden) return;
       const m = car.mesh;
       m.position.x = car.x; m.position.z = car.z;
       m.rotation.y = car.h;
@@ -219,7 +223,7 @@
       car.pitch += (pT - car.pitch) * Math.min(1, dt * 6); car.roll += (rT - car.roll) * Math.min(1, dt * 6);
       m.rotation.x = car.pitch; m.rotation.z = car.roll;
       m.position.y = car.bump ? Math.sin(performance.now() * 0.05) * 0.03 * car.bump : 0;
-      const lit = car.driven && night > 0.25;
+      const lit = (car.driven || car.ai) && night > 0.25;
       car.lights.forEach((s) => (s.visible = lit));
       // smoke
       if (car.hp < 55 && Math.random() < dt * (car.hp < 25 ? 22 : 9) && car.mesh.visible) {

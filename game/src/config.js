@@ -62,7 +62,7 @@
   // l/w: length/width, bh: body height, ch: cabin height, cz: cabin centre offset (+ = toward front)
   // cl: cabin length, max: top speed m/s, acc: acceleration, steer: yaw rate, grip: lateral grip, mass
   CW.CAR_TYPES = {
-    sports: { id: 'sports', name: 'VESPER GT', l: 4.5, w: 1.95, bh: 0.55, ch: 0.5, cz: -0.35, cl: 2.0, max: 54, acc: 22, steer: 1.95, grip: 7.0, mass: 1.1, colors: [0xff5a3c, 0xffc23a, 0x2fd0c4, 0xf2f0e6, 0xe0407a] },
+    sports: { id: 'sports', name: 'VESPER GT', l: 4.6, w: 2.08, bh: 0.42, ch: 0.38, cz: -0.35, cl: 2.0, max: 54, acc: 22, steer: 1.95, grip: 7.0, mass: 1.1, colors: [0xff5a3c, 0xffc23a, 0x2fd0c4, 0xf2f0e6, 0xe0407a] },
     sedan: { id: 'sedan', name: 'MARLIN LX', l: 4.6, w: 1.9, bh: 0.62, ch: 0.55, cz: -0.2, cl: 2.4, max: 41, acc: 14, steer: 1.8, grip: 6.0, mass: 1.3, colors: [0x3aa6a0, 0xe9d9b0, 0xd9604a, 0x4f6fb5, 0xbfc7c9, 0x8b3f58] },
     hatch: { id: 'hatch', name: 'PICO RUNABOUT', l: 3.6, w: 1.75, bh: 0.58, ch: 0.58, cz: -0.15, cl: 2.0, max: 34, acc: 13, steer: 2.15, grip: 6.5, mass: 0.9, colors: [0xffb347, 0x7fc8e8, 0xff7a8a, 0xa5d56a, 0xf6efe0] },
     suv: { id: 'suv', name: 'BULWARK 4X4', l: 4.8, w: 2.05, bh: 0.8, ch: 0.72, cz: -0.35, cl: 2.9, max: 37, acc: 12, steer: 1.5, grip: 5.5, mass: 1.7, colors: [0x2c4a52, 0xd7c9a3, 0x7a2e2e, 0x33373d, 0x5f8f6d] },
@@ -75,7 +75,7 @@
 
   // ---- protagonists --------------------------------------------------------
   CW.CREW = {
-    ray: { id: 'ray', name: 'RAY', skin: 0x5a3822, hair: 0x120c08, bandana: 0xff6b4a, shirt: 0xff7b54, pants: 0xefe3c8, shoes: 0xf5f1e6, female: false, shades: false },
+    ray: { id: 'ray', name: 'RAY', skin: 0x5a3822, hair: 0x120c08, bandana: 0xffd02e, shirt: 0xff7b54, pants: 0xefe3c8, shoes: 0xf5f1e6, female: false, shades: false },
     luna: { id: 'luna', name: 'LUNA', skin: 0xb9805a, hair: 0x1a1018, shirt: 0x37c9b8, pants: 0xf3efe4, shoes: 0xff9f43, female: true, shades: true },
   };
 

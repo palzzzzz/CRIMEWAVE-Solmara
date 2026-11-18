@@ -147,14 +147,14 @@
   S.complete = function () {
     const m = MISSIONS[S.idx], st = hs(); st.cash += m.pay; S.addRep(m.rep);
     if (m.end) m.end();
-    CW.hud.banner('MISSION PASSED', m.t + '   +$' + m.pay.toLocaleString('en-US') + '   +' + m.rep + ' REP'); CW.sfx.play('pickup', 1);
+    CW.hud.banner('MISSION PASSED', m.t + '   +$' + m.pay.toLocaleString('en-US') + '   +' + m.rep + ' REP'); CW.sfx.play('mission', 1);
     if (CW.solfeed) CW.solfeed.news('Word is the crew pulled off "' + m.t.toLowerCase() + '". Respect.');
     S.idx++; S.state = 'idle'; S.wait = 12; S.obj = null; S.timer = 0; S.retry = false;
     S.say(m.outro, false, null);
   };
   S.fail = function (why) {
     const m = MISSIONS[S.idx]; if (m.end) m.end();
-    CW.hud.banner('MISSION FAILED', why); S.state = 'idle'; S.wait = 10; S.retry = true; S.obj = null; S.timer = 0; S.st = 0;
+    CW.sfx.play('fail', 1); CW.hud.banner('MISSION FAILED', why); S.state = 'idle'; S.wait = 10; S.retry = true; S.obj = null; S.timer = 0; S.st = 0;
   };
 
   // ---- world marker (light beam + ring) and minimap ----------------------------------------------------------------------------------------------------

@@ -97,6 +97,7 @@
     if (src) W.seen = true;
     if (CW.solfeed) CW.solfeed.crime(kind, p, W.level);
     if (W.level > was) {
+      CW.sfx.play('star', 0.8);
       CW.hud.toast(was === 0 ? 'WANTED  ' + '★'.repeat(W.level) : 'WANTED LEVEL ' + '★'.repeat(W.level));
       if (was === 0) W.say('DISPATCH', (KIND_LINE[kind] || KIND_LINE.crime)(carName()), 'dispatch', 6);
       else W.say('DISPATCH', 'Suspect escalating. Raising the response to ' + W.level + ' stars.', 'esc', 6);

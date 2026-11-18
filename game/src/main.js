@@ -103,6 +103,11 @@
     if (game.state === 'play' || game.state === 'ended') CW.story.update(dt);
     if (live) { const F0 = CW.player.focus(); CW.traffic.update(sdt, F0); CW.police.update(dt, F0); CW.enemies.update(sdt); CW.weapons.simulate(sdt); CW.air.update(sdt); }
     CW.weather.update(dt, playing);
+    if (CW.audio && CW.audio.ctx) {
+      const P = CW.player, car = playing && P.mode === 'car' && P.car ? P.car : null;
+      CW.sfx.engine(!!car, car ? Math.min(1, car.speed / car.type.max) : 0, car ? Math.abs(CW.input.isDown('KeyW') ? 1 : 0.2) : 0, car && car.type.id === 'bike');
+      CW.sfx.sea(playing ? CW.clamp((CW.player.focus().x - 120) / 120, 0, 1) : 0.6, simT);
+    }
     CW.vehicles.update(sdt, playing);
     CW.world.update(dt, simT);
     const focus = playing ? CW.player.focus() : { x: 245, z: 40 };

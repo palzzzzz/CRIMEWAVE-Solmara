@@ -52,6 +52,11 @@
       case 'whoosh': S.noise('lowpass', 600, 250, 1.1, 0.7, vol, 0.04, 0.4); break;
       case 'explode': S.noise('lowpass', 2400, 60, 1.4, 1.5, vol); S.tone('sawtooth', 90, 22, 0.9, 1, vol); break;
       case 'thunder': S.noise('lowpass', 500, 60, 2.6, 1.3, vol, 0.0, 0.5); S.noise('lowpass', 300, 50, 2.2, 0.8, vol, 0.5, 0.5); break;
+      case 'menu': S.tone('triangle', 520, 700, 0.06, 0.22, vol); break;
+      case 'confirm': S.tone('triangle', 520, 780, 0.09, 0.3, vol); S.tone('triangle', 780, 1170, 0.12, 0.3, vol, 0.08); break;
+      case 'star': S.tone('square', 880, 880, 0.14, 0.22, vol); S.tone('square', 660, 660, 0.14, 0.22, vol, 0.16); S.tone('square', 880, 880, 0.14, 0.22, vol, 0.32); break;
+      case 'mission': S.tone('sine', 523, 523, 0.14, 0.4, vol); S.tone('sine', 659, 659, 0.14, 0.4, vol, 0.12); S.tone('sine', 784, 784, 0.14, 0.4, vol, 0.24); S.tone('sine', 1046, 1046, 0.3, 0.4, vol, 0.36); break;
+      case 'fail': S.tone('sawtooth', 300, 120, 0.5, 0.35, vol); break;
       case 'crash': S.noise('lowpass', 1800, 150, 0.5, 1.0, vol); S.tone('square', 130, 40, 0.3, 0.5, vol); break;
       default: break;
     }
@@ -72,6 +77,35 @@
       } catch (e) { o.ready = false; }
     };
     return o;
+  };
+  // engine: two detuned oscillators through a lowpass, pitch + loudness follow speed, brighter on throttle
+  const eng = { ready: false };
+  S.engine = function (on, kmh01, throttle, bike) {
+    const a = CW.audio; if (!a || !a.ctx) return; const c = a.ctx;
+    if (!eng.ready) {
+      try {
+        eng.o1 = c.createOscillator(); eng.o2 = c.createOscillator(); eng.f = c.createBiquadFilter(); eng.g = c.createGain();
+        eng.o1.type = 'sawtooth'; eng.o2.type = 'square'; eng.f.type = 'lowpass'; eng.f.Q.value = 2; eng.g.gain.value = 0;
+        eng.o1.connect(eng.f); eng.o2.connect(eng.f); eng.f.connect(eng.g); eng.g.connect(a.master); eng.o1.start(); eng.o2.start(); eng.ready = true;
+      } catch (e) { return; }
+    }
+    const t = c.currentTime, gear = (kmh01 * 4.2) % 1, base = (bike ? 70 : 44) + kmh01 * 70 + gear * 26;
+    eng.o1.frequency.setTargetAtTime(base, t, 0.06); eng.o2.frequency.setTargetAtTime(base * 0.5 + 1.5, t, 0.06);
+    eng.f.frequency.setTargetAtTime(260 + kmh01 * 500 + throttle * 450, t, 0.08);
+    eng.g.gain.setTargetAtTime(on && !a.muted ? 0.05 + 0.07 * throttle + 0.04 * kmh01 : 0, t, 0.1);
+  };
+  // sea ambience: slow swells of lowpassed noise, louder toward the beach (vol 0..1)
+  const sea = { ready: false };
+  S.sea = function (vol, tt) {
+    const a = CW.audio; if (!a || !a.ctx) return; const c = a.ctx;
+    if (!sea.ready) {
+      try {
+        const src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+        src.buffer = noiseBuf(c); src.loop = true; f.type = 'lowpass'; f.frequency.value = 520; g.gain.value = 0;
+        src.connect(f); f.connect(g); g.connect(a.master); src.start(); sea.g = g; sea.ready = true;
+      } catch (e) { return; }
+    }
+    sea.g.gain.value = a.muted ? 0 : vol * (0.05 + 0.04 * Math.sin(tt * 0.7));
   };
   const rain = { ready: false };
   S.rain = function (vol) {

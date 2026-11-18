@@ -14,16 +14,16 @@
     const g = new THREE.Group(); root.add(g);
     bx(g, 1.9, 1.7, 3.4, o.body, 0, 1.3, 0.2); bx(g, 1.5, 1.2, 1.5, o.body, 0, 1.0, 2.3); bx(g, 1.52, 0.85, 1.4, o.glass, 0, 1.45, 2.4); bx(g, 1.95, 0.75, 1.5, o.glass, 0, 1.6, 0.8);
     bx(g, 1.94, 0.3, 3.4, o.accent, 0, 0.72, 0.2); bx(g, 1.1, 0.55, 1.9, o.accent, 0, 2.38, -0.3);
-    bx(g, 0.45, 0.5, 4.8, o.body, 0, 1.6, -3.7); bx(g, 0.1, 1.35, 1.0, o.accent, 0, 2.3, -5.8); bx(g, 1.7, 0.08, 0.55, o.accent, 0, 1.75, -5.7);
+    bx(g, 0.62, 0.62, 1.4, o.body, 0, 1.45, -2.1); bx(g, 0.46, 0.46, 2.4, o.body, 0, 1.55, -3.9); bx(g, 0.3, 0.34, 1.6, o.body, 0, 1.68, -5.4); bx(g, 0.12, 1.0, 0.7, o.accent, 0, 2.15, -6.0); bx(g, 0.12, 0.4, 0.5, o.accent, 0, 2.7, -6.12); bx(g, 1.3, 0.07, 0.4, o.accent, 0, 1.72, -5.6);
     [-1, 1].forEach((s) => { bx(g, 0.09, 0.09, 4.0, 0x2a2f33, s * 1.05, 0.22, 0.5); bx(g, 0.08, 0.85, 0.08, 0x2a2f33, s * 1.0, 0.65, 1.4); bx(g, 0.08, 0.85, 0.08, 0x2a2f33, s * 1.0, 0.65, -0.55); });
     bx(g, 0.18, 0.5, 0.18, 0x2a2f33, 0, 2.85, 0);
     const rotor = new THREE.Group(); rotor.position.set(0, 3.15, 0); g.add(rotor);
     bx(rotor, 10.6, 0.05, 0.36, 0x2c3238, 0, 0, 0); bx(rotor, 0.36, 0.05, 10.6, 0x2c3238, 0, 0, 0); bx(rotor, 0.4, 0.22, 0.4, 0x555c63, 0, 0, 0);
     const blur = new THREE.Mesh(new THREE.CircleGeometry(5.3, 28), new THREE.MeshBasicMaterial({ color: 0xdfe8ee, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, fog: false })); blur.rotation.x = -Math.PI / 2; blur.position.y = 3.17; g.add(blur);
-    const tail = new THREE.Group(); tail.position.set(0.3, 2.2, -5.8); g.add(tail); bx(tail, 0.04, 1.5, 0.16, 0x2c3238, 0, 0, 0); bx(tail, 0.04, 0.16, 1.5, 0x2c3238, 0, 0, 0);
+    const tail = new THREE.Group(); tail.position.set(0.2, 2.2, -6.0); g.add(tail); bx(tail, 0.03, 1.0, 0.1, 0x2c3238, 0, 0, 0); bx(tail, 0.03, 0.1, 1.0, 0x2c3238, 0, 0, 0);
     const lights = [];
     const spr = (c, x, y, z, s) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: CW.glowTex, color: c, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); sp.position.set(x, y, z); sp.scale.setScalar(s); g.add(sp); lights.push(sp); return sp; };
-    const nav = [spr(0xff2a2a, 1.1, 1.3, 0.3, 1.1), spr(0x2aff6a, -1.1, 1.3, 0.3, 1.1), spr(0xffffff, 0, 2.2, -6.2, 1.2)];
+    const nav = [spr(0xff2a2a, 1.1, 1.3, 0.3, 1.1), spr(0x2aff6a, -1.1, 1.3, 0.3, 1.1), spr(0xffffff, 0, 2.75, -6.3, 1.0)];
     let red = null, blue = null;
     if (o.police) { bx(g, 1.4, 0.12, 0.4, 0x111418, 0, 0.55, 1.9); red = spr(0xff2a2a, 0.6, 0.5, 1.9, 2.8); blue = spr(0x2a6bff, -0.6, 0.5, 1.9, 2.8); bx(g, 2.0, 0.22, 2.0, 0x1f3f8f, 0, 1.3, -0.6); }
     return { root, rotor, tail, blur, nav, red, blue };

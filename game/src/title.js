@@ -18,8 +18,8 @@
     P.setLeanPose(true);
     P.crew.luna.model.userData.setPose('luna-sit');
     P.place(P.crew.ray, CX + fx * 1.5 + lx * 1.28, CZ + fz * 1.5 + lz * 1.28, face + 0.18);
-    P.place(P.crew.luna, CX - fx * 1.45 + lx * 1.0, CZ - fz * 1.45 + lz * 1.0, face - 0.22);
-    P.crew.luna.model.position.y = -0.06;
+    P.place(P.crew.luna, CX - fx * 1.45 + lx * 1.0, CZ - fz * 1.3 + lz * 0.62, face - 0.22);
+    P.crew.luna.model.position.y = 0.06;
     P.crew.ray.model.visible = P.crew.luna.model.visible = true;
     if (!T.fill) {
       T.fill = new THREE.DirectionalLight(0xffc9a0, 0.7); T.fill.position.set(260, 30, 12); T.fill.target.position.set(CX, 1, CZ);
@@ -80,7 +80,7 @@
     c.lookAt(CX - 40, 8.3, CZ + 0.1);
     c.fov = 40; c.updateProjectionMatrix();
     CW.cam.tx = CX; CW.cam.tz = CZ;
-    CW.player.crew.luna.model.position.y = -0.06;
+    CW.player.crew.luna.model.position.y = 0.06;
     // idle animation
     const P = CW.player, r = P.crew.ray.model.userData, l2 = P.crew.luna.model.userData;
     const br = Math.sin(T.t * 1.7) * 0.012;

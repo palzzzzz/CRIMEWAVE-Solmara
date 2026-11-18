@@ -40,16 +40,47 @@
       b.cyl(sx * (hw - 0.0), wr, sz * hl * 0.62, wr * 0.55, wr * 0.55, 0.3, 8, 0xc9ced1, 0, 0, Math.PI / 2);
     });
     b.box(0, y0 - 0.02, 0, t.w * 0.9, 0.18, t.l * 0.96, dark);                   // underbody
+    if (typeId === 'sports') {
+      // angular wedge: slab nose, stepped shoulders rising to high haunches, a thin glasshouse, slit lights, big rear wing
+      const w = t.w, L = t.l, hh = 0.42;
+      b.box(0, y0 + 0.15, 0, w, 0.3, L * 0.98, color);                              // low slab, full length
+      b.box(0, y0 + 0.34, -0.55, w * 0.98, 0.14, 1.9, color);                       // haunches, tallest at the back
+      b.box(0, y0 + 0.3, 0.75, w * 0.9, 0.08, 1.1, color);                          // lower shoulder wedge step
+      b.box(0, y0 + 0.33, -1.8, w * 0.96, 0.2, 0.6, color);                         // high tail
+      b.box(0, y0 + 0.33, 1.7, w * 0.8, 0.04, 0.8, color);                          // knife-edge nose blade
+      [1, -1].forEach((s) => {
+        b.box(s * (hw + 0.008), y0 + 0.2, -0.1, 0.03, 0.035, L * 0.8, 0x111416);     // sharp character crease
+        b.box(s * (hw + 0.012), y0 + 0.14, -0.7, 0.03, 0.16, 0.9, 0x111416);         // side intake
+        b.box(s * hw * 0.6, y0 + 0.24, hl * 0.98 + 0.01, 0.58, 0.045, 0.05, lightF); // slim slit headlight
+        b.box(s * hw * 0.74, y0 + 0.31, hl * 0.98 + 0.01, 0.25, 0.04, 0.05, 0xffc24a);
+        b.box(s * w * 0.3, y0 + 0.76, -hl + 0.28, 0.07, 0.34, 0.1, 0x16191b);        // wing struts
+        b.box(s * (w * 0.51), y0 + 0.92, -hl + 0.28, 0.05, 0.3, 0.7, color);         // wing end plates
+      });
+      b.box(0, y0 + 0.29, hl * 0.98 + 0.012, w * 0.3, 0.06, 0.05, 0x111416);          // nose intake
+      b.box(0, y0 + 0.36, -hl * 0.98 - 0.012, w * 0.86, 0.05, 0.05, lightR);        // full-width tail bar
+      b.box(0, y0 + 0.02, hl - 0.2, w * 1.04, 0.05, 0.5, 0x16191b);                  // front splitter
+      b.box(0, y0 + 0.04, -hl + 0.15, w * 0.8, 0.12, 0.35, 0x16191b);                // rear diffuser
+      b.box(0, y0 + 0.9, -hl + 0.28, w * 1.04, 0.05, 0.62, 0x16191b);                // large rear wing
+      b.box(0, y0 + 0.94, -hl + 0.2, w * 1.04, 0.04, 0.2, color);                    // wing flap
+      b.box(0, y0 + hh + 0.22, -0.2, w * 0.7, 0.3, 1.5, glass);                       // thin glasshouse
+      b.box(0, y0 + hh + 0.1, 0.78, w * 0.7, 0.14, 0.7, glass);                       // raked windscreen step
+      b.box(0, y0 + hh + 0.38, -0.2, w * 0.66, 0.05, 1.2, color);                     // roof panel
+      b.box(0, y0 + hh + 0.2, -1.2, w * 0.66, 0.2, 0.55, 0x16191b);                  // engine deck slats
+    } else {
     b.box(0, y0 + t.bh / 2, 0, t.w, t.bh, t.l, color);                            // main body
     b.box(0, top + 0.01, hl * 0.62, t.w * 0.92, 0.04, t.l * 0.26, color);       // hood panel line
-    b.box(0, y0 + 0.14, hl - 0.04, t.w * 1.02, 0.28, 0.18, dark);               // front bumper
-    b.box(0, y0 + 0.14, -hl + 0.04, t.w * 1.02, 0.28, 0.18, dark);              // rear bumper
-    // lights
-    b.box(hw * 0.62, y0 + t.bh * 0.66, hl + 0.01, 0.42, 0.17, 0.06, lightF);
-    b.box(-hw * 0.62, y0 + t.bh * 0.66, hl + 0.01, 0.42, 0.17, 0.06, lightF);
-    b.box(hw * 0.62, y0 + t.bh * 0.66, -hl - 0.01, 0.42, 0.15, 0.06, lightR);
-    b.box(-hw * 0.62, y0 + t.bh * 0.66, -hl - 0.01, 0.42, 0.15, 0.06, lightR);
-    b.box(0, y0 + t.bh * 0.3, hl + 0.02, t.w * 0.4, 0.14, 0.05, 0x111416);       // grille
+    if (typeId !== 'sports') {
+      b.box(0, y0 + 0.14, hl - 0.04, t.w * 1.02, 0.28, 0.18, dark);               // front bumper
+      b.box(0, y0 + 0.14, -hl + 0.04, t.w * 1.02, 0.28, 0.18, dark);              // rear bumper
+    }
+    // lights (the wedge supercar has its own slit lights)
+    if (typeId !== 'sports') {
+      b.box(hw * 0.62, y0 + t.bh * 0.66, hl + 0.01, 0.42, 0.17, 0.06, lightF);
+      b.box(-hw * 0.62, y0 + t.bh * 0.66, hl + 0.01, 0.42, 0.17, 0.06, lightF);
+      b.box(hw * 0.62, y0 + t.bh * 0.66, -hl - 0.01, 0.42, 0.15, 0.06, lightR);
+      b.box(-hw * 0.62, y0 + t.bh * 0.66, -hl - 0.01, 0.42, 0.15, 0.06, lightR);
+      b.box(0, y0 + t.bh * 0.3, hl + 0.02, t.w * 0.4, 0.14, 0.05, 0x111416);       // grille
+    }
     // cabin
     const cw = t.w * 0.88;
     if (isVan) {
@@ -62,11 +93,6 @@
       b.box(0, roof + 0.03, t.cz, cw * 1.02, 0.07, t.cl * 0.84, color);
       [[1, 1], [-1, 1], [1, -1], [-1, -1]].forEach(([sx, sz]) => b.box(sx * cw * 0.5, top + t.ch / 2, t.cz + sz * t.cl * 0.5, 0.09, t.ch, 0.1, color));
     }
-    if (typeId === 'sports') {
-      b.box(0, y0 + t.bh + 0.27, -hl + 0.22, t.w * 0.9, 0.06, 0.34, 0x16191b);
-      b.box(hw * 0.6, y0 + t.bh + 0.13, -hl + 0.22, 0.06, 0.28, 0.2, 0x16191b);
-      b.box(-hw * 0.6, y0 + t.bh + 0.13, -hl + 0.22, 0.06, 0.28, 0.2, 0x16191b);
-      b.box(0, top + 0.035, hl * 0.2, t.w * 0.2, 0.01, t.l * 0.9, 0xf6efe0);   // racing stripe
     }
     if (typeId === 'taxi') {
       b.box(0, roof + 0.2, t.cz, 0.7, 0.2, 0.32, 0xfff3d0);
@@ -142,10 +168,11 @@
       head.add(bx(0.44, 0.16, 0.3, def.hair, 0, 0.26, -0.05));
       head.add(bx(0.3, 0.1, 0.1, def.hair, 0, 0.3, -0.2));
       const band = def.bandana;
-      head.add(bx(0.285, 0.07, 0.285, band, 0, 0.21, -0.005));
-      head.add(bx(0.09, 0.09, 0.07, band, 0, 0.21, -0.19));
-      head.add(bx(0.05, 0.14, 0.03, band, 0.05, 0.12, -0.22));
-      head.add(bx(0.05, 0.12, 0.03, band, -0.05, 0.13, -0.22));
+      head.add(bx(0.47, 0.115, 0.4, band, 0, 0.24, -0.03));     // wide band that clears the afro on every side
+      head.add(bx(0.2, 0.1, 0.05, 0xfff1d0, 0, 0.24, 0.18));    // cream front patch so it reads from the front
+      head.add(bx(0.14, 0.14, 0.1, band, 0, 0.24, -0.26));
+      head.add(bx(0.08, 0.26, 0.04, band, 0.08, 0.08, -0.3));
+      head.add(bx(0.08, 0.22, 0.04, band, -0.08, 0.09, -0.3));
     } else { head.add(bx(0.26, 0.14, 0.1, def.hair, 0, 0.2, -0.12)); }
     if (def.shades) head.add(bx(0.27, 0.06, 0.05, 0x0c0c10, 0, 0.12, 0.13));
     else { head.add(bx(0.05, 0.04, 0.03, 0x1a1210, 0.06, 0.12, 0.13)); head.add(bx(0.05, 0.04, 0.03, 0x1a1210, -0.06, 0.12, 0.13)); }

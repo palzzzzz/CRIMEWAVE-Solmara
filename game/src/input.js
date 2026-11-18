@@ -1,53 +1,33 @@
-// Keyboard and pointer input. Held keys give a steering direction; one-shot presses (start or
-// restart, pause) are queued as bit flags and taken once by the loop, so a press between two
-// frames is never lost and never counted twice.
-
-export const ACTION_CONFIRM = 1;
-export const ACTION_PAUSE = 2;
-
-const LEFT = new Set(['ArrowLeft', 'KeyA']);
-const RIGHT = new Set(['ArrowRight', 'KeyD']);
-const CONFIRM = new Set(['Space', 'Enter']);
-const PAUSE = new Set(['KeyP', 'Escape']);
-
-export function createInput(target) {
-  let left = false;
-  let right = false;
-  let actions = 0;
-
-  window.addEventListener('keydown', (event) => {
-    if (LEFT.has(event.code)) left = true;
-    else if (RIGHT.has(event.code)) right = true;
-    else if (CONFIRM.has(event.code)) {
-      if (!event.repeat) actions |= ACTION_CONFIRM;
-    } else if (PAUSE.has(event.code)) {
-      if (!event.repeat) actions |= ACTION_PAUSE;
-    } else return;
-    event.preventDefault();
-  });
-  window.addEventListener('keyup', (event) => {
-    if (LEFT.has(event.code)) left = false;
-    else if (RIGHT.has(event.code)) right = false;
-  });
-  // A key released while the tab is hidden never sends keyup: let go of everything on blur.
-  window.addEventListener('blur', () => {
-    left = false;
-    right = false;
-  });
-  target.addEventListener('pointerdown', () => {
-    actions |= ACTION_CONFIRM;
+// Keyboard + mouse state. Edge-triggered presses are read with CW.input.pressed(code) once per frame.
+(function () {
+  const CW = window.CW;
+  const down = new Set();
+  const edge = new Set();
+  const input = (CW.input = {
+    mdx: 0, mdy: 0, dragging: false, locked: false, wheel: 0, enabled: true, mouse: { x: 0, y: 0 },
+    isDown: (c) => down.has(c),
+    pressed(c) { return edge.has(c); },
+    any(codes) { return codes.some((c) => down.has(c)); },
+    endFrame() { edge.clear(); input.mdx = 0; input.mdy = 0; input.wheel = 0; },
+    axis(neg, pos) { return (input.any(pos) ? 1 : 0) - (input.any(neg) ? 1 : 0); },
   });
 
-  return {
-    /** -1 for left, 1 for right, 0 for neither or both. */
-    direction() {
-      return (right ? 1 : 0) - (left ? 1 : 0);
-    },
-    /** The one-shot presses since the last call, as ACTION_* flags. */
-    takeActions() {
-      const taken = actions;
-      actions = 0;
-      return taken;
-    },
-  };
-}
+  const BLOCK = new Set(['Tab', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
+  window.addEventListener('keydown', (e) => {
+    if (BLOCK.has(e.code)) e.preventDefault();
+    if (!down.has(e.code)) edge.add(e.code);
+    down.add(e.code);
+  });
+  window.addEventListener('keyup', (e) => down.delete(e.code));
+  window.addEventListener('blur', () => down.clear());
+
+  window.addEventListener('mousedown', (e) => { if (e.button === 0 || e.button === 2) input.dragging = true; edge.add('Mouse' + e.button); down.add('Mouse' + e.button); });
+  window.addEventListener('mouseup', (e) => { input.dragging = false; down.delete('Mouse' + e.button); });
+  window.addEventListener('contextmenu', (e) => e.preventDefault());
+  window.addEventListener('wheel', (e) => { input.wheel += Math.sign(e.deltaY); }, { passive: true });
+  window.addEventListener('mousemove', (e) => {
+    input.mouse.x = e.clientX; input.mouse.y = e.clientY;
+    if (input.locked || input.dragging) { input.mdx += e.movementX || 0; input.mdy += e.movementY || 0; }
+  });
+  document.addEventListener('pointerlockchange', () => { input.locked = document.pointerLockElement != null; });
+})();

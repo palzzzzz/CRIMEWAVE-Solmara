@@ -1,36 +1,41 @@
-// CRIMEWAVE: Solmara — entry plumbing for make.fun gta6-01. The game is the 3D low-poly open-world crime game in this
-// directory's game/ folder (three.js vendored at game/vendor/three.min.js, plain static files, offline, no network).
-// The program copies game/ and screenshots/ from beside this file to /output and writes /output/dossier.json, the
-// summary the judge reads, with the vendored make.fun library. Screenshots are taken from the running game.
-//
-// Serve it locally with `node serve.ts`, then open http://localhost:8080.
-// Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
-//   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
-
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+// Crimewave entry packager.
+// Hands the game in as the bounty expects: game/ (static files) and screenshots/ (renders) copied next to a
+// dossier.json. Run with `node main.ts`; no build step, Node's standard library plus the vendored helper only.
+import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-game.ts';
 
-const here = fileURLToPath(new URL('.', import.meta.url));
-const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+// Where this file lives is where game/ and screenshots/ are read from, wherever the shell is standing.
+const here = dirname(fileURLToPath(import.meta.url));
 
-mkdirSync(out, { recursive: true });
-cpSync(join(here, 'game'), join(out, 'game'), { recursive: true });
-mkdirSync(join(out, 'screenshots'), { recursive: true });
-if (existsSync(join(here, 'screenshots'))) cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
+// The grader supplies MAKEFUN_OUTPUT_DIR; without it the contract says /output.
+const outDir = resolve(process.env.MAKEFUN_OUTPUT_DIR || '/output');
 
-// The scorer's own caps (reference/gate.json): only text_max_bytes shapes the bytes; the others refuse an entry the
-// scorer would refuse (more than 4 screenshots or one over 256 KiB; more than 993 files in game/ or 48 MiB of game
-// files, in all, or a path under game/ over 1000 bytes: game/ counts beside /output's own 1000-entry cap, its
-// screenshots/ and dossier.json).
-writeFileSync(
-  join(out, 'dossier.json'),
-  buildDossier(out, {
-    text_max_bytes: 163840,
-    screenshots: { max: 4, max_bytes: 262144 },
-    game_max_files: 993,
-    game_max_bytes: 50331648,
-    game_path_max_bytes: 1000,
-  }),
-);
+// Copy one folder of the entry into the output, replacing any stale copy so reruns never mix old and new files.
+function publishFolder(name: string): void {
+  const from = join(here, name);
+  const to = join(outDir, name);
+  if (!existsSync(from)) {
+    throw new Error(`missing ${name}/ beside main.ts (${from})`);
+  }
+  rmSync(to, { recursive: true, force: true });
+  cpSync(from, to, { recursive: true });
+}
+
+mkdirSync(outDir, { recursive: true });
+publishFolder('game');
+publishFolder('screenshots');
+
+// The scorer's caps, as documented in the header of vendor/makefun-game.ts. Only text_max_bytes changes the
+// bytes of the dossier; the rest make this program fail here exactly where the scorer would refuse the entry.
+const caps = {
+  text_max_bytes: 163840,
+  screenshots: { max: 4, max_bytes: 262144 },
+  game_max_files: 993,
+  game_max_bytes: 50331648,
+};
+
+// The dossier is derived from the copies in the output directory, which is what the scorer reads too.
+writeFileSync(join(outDir, 'dossier.json'), buildDossier(outDir, caps));
+console.log(`entry written to ${outDir}`);

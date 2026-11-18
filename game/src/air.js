@@ -189,7 +189,11 @@
       ph.sees = ph.state === 'orbit' && sd < 15 && hd < 140;
       let sx, sz, rate;
       if (ph.sees || (ph.state === 'orbit' && W.seen)) { sx = p.x + p.vx * 0.35; sz = p.z + p.vz * 0.35; rate = 4.5; }
-      else { ph.sw += dt * 0.8; const c0 = W.last; sx = c0.x + Math.cos(ph.sw) * 24 + Math.cos(ph.sw * 2.3) * 8; sz = c0.z + Math.sin(ph.sw * 1.1) * 24; rate = 2.2; }
+      else {
+        // sweep the last known position in a lazy figure that breathes wider and tighter, so the beam combs the block
+        ph.sw += dt * 0.8; const c0 = W.last, reach = 24 + Math.sin(ph.sw * 0.35) * 9;
+        sx = c0.x + Math.cos(ph.sw) * reach + Math.cos(ph.sw * 2.3) * 8; sz = c0.z + Math.sin(ph.sw * 1.1) * reach; rate = 2.2;
+      }
       if (ph.state === 'in' && W.seen) { sx = p.x; sz = p.z; rate = 3; }
       const sdx = sx - ph.spot.x, sdz = sz - ph.spot.z, sl = Math.hypot(sdx, sdz), step = Math.min(sl, (sl * rate * 0.35 + 9) * dt);
       if (sl > 0.01) { ph.spot.x += (sdx / sl) * step; ph.spot.z += (sdz / sl) * step; }
@@ -224,7 +228,9 @@
     if (!h.dead) {
       m.root.visible = true; m.root.position.set(h.x, h.y, h.z); m.root.rotation.set(h.pitch, h.h, h.roll);
       m.rotor.rotation.y += dt * 40 * h.rs; m.tail.rotation.x += dt * 60 * h.rs; m.blur.material.opacity = 0.17 * h.rs * h.rs;
-      m.nav.forEach((n, i) => { n.visible = i === 2 ? Math.floor(performance.now() / 500) % 2 === 0 : true; });
+      // tail beacon double-flashes (two quick pulses, then a pause) like a real anti-collision strobe; the rest stay lit
+      const strobe = (performance.now() % 1200) / 1200;
+      m.nav.forEach((n, i) => { n.visible = i === 2 ? (strobe < 0.08 || (strobe > 0.18 && strobe < 0.26)) : true; });
     }
     // altitude shadow
     const alt = Math.max(0, h.y - h.floor), sc = 3.6 + alt * 0.045;

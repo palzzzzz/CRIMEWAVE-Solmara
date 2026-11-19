@@ -402,6 +402,55 @@
     // beach bar (title scene backdrop) with thatch roof
     bch.sol.box(266, 1.6, 40, 8, 3.2, 6, 0xfdf2d0); world.addBox(262, 270, 37, 43, 3.2); bch.sol.cone(266, 4.2, 40, 6.6, 2.4, 4, 0xd9b45a, 0, Math.PI / 4, 0);
     for (let i = -1; i <= 1; i++) bch.sol.cyl(260.5, 0.55, 40 + i * 2, 0.3, 0.3, 1.1, 6, 0xe8569b);
+    // ---- beach night market: timber deck, timber stalls with shingle roofs, lantern strings, banner, slow ferris wheel ----
+    const WOOD = [0x8a5a34, 0x6b4426, 0xa8754a], cols = [0xff4fd8, 0xffcf3a, 0x35f2ff, 0xff7a3a, 0x7dff6a, 0xff3b5c];
+    for (let z = -5; z <= 19; z += 0.5) bch.sol.box(275, 0.18, z, 29, 0.36, 0.46, Math.round(z * 2) % 2 ? 0xb98a56 : 0xa57a48);
+    bch.sol.box(275, 0.1, 7, 29.4, 0.2, 25.2, 0x5a3a22);
+    for (let x = 262; x <= 288; x += 4) [-5.2, 19.2].forEach((z) => bch.sol.box(x, -0.3, z, 0.3, 0.7, 0.3, 0x4a3018));
+    [[-0.5, 1], [14.5, -1]].forEach(([zc, d], row) => [266, 272, 278].forEach((x, i) => {
+      const wc = WOOD[(i + row) % 3];
+      bch.sol.box(x, 1.5, zc - d * 1.5, 4.2, 2.6, 0.2, wc);                      // back wall (vertical boards)
+      for (let b = -1.8; b <= 1.8; b += 0.6) bch.sol.box(x + b, 1.5, zc - d * 1.62, 0.06, 2.6, 0.04, 0x4a3018);
+      [-2.0, 2.0].forEach((sx) => bch.sol.box(x + sx, 1.5, zc, 0.2, 2.6, 3.2, WOOD[(i + 1) % 3]));
+      bch.sol.box(x, 0.55, zc + d * 1.45, 4.2, 1.0, 0.18, wc); bch.sol.box(x, 1.08, zc + d * 1.4, 4.4, 0.12, 0.7, 0xc89a62);
+      bch.sol.box(x, 3.05, zc + d * 0.2, 4.6, 0.14, 3.6, 0x4a3018);
+      bch.sol.cone(x, 3.9, zc, 3.7, 1.7, 4, 0x6e4426, 0, Math.PI / 4, 0);          // timber-shingle pyramid roof
+      for (let k = 0; k < 5; k++) bch.sol.sphere(x - 1.6 + k * 0.8, 1.35, zc + d * 1.35, 0.22, cols[(i * 2 + k + row) % cols.length]);
+      bch.lamp.box(x, 2.85, zc + d * 1.6, 2.4, 0.12, 0.12, 0xfff0b0); world.lampGlow.push(x, 2.8, zc + d * 1.6);
+      world.addBox(x - 2.2, x + 2.2, zc - 1.7, zc + 1.7, 2.6);
+    }));
+    [262, 269, 275, 281].forEach((x) => { [[1.2, 3.3], [13.8, 3.3]].forEach(([z]) => bch.sol.cyl(x, 2.4, z, 0.08, 0.08, 4.8, 5, 0x4a3018)); });
+    for (let ln = 0; ln < 5; ln++) {   // lantern strings across the aisle, stall roof to stall roof
+      const x = 263 + ln * 4.6;
+      for (let z = 0.5; z <= 14; z += 0.9) { const sag = 0.5 * Math.sin(((z - 0.5) / 13.5) * Math.PI); bch.lamp.sphere(x, 4.6 - sag, z, 0.27, cols[(ln * 3 + Math.floor(z)) % cols.length]); if (ln % 2 === 0 && Math.floor(z) % 2 === 0) world.lampGlow.push(x, 4.5 - sag, z); }
+      bch.sol.box(x, 4.72, 7, 0.03, 0.03, 14, 0x222222);
+    }
+    [2, 12].forEach((z) => bch.sol.cyl(262, 4.4, z, 0.14, 0.14, 8.8, 6, 0x5a3a22));
+    plate('PASAR MALAM\nBEACH NIGHT MARKET', 10, 2.4, { bg: '#2a1408', fg: '#ffcf3a', edge: '#ff4fd8', glow: true }, 262, 8.9, 7, -Math.PI / 2, true);
+    // ferris wheel on the sea side of the deck: axis along x, so the disc faces the market
+    const FW = { x: 285, y: 13.5, z: 7, R: 11 }, wgrp = new THREE.Group(), wb = new CW.Batch(), wl = new CW.Batch(), cabs = [];
+    wgrp.position.set(FW.x, FW.y, FW.z);
+    for (let k = 0; k < 12; k++) { const a = (k * Math.PI) / 6; wb.cyl(0, Math.cos(a) * FW.R / 2, Math.sin(a) * FW.R / 2, 0.12, 0.12, FW.R, 5, 0xe8e8e8, a); }
+    wb.cyl(0, 0, 0, 1.3, 1.3, 3.4, 10, 0xf4f0e6, 0, 0, Math.PI / 2);
+    for (let k = 0; k < 24; k++) {
+      const am = ((k + 0.5) * Math.PI) / 12, ap = (k * Math.PI) / 12;
+      [-1.3, 1.3].forEach((px) => {
+        wb.cyl(px, Math.cos(am) * FW.R * 0.99, Math.sin(am) * FW.R * 0.99, 0.14, 0.14, 2 * FW.R * Math.sin(Math.PI / 24) + 0.1, 5, 0xf4f0e6, am + Math.PI / 2);
+        wl.sphere(px, Math.cos(ap) * FW.R, Math.sin(ap) * FW.R, 0.34, cols[k % cols.length]);
+        world.lampGlow.push(FW.x + px, FW.y + Math.cos(ap) * FW.R, FW.z + Math.sin(ap) * FW.R);
+      });
+      wb.cyl(0, Math.cos(ap) * FW.R, Math.sin(ap) * FW.R, 0.07, 0.07, 2.6, 4, 0xe8e8e8, 0, 0, Math.PI / 2);
+    }
+    for (let k = 0; k < 12; k++) {
+      const a = (k * Math.PI) / 6 + 0.26, cab = new THREE.Group(), cb = new CW.Batch();
+      cb.cyl(0, -0.8, 0, 0.06, 0.06, 1.6, 4, 0x3a3f44);
+      cb.box(0, -2.0, 0, 2.6, 1.5, 2.2, cols[k % cols.length]); cb.box(0, -2.0, 0, 2.7, 0.5, 2.3, 0xfaf3e3); cb.box(0, -2.9, 0, 2.9, 0.15, 2.5, 0x3a3f44);
+      cab.add(cb.build(CW.mats.solid, true, false)); cab.position.set(0, Math.cos(a) * FW.R, Math.sin(a) * FW.R); wgrp.add(cab); cabs.push(cab);
+    }
+    wgrp.add(wb.build(CW.mats.solid, true, false)); wgrp.add(wl.build(CW.mats.lamp, false, false)); scene.add(wgrp);
+    world.ferris = { wheel: wgrp, cabs, a: 0 };
+    [1, -1].forEach((s) => [-1.6, 1.6].forEach((px) => { const n = Math.hypot(FW.y, 7); bch.sol.cyl(FW.x + px, FW.y / 2, FW.z + s * 3.5, 0.3, 0.3, n, 6, 0xd9d4c6, Math.atan2(7 * s, -FW.y)); }));
+    world.addBox(FW.x - 2.5, FW.x + 2.5, FW.z - 8, FW.z + 8, 2);
     flush(bch, scene);
     world.footprints.push({ x0: 262, x1: 270, z0: 37, z1: 43 });
 
@@ -520,6 +569,7 @@
       pa.setY(i, Math.sin(x * 0.045 + t * 0.9) * 0.22 + Math.sin(z * 0.06 + t * 1.2) * 0.18 + Math.sin((x + z) * 0.1 + t * 1.7) * 0.09);
     }
     pa.needsUpdate = true;
+    if (world.ferris) { const f = world.ferris; f.a += dt * 0.12; f.wheel.rotation.x = f.a; f.cabs.forEach((g) => { g.rotation.x = -f.a; }); }
     world.foam.position.x = 289.5 + Math.sin(t * 0.8) * 2.2; world.foam.material.opacity = 0.45 + 0.4 * Math.sin(t * 0.8 + 1);
   };
 })();

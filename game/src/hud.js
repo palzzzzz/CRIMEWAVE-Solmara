@@ -134,6 +134,11 @@
     c.restore();
   }
 
+  // shared with map.js (the full-screen map): same base map, route planner, badge style and palette
+  const MAG = '#ff4fd8';
+  H.wp = null;   // the checkpoint chosen on the full-screen map ({x, z}) or null; routed with the same BFS as the mission GPS
+  H.api = { badge, planRoute, getMap: () => map, E, INK, WHITE, YELLOW, RED, BLUE, GREEN, SEA, MAG };
+
   // ---- per-draw minimap ------------------------------------------------------------------------------------------------------
   function drawMinimap(P, cam) {
     const c = mctx, d = mmD, R = mmR, sc = R / VIEW, u = d / 120, ir = Math.max(7.5, d * 0.072);   // u: general px unit, ir: badge radius
@@ -164,6 +169,19 @@
       const r = planRoute(px, pz, mk.x, mk.z), pts = r.pts, n = pts.length;
       c.save(); c.lineJoin = c.lineCap = 'round';
       [[5.6 * u, INK], [3.2 * u, YELLOW]].forEach(([lw, col]) => {
+        c.strokeStyle = col; c.lineWidth = lw; c.beginPath();
+        for (let i = 0; i < n - (r.offRoad ? 1 : 0); i++) { const s = scr(pts[i].x, pts[i].z); c[i ? 'lineTo' : 'moveTo'](s.x, s.y); }
+        c.stroke();
+        if (r.offRoad) { c.save(); c.setLineDash([4 * u, 4 * u]); c.beginPath(); let s = scr(pts[n - 2].x, pts[n - 2].z); c.moveTo(s.x, s.y); s = scr(pts[n - 1].x, pts[n - 1].z); c.lineTo(s.x, s.y); c.stroke(); c.restore(); }
+      });
+      c.restore();
+    }
+    // checkpoint route (chosen on the full map): magenta, drawn under the mission route's icons
+    const wp = H.wp;
+    if (wp) {
+      const r = planRoute(px, pz, wp.x, wp.z), pts = r.pts, n = pts.length;
+      c.save(); c.lineJoin = c.lineCap = 'round';
+      [[5.6 * u, INK], [3.2 * u, MAG]].forEach(([lw, col]) => {
         c.strokeStyle = col; c.lineWidth = lw; c.beginPath();
         for (let i = 0; i < n - (r.offRoad ? 1 : 0); i++) { const s = scr(pts[i].x, pts[i].z); c[i ? 'lineTo' : 'moveTo'](s.x, s.y); }
         c.stroke();
@@ -211,6 +229,15 @@
         badge(c, 'circle', s.x, s.y, ir * 1.6 * pulse, YELLOW, 'mission');
       }
     }
+    // checkpoint marker: magenta diamond, pinned to the rim as an arrow when out of view
+    if (wp) {
+      const s = scr(wp.x, wp.z, 13 * u);
+      if (s.off) {
+        c.save(); c.translate(s.x, s.y); c.rotate(s.ang + Math.PI / 2); c.fillStyle = MAG; c.strokeStyle = INK; c.lineWidth = 4 * u; c.lineJoin = 'round';
+        c.beginPath(); c.moveTo(0, -12 * u); c.lineTo(10 * u, 8 * u); c.lineTo(0, 2 * u); c.lineTo(-10 * u, 8 * u); c.closePath(); c.stroke(); c.fill();
+        c.strokeStyle = WHITE; c.lineWidth = 1.5 * u; c.stroke(); c.restore();
+      } else badge(c, 'diamond', s.x, s.y, ir * 1.1, MAG, null);
+    }
     // player arrow (points where the car / character faces)
     c.save(); c.translate(R, R); c.rotate(cam.yaw - hd); c.lineJoin = 'round'; c.fillStyle = WHITE; c.strokeStyle = INK; c.lineWidth = 4.2 * u;
     c.beginPath(); c.moveTo(0, 17 * u); c.lineTo(-12 * u, -12 * u); c.lineTo(0, -5 * u); c.lineTo(12 * u, -12 * u); c.closePath(); c.stroke(); c.fill(); c.restore();
@@ -225,6 +252,7 @@
   H.update = function (dt) {
     if (!H.shown) return;
     const P = CW.player, st = H.state, e = P.active;
+    if (H.wp) { const pf = P.focus(); if (Math.hypot(H.wp.x - pf.x, H.wp.z - pf.z) < 12) { H.wp = null; H.toast('CHECKPOINT REACHED'); mmT = 0; } }
     const t = performance.now(); if (t - mmT >= STEP_MS) { mmT = t; drawMinimap(P, CW.cam); }
     setText('cash', '$' + st.cash.toLocaleString('en-US'));
     setText('clock', CW.sky.clock() + (CW.weather && CW.weather.wet > 0.3 ? '  ·  RAIN' : ''));

@@ -38,7 +38,7 @@
   CW.title.bind();
 
   game.start = function (cont) {
-    CW.title.leave();
+    CW.title.leave(); CW.hud.wp = null; if (CW.bigmap.open) CW.bigmap.toggle(false);
     CW.player.startNew(); CW.gunner.reset();
     CW.weapons.reset(); CW.air.reset(); CW.enemies.reset(); CW.weather.set('clear');
     CW.sky.hour = CW.C.START_HOUR;
@@ -94,7 +94,7 @@
     let dt = Math.min(0.05, (now - last) / 1000); last = now;
     if (capture) dt *= qn('ts', 1);   // capture only: &ts=<scale> slows the simulation so a burst of screenshots can resolve a fast event
     if (CW.weapons.wheelOpen) dt *= 0.22;   // the weapon wheel slows the world right down
-    if (CW.solfeed.open || CW.shops.menu) dt *= 0.05;   // phone + shop menus nearly freeze it
+    if (CW.solfeed.open || CW.shops.menu || CW.bigmap.open) dt *= 0.05;   // phone + shop menus + the full map nearly freeze it
     dt *= CW.story.timeScale;
     simT += dt;
     fpsAcc += dt; fpsN++; if (fpsAcc > 1) { CW.fps = Math.round(fpsN / fpsAcc); fpsAcc = 0; fpsN = 0; }
@@ -102,7 +102,8 @@
     if (game.state === 'title') CW.title.update(dt);
     const live = playing || game.state === 'ended';
     const sdt = game.state === 'ended' ? dt * 0.3 : dt;
-    if (playing) { CW.player.update(dt); CW.weapons.update(dt); CW.shops.update(dt); CW.solfeed.update(dt); CW.radio.update(dt); }
+    const mapOpen = playing && CW.bigmap.update(dt);   // N: full-screen map; while it is open the player + weapons stand still
+    if (playing && !mapOpen) { CW.player.update(dt); CW.weapons.update(dt); CW.shops.update(dt); CW.solfeed.update(dt); CW.radio.update(dt); }
     if (game.state === 'play' || game.state === 'ended') CW.story.update(dt);
     if (live) { const F0 = CW.player.focus(); CW.traffic.update(sdt, F0); CW.police.update(dt, F0); CW.enemies.update(sdt); CW.weapons.simulate(sdt); CW.air.update(sdt); }
     CW.weather.update(dt, playing);

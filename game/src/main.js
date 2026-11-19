@@ -92,6 +92,7 @@
   function frame(now) {
     requestAnimationFrame(frame);
     let dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (capture) dt *= qn('ts', 1);   // capture only: &ts=<scale> slows the simulation so a burst of screenshots can resolve a fast event
     if (CW.weapons.wheelOpen) dt *= 0.22;   // the weapon wheel slows the world right down
     if (CW.solfeed.open || CW.shops.menu) dt *= 0.05;   // phone + shop menus nearly freeze it
     dt *= CW.story.timeScale;
@@ -163,7 +164,7 @@
     CW.vehicles.enter(car); P.mode = 'car'; P.car = car; P.crew.ray.model.visible = false;
     car.mesh.position.set(car.x, 0, car.z); car.mesh.rotation.y = h;
     CW.sky.hour = qn('hr', 17.2);
-    capture = { car, cop: W.cops[0], R, h, side: qn('cam', 3.4), camh: qn('camh', 0.9), camf: qn('camf', 6.4), fov: qn('fov', 40), boom: null, beach };
+    capture = { car, cop: W.cops[0], R, h, chase: qn('chase', 0), side: qn('cam', 3.4), camh: qn('camh', 0.9), camf: qn('camf', 6.4), fov: qn('fov', 40), boom: null, beach };
     W.dispT = 1e9; W.rbT = 1e9; W.busted = function () {};
     if (stageQ === 'boom') {
       // three parked cars nose to tail on the lane ahead; the middle one is the one that burns
@@ -195,17 +196,44 @@
       W.cops.forEach((q) => { if (q !== cop && !q.hidden) { q.hidden = true; q.cs = 'idle'; } });
       // staged cruiser: out the passenger side, a little ahead, broadside to Luna, never takes damage (closer downtown: narrower streets)
       const out = capture.beach ? 21 : 14;
+      if (capture.chase) {
+        // &chase=<speed m/s>: the car cruises east on the avenue, two cruisers tail it, the police heli trails overhead (capture only)
+        const v = capture.chase, A = CW.air.policeHeli;
+        if (!capture.started) {
+          capture.started = true; car.x -= sn * qn('back', 150); car.z -= cs * qn('back', 150);
+          if (!A.active) { A.active = true; A.state = 'orbit'; A.hp = 400; A.x = car.x - sn * 40; A.z = car.z - cs * 40; A.y = 34; A.vx = A.vz = A.vy = 0; A.leaveT = 0; A.ang = Math.atan2(-cs, -sn); A.h = h; A.spot.x = car.x; A.spot.z = car.z; A.mk.root.visible = true; A.cone.visible = true; A.disc.visible = true; }
+        }
+        car.x += sn * v * dt; car.z += cs * v * dt; car.vx = sn * v; car.vz = cs * v; car.speed = v;
+        car.mesh.position.set(car.x, 0, car.z); car.mesh.rotation.y = h;
+        const offs = [[qn('c1', 9), qn('c1s', 3.0)], [qn('c2', 16), qn('c2s', 2.2)]];   // both on Luna's side so her line of fire does not cross our own hull
+        [cop, W.cops[1]].forEach((q, i) => {
+          q.hidden = false; q.awake = true; q.cs = 'pursuit'; q.hp = 100; q.ai = q.ai || { cruise: 0, off: 0 };
+          q.x = car.x - sn * offs[i][0] + R.x * offs[i][1]; q.z = car.z - cs * offs[i][0] + R.z * offs[i][1]; q.h = h; q.vx = sn * v; q.vz = cs * v; q.speed = v;
+          q.mesh.position.set(q.x, 0, q.z); q.mesh.rotation.y = h;
+        });
+        W.cops.forEach((q, i) => { if (i > 1 && !q.hidden) { q.hidden = true; q.cs = 'idle'; } });
+        capture.t = (capture.t || 0) + dt;
+        if (qn('hdown', 0) && capture.t >= qn('hdown', 0) && A.state !== 'down') { A.state = 'down'; A.vy = 0; A.spin = 1.5; A.vx = car.vx; A.vz = car.vz; }   // &hdown=<s>: shot down at that moment
+        if (A.state !== 'down') { A.hp = 400; A.ang = Math.atan2(-cs, -sn) + 0.5; }
+      } else {
       cop.hidden = false; cop.awake = true; cop.cs = 'roadblock'; cop.rbMin = 1e9; cop.hp = 100; cop.ai = cop.ai || { cruise: 0, off: 0 };
       cop.x = car.x + R.x * out + sn * 3; cop.z = car.z + R.z * out + cs * 3; cop.h = h + Math.PI / 2; cop.vx = cop.vz = 0; cop.speed = 0;
+      }
       // low front 3/4: ahead of the bonnet, swung out on Luna's side, aimed at the window line
       tx = car.x + R.x * 0.6; tz = car.z + R.z * 0.6; ty = 1.25;
       c.position.set(car.x + sn * camf + R.x * side, camh, car.z + cs * camf + R.z * side);
+      if (capture.chase) {
+        // aim past the car at the pursuers; heli pinned in view: &lookb=<m behind car> &looky=<m high> &heli=<m behind>,<m high>,<m to the right>
+        const lb = qn('lookb', 8), ly = qn('looky', 4), hb = qn('hb', 30), hy = qn('hy', 22), hs = qn('hs', 6), A = CW.air.policeHeli;
+        tx = car.x - sn * lb + R.x * 0.6; tz = car.z - cs * lb + R.z * 0.6; ty = ly;
+        if (A.state !== 'down') { A.x = car.x - sn * hb + R.x * hs; A.z = car.z - cs * hb + R.z * hs; A.y = hy; A.vx = car.vx; A.vz = car.vz; A.h = h; A.mk.root.position.set(A.x, A.y, A.z); }
+      }
     }
     c.fov = fov; c.updateProjectionMatrix(); c.lookAt(tx, ty, tz);
     const near = boom ? 7 : 25;
     CW.traffic.peds.forEach((p) => { if (Math.hypot(p.x - c.position.x, p.z - c.position.z) < near) p.model.visible = false; });   // no bystanders in the evidence frame
     // anything else within 12 m of the lens would hide the subject: hide it (the staged boom cars are exempt)
-    CW.vehicles.list.forEach((v) => { if (v !== car && v !== cop && !(boom && boom.cars.includes(v)) && Math.hypot(v.x - c.position.x, v.z - c.position.z) < 12) v.mesh.visible = false; });
+    CW.vehicles.list.forEach((v) => { if (v !== car && v !== cop && !(capture.chase && v === CW.police.cops[1]) && !(boom && boom.cars.includes(v)) && Math.hypot(v.x - c.position.x, v.z - c.position.z) < 12) v.mesh.visible = false; });
   }
 
   game.state = 'title';

@@ -1,6 +1,6 @@
 [
-  { "name": "1-title.jpg", "query": "" },
-  { "name": "2-chase.jpg", "query": "", "note": "golden hour downtown, VESPER GT flanked by two flashing cruisers, 4-5 star chase" },
-  { "name": "3-shootout.jpg", "query": "", "note": "five stars in the rain, weapon wheel open on the SMG stat panel, police response list, minimap" },
-  { "name": "4-heli.jpg", "query": "" }
+  { "name": "1-chase.jpg", "query": "?capture=sports&chase=11&back=95&hr=17.8&mission=1&hold=card,radio&cam=4.6&camh=1.0&camf=8&fov=50&lookb=9&looky=3.2&hb=24&hy=9&hs=-6", "note": "COVER. golden hour downtown, Luna firing from the VESPER GT, two cruisers chasing behind, police heli overhead, full HUD" },
+  { "name": "2-explosion.jpg", "query": "?stage=boom&boom=2.5&hr=17.8&mission=1&hold=card,radio&cam=3.2&camh=1.1&camf=5&fov=50", "note": "burst of consecutive frames around the blast; peak fireball with one car launched and a second thrown" },
+  { "name": "3-heli-down.jpg", "query": "?capture=sports&chase=11&back=95&hr=17.8&mission=1&hold=card,radio&cam=4.6&camh=1.0&camf=8&fov=55&lookb=12&looky=4&hb=16&hy=13&hs=-3&hdown=1.5&ts=0.3", "note": "police heli shot down, smoking and spinning over the chase, Luna still firing" },
+  { "name": "4-title.jpg", "query": "", "note": "title screen, golden hour downtown" }
 ]

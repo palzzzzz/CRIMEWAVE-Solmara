@@ -442,6 +442,35 @@
     // billboards along the boulevard and the harbour wall
     [[-190, 0], [-130, 5], [130, 7]].forEach(([z, k]) => billboard(258, 0, z, -Math.PI / 2, k, 14, 6.5));
     [[-180, 3], [0, 1], [150, 6]].forEach(([x, k]) => billboard(x, 0, 250, Math.PI, k, 16, 7));
+    // night-market corner: stalls, hanging lanterns and a banner on the south pavement of the z=0 avenue, east of the origin junction
+    (function () {
+      const cols = [0xff4fd8, 0xffcf3a, 0x35f2ff, 0xff7a3a, 0x7dff6a, 0xff3b5c];
+      const z0 = 11.6;
+      for (let i = 0; i < 6; i++) {
+        const x = 15 + i * 6.2, c = cols[i % cols.length];
+        furn.sol.box(x, 0.45, z0, 2.6, 0.9, 1.5, 0x6b4a32);
+        furn.sol.box(x, 0.95, z0, 2.8, 0.1, 1.7, 0xd9b47a);
+        [[-1.3, -0.75], [1.3, -0.75], [-1.3, 0.75], [1.3, 0.75]].forEach(([a, b]) => furn.sol.cyl(x + a, 1.45, z0 + b, 0.05, 0.05, 2.5, 5, 0x3a3f44));
+        for (let k = 0; k < 4; k++) furn.sol.box(x - 1.05 + k * 0.7, 2.72, z0 - 0.1, 0.7, 0.08, 1.9, k % 2 ? c : 0xfaf3e3);
+        for (let k = 0; k < 5; k++) furn.sol.sphere(x - 1 + k * 0.5, 1.12, z0 - 0.2, 0.2, cols[(i + k) % cols.length]);
+        furn.lamp.box(x, 2.5, z0 - 0.5, 1.8, 0.14, 0.14, 0xfff0b0);
+        world.lampGlow.push(x, 2.4, z0 - 0.5);
+        world.addBox(x - 1.4, x + 1.4, z0 - 0.85, z0 + 0.85, 1.0);
+      }
+      furn.sol.box(11.5, 0.8, 11.6, 1.6, 1.0, 1.1, 0xe8e0d0); furn.sol.cyl(11.5, 1.5, 11.6, 0.1, 0.9, 0.7, 8, 0xd8362e);
+      world.addBox(10.7, 12.3, 11.0, 12.2, 1.4);
+      for (let row = 0; row < 3; row++) {   // three lantern strings across the pavement
+        const zz = 9.9 + row * 1.2;
+        for (let x = 10; x <= 52; x += 1.4) {
+          const sag = 0.35 * Math.sin((((x - 10) % 8.4) / 8.4) * Math.PI), col = cols[Math.floor(x * 0.7 + row * 2) % cols.length];
+          furn.lamp.sphere(x, 4.5 - sag - row * 0.15, zz, 0.26, col);
+          if (row === 1 && Math.floor((x - 10) / 1.4) % 2 === 0) world.lampGlow.push(x, 4.4 - sag, zz);
+        }
+        furn.sol.box(31, 4.62, zz, 42, 0.03, 0.03, 0x222222);
+      }
+      [10, 31, 52].forEach((x) => furn.sol.cyl(x, 2.4, 9.9, 0.06, 0.06, 4.8, 6, 0x333b41));
+      plate('PASAR MALAM\nNIGHT MARKET', 9, 2.4, { bg: '#2a0a2a', fg: '#ffcf3a', edge: '#ff4fd8', glow: true }, 31, 5.9, 12.6, Math.PI, true);
+    })();
     flush(furn, scene);
 
     // glow sprites for lamps (night only)

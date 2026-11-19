@@ -6,7 +6,7 @@
 // No chain reactions: a blast never lowers another unmanned car's hp.
 (function () {
   const CW = window.CW, X = (CW.explosions = { list: [], launched: [], wrecks: 0 });
-  const FIRE_N = 38, SMOKE_N = 56, MAX_EX = 3, MAX_WRECK = 5;
+  const FIRE_N = 54, SMOKE_N = 56, MAX_EX = 3, MAX_WRECK = 5;
   const fire = [], smoke = [];
   let light = null, lightE = 0, scene = null;
   const CHAR = new THREE.Color(0x1d1a18), tmp = new THREE.Color();
@@ -39,20 +39,23 @@
     const s = take(arr); if (!s) return null; const u = s.userData;
     s.position.set(x, y, z); s.visible = true; u.life = u.max = o.life; u.vx = o.vx || 0; u.vy = o.vy || 0; u.vz = o.vz || 0; u.g = o.g || 0; u.drag = o.drag || 0;
     u.s0 = o.size; u.grow = o.grow || 0; u.a = o.a; u.col = o.col || 0; u.own = null; u.fl = 0;
-    s.scale.setScalar(o.size); s.material.opacity = 0; s.material.color.setHex(o.c0 || 0xffffff); return s;
+    s.material.depthTest = !o.core; s.scale.setScalar(o.size); s.material.opacity = 0; s.material.color.setHex(o.c0 || 0xffffff); return s;
   };
-  const FIRE_COL = [0xfff0b0, 0xffb23a, 0xff6a14, 0x8a2a0c];   // white-hot -> orange -> deep red
+  const FIRE_COL = [0xfffbe0, 0xffc548, 0xff7a1a, 0x8a2a0c];   // white-hot -> orange -> deep red
 
   X.explode = function (x, z, r, opt) {
     opt = opt || {}; r = r || 7;
     const P = CW.player, T = CW.traffic, W = CW.police, E = CW.enemies, V = CW.vehicles, Wp = CW.weapons, src = opt.src || null;
-    // ---- visuals: 1 flash + 5 fire + 6 sparks + 6 smoke = 18 sprites, at most 3 blasts alive at once
+    // ---- visuals: 2 core + 8 fire + 6 sparks + 6 smoke = 22 sprites, at most 3 blasts alive at once
     while (X.list.length >= MAX_EX) X.list.shift();
     X.list.push({ t: 0 });
-    const f0 = spawn(fire, x, 1.4, z, { life: 0.28, size: 3, grow: 40, a: 1, c0: 0xffe2a0 }); if (f0) f0.userData.fl = 1;
-    for (let i = 0; i < 5; i++) {
+    // white-hot core: a quick huge flash plus a smaller, longer-lived yellow-white heart (depth test off so the tumbling wrecks
+    // cannot hide it), then eight fat fire puffs that cool white-yellow -> orange -> red
+    const f0 = spawn(fire, x, 1.4, z, { life: 0.42, size: 4, grow: 32, a: 1, c0: 0xfff8e0, core: 1 }); if (f0) f0.userData.fl = 1;
+    const f1 = spawn(fire, x, 1.5, z, { life: 0.8, size: 4, grow: 9, a: 1, c0: 0xffe590, core: 1 }); if (f1) f1.userData.fl = 1;
+    for (let i = 0; i < 8; i++) {
       const a = rnd() * 6.283, sp = 2 + rnd() * 4;
-      spawn(fire, x + Math.cos(a) * 0.6, 0.9 + rnd() * 0.8, z + Math.sin(a) * 0.6, { life: 0.7 + rnd() * 0.5, size: 2.2, grow: 6.5 + rnd() * 3, vx: Math.cos(a) * sp, vz: Math.sin(a) * sp, vy: 2 + rnd() * 3.5, drag: 2, a: 0.95, col: 1 });
+      spawn(fire, x + Math.cos(a) * 0.6, 0.9 + rnd() * 0.8, z + Math.sin(a) * 0.6, { life: 0.8 + rnd() * 0.5, size: 3.0, grow: 8 + rnd() * 4, vx: Math.cos(a) * sp, vz: Math.sin(a) * sp, vy: 2 + rnd() * 3.5, drag: 2, a: 1, col: 1 });
     }
     for (let i = 0; i < 6; i++) {
       const a = rnd() * 6.283, sp = 6 + rnd() * 11;
@@ -134,7 +137,7 @@
       // flames (2 additive sprites) + smoke trickle; intensity fades out over the last 2 s of the "after" phase
       const inten = c._ws === 'burn' ? Math.min(1, 0.45 + c._wt * 0.5) : Math.max(0, Math.min(1, ((c.cop ? 8 : 7) - c._wt) / 2));
       if (!c._fl) c._fl = [];
-      while (c._fl.length < 2) { const s = take(fire); if (!s) break; s.visible = true; s.userData.life = s.userData.max = 1e9; s.userData.fl = 2; s.userData.own = c; s.userData.k = c._fl.length; s.userData.ph = rnd() * 6; c._fl.push(s); }
+      while (c._fl.length < 2) { const s = take(fire); if (!s) break; s.visible = true; s.material.depthTest = true; s.userData.life = s.userData.max = 1e9; s.userData.fl = 2; s.userData.own = c; s.userData.k = c._fl.length; s.userData.ph = rnd() * 6; c._fl.push(s); }
       c._fl.forEach((s) => { const u = s.userData, ph = c._wt * 11 + u.ph, off = u.k ? 1.0 : -1.0, sn = Math.sin(c.h), cn = Math.cos(c.h);
         s.position.set(c.x + sn * off * c.type.l * 0.22, 0.75 + Math.abs(Math.sin(ph * 0.7)) * 0.5, c.z + cn * off * c.type.l * 0.22);
         s.scale.setScalar((1.5 + Math.sin(ph) * 0.45) * inten + 0.01); s.material.opacity = 0.9 * inten; s.material.color.setHex(Math.sin(ph * 1.3) > 0.2 ? 0xffc040 : 0xff6a1a); });
@@ -160,7 +163,7 @@
       s.material.opacity = u.a * Math.min(1, k * 6) * (1 - k * k);
     }
     // light flash
-    if (lightE > 0) { lightE = Math.max(0, lightE - dt * 2.6); light.intensity = 9 * lightE * lightE; } else if (light.intensity) light.intensity = 0;
+    if (lightE > 0) { lightE = Math.max(0, lightE - dt * 2.2); light.intensity = 15 * lightE * lightE; } else if (light.intensity) light.intensity = 0;
     for (let i = 0; i < X.scorch.length; i++) { const m = X.scorch[i]; if (!m.visible) continue; m.userData.t += dt; const o = Math.min(1, m.userData.t * 4) * Math.max(0, 1 - (m.userData.t - 40) / 20); m.material.opacity = o; if (o <= 0 && m.userData.t > 40) m.visible = false; }
     // thrown cars: arc + tumble layered over the pose vehicles.update just wrote
     for (let i = X.launched.length - 1; i >= 0; i--) {

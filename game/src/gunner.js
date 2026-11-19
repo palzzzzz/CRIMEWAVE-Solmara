@@ -5,6 +5,7 @@
   const CW = window.CW;
   const G = (CW.gunner = { aboard: false, car: null, fireK: 0, lean: 0.3, twist: 0, tgt: null, tgtT: 0, burst: 0, cd: 0, pause: 0, flashT: 0, announced: false });
   const HIP_Y = 0.92;                 // model-space hip height
+  const HELI_RANGE = 80;              // 3D reach for the police helicopter (it orbits ~50 m up)
   const RANGE = 48, DMG = 9, RATE = 0.085, BURST = 5, PAUSE = 0.7, SPREAD = 0.06;
   const qY = new THREE.Quaternion(), qZ = new THREE.Quaternion(), qT = new THREE.Quaternion(), q = new THREE.Quaternion(), qi = new THREE.Quaternion();
   const UP = new THREE.Vector3(0, 1, 0), FWD = new THREE.Vector3(0, 0, 1), DOWN = new THREE.Vector3(0, -1, 0);
@@ -34,6 +35,12 @@
     };
     W.cops.forEach((k) => { if (!k.hidden && k.hp > 0 && k.cs !== 'dead' && k.cs !== 'idle' && k.cs !== 'patrol' && k.cs !== 'leave' && k !== car) consider(k.x, k.z, 0.95, k, 'car'); });
     W.officers.forEach((o) => { if (o.on) consider(o.x, o.z, 1.25, o, 'cop'); });
+    // police helicopter (shots go up at it; a live heli outranks nothing, it is only picked when it is the nearest legal target)
+    const ph = CW.air && CW.air.policeHeli;
+    if (ph && ph.active && ph.state !== 'down' && ph.hp > 0) {
+      const hd = Math.hypot(ph.x - car.x, ph.z - car.z), d3 = Math.hypot(hd, ph.y - 1.2);
+      if (hd < bd && d3 < HELI_RANGE && !crossesHull(car, ox, oz, ph.x, ph.z)) best = { x: ph.x, z: ph.z, y: ph.y, ref: ph, kind: 'heli' };
+    }
     return best;
   }
 
@@ -66,8 +73,8 @@
     const hot = W.level >= 2 && !W.ended;
     G.tgtT -= dt; if (G.tgtT <= 0) { G.tgtT = 0.2; G.tgt = hot ? pickTarget(car) : null; }
     // a cop that died / vanished since the last scan
-    if (G.tgt && ((G.tgt.kind === 'car' && (G.tgt.ref.hidden || G.tgt.ref.hp <= 0)) || (G.tgt.kind === 'cop' && !G.tgt.ref.on))) G.tgt = null;
-    if (G.tgt) { G.tgt.x = G.tgt.ref.x; G.tgt.z = G.tgt.ref.z; }
+    if (G.tgt && ((G.tgt.kind === 'car' && (G.tgt.ref.hidden || G.tgt.ref.hp <= 0)) || (G.tgt.kind === 'cop' && !G.tgt.ref.on) || (G.tgt.kind === 'heli' && (!G.tgt.ref.active || G.tgt.ref.state === 'down' || G.tgt.ref.hp <= 0)))) G.tgt = null;
+    if (G.tgt) { G.tgt.x = G.tgt.ref.x; G.tgt.z = G.tgt.ref.z; if (G.tgt.kind === 'heli') G.tgt.y = G.tgt.ref.y; }
     const want = hot && G.tgt ? 1 : 0;
     G.fireK = CW.damp(G.fireK, want, want ? 9 : 5, dt);
     G.lean = CW.damp(G.lean, 0.3 + 0.35 * G.fireK, 8, dt);   // ~0.65 rad firing: upright enough not to read as lying on the roof
@@ -138,9 +145,9 @@
     let dx = tx - o.x, dy = ty - o.y, dz = tz - o.z; const l = Math.hypot(dx, dy, dz) || 1; dx /= l; dy /= l; dz /= l;
     dx += (Math.random() - 0.5) * 2 * SPREAD; dy += (Math.random() - 0.5) * 2 * SPREAD * 0.6; dz += (Math.random() - 0.5) * 2 * SPREAD;
     const rl = Math.hypot(dx, dy, dz); dx /= rl; dy /= rl; dz /= rl;
-    const r = Wp.cast(o.x, o.y, o.z, dx, dy, dz, RANGE + 8), h = r.hit;
+    const r = Wp.cast(o.x, o.y, o.z, dx, dy, dz, Math.max(RANGE + 8, l + 6)), h = r.hit;
     // only police take damage: no friendly fire on civilians / gang / own car, nothing passes through walls
-    if (h && (h.k === 'cop' || (h.k === 'car' && h.ref.cop && h.ref !== car))) Wp.dealDamage(h, DMG, dx, dz, false);
+    if (h && (h.k === 'cop' || h.k === 'heli' || (h.k === 'car' && h.ref.cop && h.ref !== car))) Wp.dealDamage(h, DMG, dx, dz, false);
     Wp.tracer(o.x, o.y, o.z, r.x, r.y, r.z, 0xffe9a0, 0.09, 2.2);
     if (fl) { fl.visible = true; fl.rotation.z = Math.random() * 3; fl.scale.setScalar(2.1 + Math.random() * 0.8); G.flashT = 0.07; }
     CW.sfx.play('smg', 0.4);

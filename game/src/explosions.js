@@ -117,6 +117,16 @@
   // ---- per frame: runs right after vehicles.update
   X.update = function (dt, playing) {
     const P = CW.player, V = CW.vehicles, F = P.focus(), pcar = P.mode === 'car' ? P.car : null, lcar = CW.gunner && CW.gunner.aboard ? CW.gunner.car : null;
+    // police helicopter (air.js owns hp / spin / smoke / the descent): when a DOWNED one touches the ground (it goes inactive that
+    // frame, last seen under 4 m) the real blast goes off here, so nearby cars are thrown and pedestrians caught like any other fireball
+    const ph = CW.air && CW.air.policeHeli;
+    if (ph) {
+      // air.js sets state 'down' at hp 0 but the orbit branch right below overwrites it the same frame, so the heli never fell:
+      // latch it here (runs after air.update); next frame air.js takes its own spin-and-fall branch
+      if (ph.active && ph.hp <= 0 && ph.state !== 'down') ph.state = 'down';
+      if (ph.active && ph.state === 'down') X.phDown = { x: ph.x, z: ph.z, y: ph.y };
+      else if (X.phDown) { const d = X.phDown; X.phDown = null; if (!ph.active && d.y < 4) { X.explode(d.x, d.z, 11); X.heliBlasts = (X.heliBlasts || 0) + 1; } }
+    }
     let nWreck = 0;
     for (let i = 0; i < V.list.length; i++) {
       const c = V.list[i];

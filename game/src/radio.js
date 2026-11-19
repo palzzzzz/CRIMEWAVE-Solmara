@@ -13,7 +13,7 @@
   const PROGS = [[0, 0, -2, -4], [0, -4, -2, -5], [0, 3, -2, -5], [0, -2, 3, 5]];
   const SHIFT = [0, 2, 5, -2];
   const A = () => CW.audio && CW.audio.ctx ? CW.audio : null;
-  let nbuf = null;
+  let nbuf = null, popT = 0, wasCar = false, lastD = -1;
   const hz = (n) => 440 * Math.pow(2, (n - 69) / 12);
   function osc(type, f, t, d, g, f2) {
     const a = A(), c = a.ctx, o = c.createOscillator(), v = c.createGain();
@@ -66,8 +66,15 @@
     const P = CW.player, I = CW.input, a = A(), car = P.mode === 'car' && P.car && CW.game.state === 'play';
     const off = R.st >= STATIONS.length;
     if (car && I.pressed('KeyR')) { R.st = (R.st + 1) % (STATIONS.length + 1); R.track = 0; R.bar = 0; R.step = 0; R.next = 0; const s = STATIONS[R.st]; CW.hud.toast(s ? 'RADIO  ·  ' + s.freq + ' ' + s.name : 'RADIO OFF'); CW.sfx.play('click', 0.6); }
-    const el = $('radiohud'); const on = car && CW.hud.shown;
-    const key = on ? R.st + ':' + R.track : ''; if (el.dataset.k !== key) { el.dataset.k = key; el.style.display = on ? 'block' : 'none'; if (on) { const s = STATIONS[R.st]; el.innerHTML = s ? '<b>' + s.freq + '  ' + s.name + '</b>&#9835; ' + s.tracks[R.track % 4] + '<small>' + s.genre + '  ·  R NEXT STATION</small>' : '<b>RADIO OFF</b><small>R TURN ON</small>'; } }
+    // pop-up (right edge, 3 s): on getting into a car, on a station change, on a new track and on entering another district. Cosmetic only.
+    if (car && I.pressed('KeyR')) popT = 3;
+    if (car && !wasCar) popT = 3; wasCar = !!car;
+    if (car) { const d = CW.districtAt(P.car.x, P.car.z); if (lastD >= 0 && d !== lastD) popT = 3; lastD = d; } else lastD = -1;
+    if (popT > 0) popT -= dt;
+    const el = $('radiohud'), hold = CW.hud.hold.indexOf('radio') >= 0, on = car && CW.hud.shown, show = on && (popT > 0 || hold);
+    const key = on ? R.st + ':' + R.track : '';
+    if (el.dataset.k !== key) { el.dataset.k = key; if (on) { const s = STATIONS[R.st]; el.innerHTML = s ? '<small class="rl">NOW PLAYING</small><b>' + s.freq + '  ' + s.name + '</b><span>&#9835; ' + s.tracks[R.track % 4] + '</span><small>' + s.genre + '</small>' : '<small class="rl">CAR RADIO</small><b>RADIO OFF</b><small>R TURNS IT ON</small>'; } }
+    if (el.classList.contains('show') !== show) el.classList.toggle('show', show);
     if (!a) return;
     if (!R.out) { R.out = a.ctx.createGain(); R.out.gain.value = 0; R.out.connect(a.master); }
     R.out.gain.setTargetAtTime(car && !off ? 0.55 : 0, a.ctx.currentTime, 0.25);
@@ -77,7 +84,7 @@
     let guard = 0;
     while (R.next < now + 0.18 && guard++ < 8) {
       const i = R.step % 16; playStep(m, i, R.next); R.next += sd; R.step++;
-      if (R.step % 16 === 0) { R.bar++; if (R.bar % 16 === 0) { R.track = (R.track + 1) % 4; el.dataset.k = ''; CW.hud.toast('NOW PLAYING  ·  ' + m.tracks[R.track]); } }
+      if (R.step % 16 === 0) { R.bar++; if (R.bar % 16 === 0) { R.track = (R.track + 1) % 4; el.dataset.k = ''; popT = 3; } }
     }
   };
 })();

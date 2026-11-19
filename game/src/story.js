@@ -15,8 +15,8 @@
   };
   S.cast = CAST;
   function poly(x, pts, col) { x.fillStyle = col; x.beginPath(); pts.forEach((p, i) => (i ? x.lineTo(p[0], p[1]) : x.moveTo(p[0], p[1]))); x.closePath(); x.fill(); }
-  function drawPortrait(who) {
-    const x = $('portrait').getContext('2d'), P = CAST[who];
+  function drawPortrait(who, cv) {
+    const x = (cv || $('portrait')).getContext('2d'), P = CAST[who];
     const g = x.createLinearGradient(0, 0, 0, 128); g.addColorStop(0, P.bg[0]); g.addColorStop(1, P.bg[1]); x.fillStyle = g; x.fillRect(0, 0, 128, 128);
     x.fillStyle = 'rgba(255,230,160,.22)'; x.beginPath(); x.arc(100, 26, 20, 0, 7); x.fill();
     for (let i = 0; i < 4; i++) { x.fillStyle = 'rgba(255,255,255,.07)'; x.fillRect(0, 70 + i * 12, 128, 5); }
@@ -33,6 +33,16 @@
     else if (who === 'teo') { poly(x, [[34, 46], [94, 46], [90, 26], [40, 24]], '#3a4a5a'); x.fillStyle = '#2a3642'; x.fillRect(30, 44, 68, 6); x.fillStyle = '#cfd3d6'; x.fillRect(34, 56, 7, 20); x.fillRect(87, 56, 7, 20); x.fillStyle = '#120c08'; x.fillRect(47, 59, 8, 5); x.fillRect(73, 59, 8, 5); poly(x, [[48, 74], [80, 74], [76, 82], [52, 82]], '#cfd3d6'); x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(44, 52, 40, 2); }
     else if (who === 'roxy') { x.fillStyle = '#120c08'; x.beginPath(); x.arc(64, 22, 14, 0, 7); x.fill(); poly(x, [[37, 46], [91, 46], [88, 32], [40, 32]], '#120c08'); x.fillStyle = '#e8312f'; x.fillRect(36, 40, 56, 8); x.fillStyle = '#2a2f33'; x.beginPath(); x.arc(52, 36, 9, 0, 7); x.arc(76, 36, 9, 0, 7); x.fill(); x.fillStyle = '#5fd0d8'; x.beginPath(); x.arc(52, 36, 6, 0, 7); x.arc(76, 36, 6, 0, 7); x.fill(); x.fillStyle = '#120c08'; x.fillRect(47, 60, 8, 5); x.fillRect(73, 60, 8, 5); x.fillStyle = 'rgba(20,12,8,.5)'; x.fillRect(70, 68, 12, 5); x.fillStyle = '#c93a4a'; x.fillRect(56, 77, 16, 4); }
   }
+
+  // ---- contact card (bottom centre): who, role and ONE line of the mission script, shown for a few seconds on start / progress / pass ----
+  let cardT = 0, cardWho = '';
+  function showCard(who, text, tag) {
+    const c = CAST[who]; if (!c) return;
+    if (cardWho !== who) { cardWho = who; drawPortrait(who, $('card-pt')); }
+    $('card-tag').textContent = tag; $('card-name').textContent = c.name; $('card-role').textContent = c.role; $('card-text').textContent = '“' + text + '”';
+    cardT = 5.5;
+  }
+  S.card = showCard;
 
   // ---- phone log + calls + dialogue ---------------------------------------------------------------------------------
   function logMsg(who, text) { S.log.unshift({ who, text, t: CW.sky.clock() }); if (S.log.length > 40) S.log.pop(); S.unread++; }
@@ -142,6 +152,8 @@
   S.start = function () {
     const m = MISSIONS[S.idx]; S.state = 'active'; S.st = 0; S.timer = 0; S.count = 0; S.obj = null;
     if (m.begin) m.begin();
+    S.cn = -1;
+    const first = m.brief.find((l) => l[0] === m.who) || m.brief[0]; showCard(first[0], first[1], 'NEW JOB');
     CW.hud.banner('CHAPTER ' + (S.idx + 1) + '  ·  ' + m.t, 'MISSION STARTED');
   };
   S.complete = function () {
@@ -150,7 +162,8 @@
     CW.hud.banner('MISSION PASSED', m.t + '   +$' + m.pay.toLocaleString('en-US') + '   +' + m.rep + ' REP'); CW.sfx.play('mission', 1);
     if (CW.solfeed) CW.solfeed.news('Word is the crew pulled off "' + m.t.toLowerCase() + '". Respect.');
     S.idx++; S.state = 'idle'; S.wait = 12; S.obj = null; S.timer = 0; S.retry = false;
-    S.say(m.outro, false, null);
+    const lastLine = m.outro[m.outro.length - 1];
+    S.say(m.outro, false, () => showCard(lastLine[0], lastLine[1], 'JOB DONE'));
   };
   S.fail = function (why) {
     const m = MISSIONS[S.idx]; if (m.end) m.end();
@@ -205,6 +218,13 @@
       set('m-next', 'nx', m.nx && o.of ? '<b>NEXT</b>' + m.nx[Math.min(m.nx.length - 1, Math.floor(o.n / o.of * m.nx.length))] : '', 'innerHTML');
       const tm = $('m-timer'); tm.style.display = S.timer > 0 ? 'block' : 'none'; if (S.timer > 0) { set('m-timer', 'tx', Math.floor(S.timer / 60) + ':' + ('0' + Math.floor(S.timer % 60)).slice(-2)); tm.classList.toggle('low', S.timer < 20); }
     }
+    if (on) {   // progress card: the next scripted line of this mission's giver, whenever the stage counter moves
+      const m = MISSIONS[S.idx], n = S.obj.n; if (S.cn === -1) S.cn = n; else if (n !== S.cn && n > S.cn) { S.cn = n; const l = m.brief[Math.min(n, m.brief.length - 1)]; showCard(l[0], l[1], 'UPDATE'); } else S.cn = n;
+    }
+    const hold = CW.hud.hold.indexOf('card') >= 0, cd = $('card');
+    if (hold && cardT <= 0) { const m = MISSIONS[Math.min(S.idx, MISSIONS.length - 1)], l = m.brief[m.brief.length - 1]; showCard(l[0], l[1], 'UPDATE'); }
+    if (cardT > 0) { cardT = hold ? 5 : cardT - dt; }
+    const showC = cardT > 0 && !S.talk && !S.ring; if (cd.classList.contains('show') !== showC) cd.classList.toggle('show', showC);
     $('obj').style.display = on ? 'none' : 'block';   // the mission panel carries the objective while a job is live
     const idle = S.state === 'idle' && S.idx < MISSIONS.length, done = S.idx >= MISSIONS.length;
     set('obj', 'free', done ? 'STORY COMPLETE. Free roam: sell cars, upgrade at Roxy\'s, hit the shops, chase the stars.' : idle ? 'Waiting for the next call... P opens the phone. Free roam until then.' : S.obj ? S.obj.text : 'Free roam.');

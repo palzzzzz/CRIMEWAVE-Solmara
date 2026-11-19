@@ -5,7 +5,8 @@
 // redrawn: clip, blit the map rotated to the camera yaw, then the dynamic layer (search zone, GPS route, icons, player).
 (function () {
   const CW = window.CW;
-  const H = (CW.hud = { shown: false, state: { cash: 2500, rep: 1, repXp: 0, repNeed: 100, hp: 100, armour: 0, wanted: 0 } });
+  // ?hold=card,radio : capture/staging only, keeps the contact card and the radio pop-up on screen instead of timing out
+  const H = (CW.hud = { hold: new URLSearchParams(location.search).get('hold') || '', shown: false, state: { cash: 2500, rep: 1, repXp: 0, repNeed: 100, hp: 100, armour: 0, wanted: 0 } });
   const $ = (id) => document.getElementById(id);
   let mm = null, mctx = null, lastDistrict = -1, bannerT = 0, toastT = 0;
   const cache = {};
@@ -249,6 +250,9 @@
       setText('spd', String(Math.round(car.speed * 3.6)));
       setText('carname', car.type.name);
       setW('carhp', car.hp);
+      const hc = car.hp > 66 ? '' : car.hp > 33 ? 'mid' : 'low'; if (cache.hpc !== hc) { cache.hpc = hc; $('carhp').className = hc; }
+      // gear is cosmetic: five even slices of the top speed, N when rolling, R when the forward speed is negative
+      setText('gear', car.fs < -0.6 ? 'R' : car.speed < 0.8 ? 'N' : String(CW.clamp(Math.ceil(car.speed / (car.type.max / 5)), 1, 5)));
       setText('carcond', car.hp > 66 ? 'CONDITION  GOOD' : car.hp > 33 ? 'CONDITION  DAMAGED' : car.hp > 0 ? 'CONDITION  CRITICAL' : 'CONDITION  WRECKED');
       $('drift').style.opacity = car.drift > 0.3 ? 1 : 0;
     }

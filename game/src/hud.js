@@ -192,18 +192,24 @@
     if (ph && ph.active) { const s = scr(ph.x, ph.z, 7 * u); c.save(); c.translate(s.x, s.y); c.fillStyle = Math.floor(now * 4) % 2 ? RED : BLUE; c.strokeStyle = WHITE; c.lineWidth = 1.6 * u; c.beginPath(); c.moveTo(0, -7 * u); c.lineTo(5.5 * u, 4.5 * u); c.lineTo(-5.5 * u, 4.5 * u); c.closePath(); c.fill(); c.stroke(); c.restore(); }
     // active mission icon: big yellow badge, soft pulse + ripple; a rim arrow when it is out of view
     if (mk) {
-      const s = scr(mk.x, mk.z, 9 * u), pulse = 1 + Math.sin(now * 4.5) * 0.12;
+      // thumbnail pass: everything ~1.5x bigger with a dark under-stroke, so it still reads when the whole frame is shrunk to ~480 px
+      const s = scr(mk.x, mk.z, 13 * u), pulse = 1 + Math.sin(now * 4.5) * 0.2;
       if (s.off) {
-        c.save(); c.translate(s.x, s.y); c.rotate(s.ang + Math.PI / 2); c.fillStyle = YELLOW; c.strokeStyle = WHITE; c.lineWidth = 2.2 * u; c.lineJoin = 'round';
-        c.beginPath(); c.moveTo(0, -9 * u); c.lineTo(8 * u, 6 * u); c.lineTo(0, 2 * u); c.lineTo(-8 * u, 6 * u); c.closePath(); c.stroke(); c.fill(); c.restore();
+        c.save(); c.translate(s.x, s.y); c.rotate(s.ang + Math.PI / 2); c.fillStyle = YELLOW; c.strokeStyle = INK; c.lineWidth = 4.4 * u; c.lineJoin = 'round';
+        c.beginPath(); c.moveTo(0, -14 * u); c.lineTo(12 * u, 9 * u); c.lineTo(0, 3 * u); c.lineTo(-12 * u, 9 * u); c.closePath(); c.stroke(); c.fill();
+        c.strokeStyle = WHITE; c.lineWidth = 1.6 * u; c.stroke(); c.restore();
       } else {
-        const ph2 = (now * 0.9) % 1; c.strokeStyle = 'rgba(255,210,63,' + (0.7 * (1 - ph2)) + ')'; c.lineWidth = 2.4 * u; c.beginPath(); c.arc(s.x, s.y, ir * (1.1 + ph2 * 1.0), 0, 7); c.stroke();
-        badge(c, 'circle', s.x, s.y, ir * 1.2 * pulse, YELLOW, 'mission');
+        const ph2 = (now * 0.9) % 1;
+        // static ring (dark outline + yellow) so the target is findable even between pulses, plus the expanding ripple
+        c.lineWidth = 5.5 * u; c.strokeStyle = INK; c.beginPath(); c.arc(s.x, s.y, ir * 2.0, 0, 7); c.stroke();
+        c.lineWidth = 3 * u; c.strokeStyle = YELLOW; c.beginPath(); c.arc(s.x, s.y, ir * 2.0, 0, 7); c.stroke();
+        c.strokeStyle = 'rgba(255,210,63,' + (0.85 * (1 - ph2)) + ')'; c.lineWidth = 3.4 * u; c.beginPath(); c.arc(s.x, s.y, ir * (1.6 + ph2 * 1.6), 0, 7); c.stroke();
+        badge(c, 'circle', s.x, s.y, ir * 1.6 * pulse, YELLOW, 'mission');
       }
     }
     // player arrow (points where the car / character faces)
-    c.save(); c.translate(R, R); c.rotate(cam.yaw - hd); c.lineJoin = 'round'; c.fillStyle = WHITE; c.strokeStyle = INK; c.lineWidth = 2.2 * u;
-    c.beginPath(); c.moveTo(0, 10.5 * u); c.lineTo(-7.5 * u, -7.5 * u); c.lineTo(0, -3 * u); c.lineTo(7.5 * u, -7.5 * u); c.closePath(); c.stroke(); c.fill(); c.restore();
+    c.save(); c.translate(R, R); c.rotate(cam.yaw - hd); c.lineJoin = 'round'; c.fillStyle = WHITE; c.strokeStyle = INK; c.lineWidth = 4.2 * u;
+    c.beginPath(); c.moveTo(0, 17 * u); c.lineTo(-12 * u, -12 * u); c.lineTo(0, -5 * u); c.lineTo(12 * u, -12 * u); c.closePath(); c.stroke(); c.fill(); c.restore();
     c.restore();
     // rim + north marker (rides the rim at the world's north)
     c.lineWidth = 3; c.strokeStyle = INK; c.beginPath(); c.arc(R, R, R - 1.5, 0, 7); c.stroke();

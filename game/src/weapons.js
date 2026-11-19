@@ -71,10 +71,10 @@
     Wp.bottle = bm; Wp.bottleLive = null;
   }
   let tNext = 0;
-  Wp.tracer = function (x0, y0, z0, x1, y1, z1, color, life) {
+  Wp.tracer = function (x0, y0, z0, x1, y1, z1, color, life, w) {
     const m = tracers[tNext]; tNext = (tNext + 1) % tracers.length;
     const dx = x1 - x0, dy = y1 - y0, dz = z1 - z0, len = Math.hypot(dx, dy, dz); if (len < 0.5) return;
-    m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); m.lookAt(x1, y1, z1); m.scale.set(1, 1, len);
+    m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); m.lookAt(x1, y1, z1); m.scale.set(w || 1, w || 1, len);
     m.material.color.setHex(color || 0xffe9a0); m.visible = true; m.userData.t = m.userData.max = life || 0.07;
   };
   const puff = (x, y, z, o) => CW.fx.puff(x, y, z, o);

@@ -152,7 +152,7 @@
         s.position.set(c.x + sn * off * c.type.l * 0.22, 0.75 + Math.abs(Math.sin(ph * 0.7)) * 0.5, c.z + cn * off * c.type.l * 0.22);
         s.scale.setScalar((1.5 + Math.sin(ph) * 0.45) * inten + 0.01); s.material.opacity = 0.9 * inten; s.material.color.setHex(Math.sin(ph * 1.3) > 0.2 ? 0xffc040 : 0xff6a1a); });
       c._int -= dt;
-      if (c._int <= 0 && inten > 0.05) { c._int = (c._ws === 'burn' ? 0.16 : 0.26) + rnd() * 0.12; spawn(smoke, c.x + (rnd() - 0.5) * 1.6, 1.3, c.z + (rnd() - 0.5) * 1.6, { life: 1.8 + rnd(), size: 1.0, grow: 1.5, vy: 2.2, vx: 0.4, drag: 0.2, a: 0.6 * inten + 0.15, c0: 0x242321 }); }
+      if (c._int <= 0 && inten > 0.05) { c._int = (c._big ? 0.08 : c._ws === 'burn' ? 0.16 : 0.26) + rnd() * 0.12; spawn(smoke, c.x + (rnd() - 0.5) * 1.6, 1.3, c.z + (rnd() - 0.5) * 1.6, { life: 1.8 + rnd() + (c._big ? 2 : 0), size: c._big ? 2.2 : 1.0, grow: c._big ? 4.5 : 1.5, vy: 2.2, vx: 0.4, drag: 0.2, a: 0.6 * inten + 0.15, c0: 0x242321 }); }
     }
     // ---- sprite animation
     for (let i = 0; i < fire.length; i++) {

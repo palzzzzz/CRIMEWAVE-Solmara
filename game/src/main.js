@@ -217,12 +217,12 @@
         if (qn('scene', 0)) {   // &scene=1: street behind the chase filled with supercars (parked + cruising) and smouldering wrecks, all pinned relative to our car
           const PK = CW.C.PARK;
           if (!capture.sc) {
-            const S = [['sports', 2, 27, 2.7], ['sports', 1, 41, 2.7], ['sports', 3, 33, -2.7, -1], ['sports', 4, 52, -2.7, -1], ['sports', 0, 22, PK], ['suv', 2, 36, PK], ['sports', 1, 29, -PK], ['sports', 4, 46, PK], ['sports', 2, 60, 2.7], ['sports', 3, 66, -PK], ['sedan', 0, 58, -2.7, -1],
-              ['sedan', 1, 24, -1.0, 0, 1], ['hatch', 2, 20, -6.0, 0, 1], ['suv', 1, 47, 3.8, 0, 1], ['sedan', 3, 35, -4.5, 0, 1], ['hatch', 0, 56, 0.5, 0, 1]];
+            const S = [['sports', 2, 17, 2.7], ['sports', 1, 25, -2.7, -1], ['sports', 3, 31, 2.7], ['sports', 4, 38, -2.7, -1], ['sports', 0, 14, PK], ['suv', 2, 27, PK], ['sports', 1, 21, -PK], ['sports', 4, 36, PK], ['sports', 2, 46, 2.7], ['sports', 3, 44, -PK], ['sedan', 0, 52, -2.7, -1],
+              ['sedan', 1, 24, -1.0, 0, 1], ['hatch', 2, 33, -6.0, 0, 1], ['suv', 1, 41, 3.8, 0, 1], ['sedan', 3, 19, -5.0, 0, 1], ['hatch', 0, 29, 0.5, 0, 1]];
             capture.sc = S.map(([ty, ci, back, z, dir, wreck], i) => {
               const cols = CW.CAR_TYPES[ty].colors, hh = wreck ? h + (i % 2 ? 0.6 : -0.5) : dir ? h + Math.PI : h;
               const v = CW.vehicles.add(ty, cols[ci % cols.length], car.x - back, z, hh); v.awake = false; v.ai = null;
-              if (wreck) { v.hp = 0; v._ws = 'after'; v._wt = 0; v._fuse = 1e9; v.mesh.traverse((o) => { if (o.isMesh && o.material && !o.material.isSpriteMaterial) { o.material = o.material.clone(); o.material.color.multiplyScalar(0.22); } }); }
+              if (wreck) { v._big = 1; v.hp = 0; v._ws = 'after'; v._wt = 0; v._fuse = 1e9; v.mesh.traverse((o) => { if (o.isMesh && o.material && !o.material.isSpriteMaterial) { o.material = o.material.clone(); o.material.color.multiplyScalar(0.22); } }); }
               return { v, back, z, dir: dir || 0, wreck, hh };
             });
           }

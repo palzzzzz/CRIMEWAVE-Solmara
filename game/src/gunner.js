@@ -149,6 +149,7 @@
     // only police take damage: no friendly fire on civilians / gang / own car, nothing passes through walls
     if (h && (h.k === 'cop' || h.k === 'heli' || (h.k === 'car' && h.ref.cop && h.ref !== car))) Wp.dealDamage(h, DMG, dx, dz, false);
     Wp.tracer(o.x, o.y, o.z, r.x, r.y, r.z, 0xffe9a0, 0.09, 2.2);
+    CW.traffic.danger(o.x, o.z, 24, 3);   // bystanders bolt from Luna's gunfire too (same hook the player's and the police's shots use)
     if (fl) { fl.visible = true; fl.rotation.z = Math.random() * 3; fl.scale.setScalar(2.1 + Math.random() * 0.8); G.flashT = 0.07; }
     CW.sfx.play('smg', 0.4);
     CW.fx.puff(o.x + dx * 0.3, o.y, o.z + dz * 0.3, { color: 0xcccccc, size: 0.3, grow: 0.9, vy: 0.4, a: 0.35, life: 0.45 });

@@ -73,7 +73,7 @@
       c.fillStyle = fg || '#fff'; c.fillText(t, x0 + size * 0.4, y + size * 0.04); c.restore();
     };
     c.save(); c.font = '900 ' + Math.round(34 * U) + 'px Impact, "Arial Black", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
-    [['DOWNTOWN', -100, -268], ['BEACHFRONT', 190, -268], ['SOLMARA HARBOUR', -110, 268]].forEach(([t, x, z]) => { const s = toScr(x, z); c.lineWidth = 7 * U; c.strokeStyle = 'rgba(255,255,255,.92)'; c.strokeText(t, s.x, s.y); c.fillStyle = A.INK; c.fillText(t, s.x, s.y); });
+    [['DOWNTOWN', -100, -268], ['BEACHFRONT', 190, -268], ['SOLMARA HARBOUR', -150, 268]].forEach(([t, x, z]) => { const s = toScr(x, z); c.lineWidth = 7 * U; c.strokeStyle = 'rgba(255,255,255,.92)'; c.strokeText(t, s.x, s.y); c.fillStyle = A.INK; c.fillText(t, s.x, s.y); });
     c.restore();
     const ir = 14 * U, LS = 20 * U;
     // police search zone

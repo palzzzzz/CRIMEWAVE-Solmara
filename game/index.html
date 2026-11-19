@@ -60,8 +60,9 @@
   #weap { display: flex; gap: 6px; justify-content: flex-end; margin-top: 8px; }
   .slot { padding: 5px 7px; min-width: 62px; text-align: center; font-size: 11px; background: rgba(10,30,38,.62); border: 2px solid rgba(255,241,214,.2); border-radius: 6px; opacity: .55; }
   .slot.on { opacity: 1; border-color: var(--gold); } .slot b { display: block; font-size: 15px; color: var(--gold); }
-  #topl { position: absolute; left: 22px; top: 18px; padding: 10px 14px; width: 290px; }
-  #who { font-size: 30px; color: var(--cream); } #obj { font-size: 13px; line-height: 1.45; margin-top: 4px; color: #d8f6f0; }
+  #lcol { position: absolute; left: 22px; top: 18px; width: 310px; display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
+  #topl { padding: 6px 12px 7px; }
+  #who { font-size: 22px; color: var(--cream); display: inline-block; margin-left: 8px; } #obj { font-size: 12px; line-height: 1.4; margin-top: 3px; color: #d8f6f0; }
   #carpanel { position: absolute; right: 22px; bottom: 22px; width: 250px; padding: 10px 14px 12px; display: none; text-align: right; }
   #spd { font-size: 76px; line-height: .95; color: #fff; } #spdu { font-size: 16px; color: var(--gold); letter-spacing: .15em; } #carname { font-size: 22px; color: var(--gold); margin-bottom: 4px; }
   #drift { position: absolute; right: 22px; bottom: 190px; font-size: 26px; color: #ff9bd1; opacity: 0; transition: opacity .2s; }
@@ -71,7 +72,7 @@
   #toast { position: absolute; left: 50%; top: 6%; transform: translateX(-50%); padding: 7px 18px; background: rgba(10,30,38,.78); border-radius: 8px; letter-spacing: .14em; font-size: 15px; opacity: 0; transition: opacity .3s; }
   #fpsbox { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); font-size: 11px; opacity: .45; }
   /* ---------- law: response panel, radio, bust meter, end screens ---------- */
-  #police { position: absolute; left: 22px; top: 150px; width: 300px; padding: 8px 12px 9px; display: none; border-color: rgba(90,140,255,.7); background: rgba(8,20,44,.72); }
+  #police { padding: 8px 12px 9px; display: none; border-color: rgba(90,140,255,.7); background: rgba(8,20,44,.72); }
   #police .ph { display: flex; justify-content: space-between; font-size: 12px; letter-spacing: .2em; color: #8fb6ff; font-weight: bold; margin-bottom: 4px; }
   #police .ph b { color: #fff; }
   #police .ps { font-size: 11px; letter-spacing: .12em; font-weight: bold; margin-bottom: 5px; padding: 2px 0; }
@@ -115,11 +116,13 @@
   .hrow { display: flex; justify-content: space-around; } .hrow span { font-size: 42px; line-height: 1; color: #fff; } .hrow small { display: block; font-size: 10px; letter-spacing: .2em; color: var(--gold); }
   #h-state { margin: 6px 0 4px; color: #d8f6f0; } #h-hp { background: linear-gradient(90deg, #ff6b4a, #ffc83d); } .hkeys { font-size: 11px; letter-spacing: .06em; opacity: .85; margin-top: 7px; }
   /* ---------- story: mission panel, dialogue, phone, shops, radio ---------- */
-  #mission { position: absolute; right: 22px; top: 318px; width: 300px; padding: 9px 13px 10px; display: none; border-color: rgba(255,200,61,.7); }
+  #mission { padding: 8px 13px 10px; display: none; border-color: rgba(255,200,61,.7); }
   #m-chapter { color: var(--gold); } #m-title { font-size: 22px; color: #fff; margin: 1px 0 3px; } #m-obj { font-size: 13px; line-height: 1.4; color: #d8f6f0; }
-  #m-pips { margin-top: 6px; display: flex; gap: 6px; } #m-pips i { width: 22px; height: 8px; border-radius: 4px; background: rgba(255,255,255,.22); } #m-pips i.on { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
-  #m-timer { font-size: 38px; color: #ff9d7a; margin-top: 2px; display: none; } #m-timer.low { color: #ff3b3b; animation: blink .5s steps(2) infinite; }
-  #solhud { position: absolute; left: 22px; top: 120px; padding: 4px 10px; font-size: 11px; letter-spacing: .16em; font-weight: bold; display: none; background: rgba(60,10,50,.7); border: 2px solid #ff6bd6; border-radius: 6px; color: #ffd6f6; }
+  #m-prog { display: flex; justify-content: space-between; align-items: baseline; margin-top: 6px; font-size: 11px; letter-spacing: .16em; font-weight: bold; color: var(--gold); } #m-prog b { font-size: 15px; color: #fff; letter-spacing: .06em; }
+  #m-bar { height: 9px; margin-top: 3px; } #m-barfill { background: linear-gradient(90deg, #ffb42e, #ffe27a); width: 0; transition: width .4s; }
+  #m-next { margin-top: 6px; font-size: 12px; line-height: 1.35; color: #a9e9e2; } #m-next b { color: var(--gold); letter-spacing: .14em; font-size: 11px; margin-right: 6px; }
+  #m-timer { font-size: 30px; color: #ff9d7a; margin-top: 3px; display: none; } #m-timer::before { content: 'TIME  '; font-family: 'Trebuchet MS', sans-serif; font-size: 11px; letter-spacing: .2em; color: var(--gold); } #m-timer.low { color: #ff3b3b; animation: blink .5s steps(2) infinite; }
+  #solhud { padding: 4px 10px; font-size: 11px; letter-spacing: .16em; font-weight: bold; display: none; background: rgba(60,10,50,.7); border: 2px solid #ff6bd6; border-radius: 6px; color: #ffd6f6; }
   #solhud.hot { border-color: #ffd23f; color: #fff2a8; animation: blink 1s steps(2) infinite; } #solhud.cool { background: rgba(10,50,60,.7); border-color: #7fd4ff; color: #d8f6ff; }
   #radiohud { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); padding: 5px 16px; display: none; font-size: 14px; letter-spacing: .1em; white-space: nowrap; }
   #radiohud b { color: var(--gold); margin-right: 8px; } #radiohud small { opacity: .65; margin-left: 10px; letter-spacing: .14em; font-size: 10px; }
@@ -188,7 +191,12 @@
 </div></div>
 
 <div id="hud">
-  <div id="topl" class="panel"><div class="lab">PLAYING AS &nbsp;&middot;&nbsp; TAB TO SWITCH</div><div id="who" class="imp">RAY</div><div id="obj">FREE ROAM. Find a car and press E. Cruise the boulevard, drift the junctions, find the harbour.</div></div>
+  <div id="lcol">
+    <div id="topl" class="panel"><span class="lab">PLAYING AS</span><span id="who" class="imp">RAY</span><span class="lab" style="float:right;margin-top:6px">TAB SWITCH</span><div id="obj">FREE ROAM. Find a car and press E. Cruise the boulevard, drift the junctions, find the harbour.</div></div>
+    <div id="mission" class="panel"><div class="lab" id="m-chapter">CHAPTER 1</div><div id="m-title" class="imp"></div><div id="m-obj"></div><div id="m-prog"><span>PROGRESS</span><b id="m-pt">0/0</b></div><div class="bar" id="m-bar"><i id="m-barfill"></i></div><div id="m-next"></div><div id="m-timer" class="imp"></div></div>
+    <div id="solhud"></div>
+    <div id="police" class="panel"></div>
+  </div>
   <div id="topr">
     <div class="lab">CASH</div><div id="cash" class="imp">$2,500</div>
     <div id="clock" class="imp">17:00</div>
@@ -215,12 +223,9 @@
   <div id="bannerwrap"><div id="banner" class="imp"></div><div id="bannersub"></div></div>
   <div id="prompt" class="imp"></div>
   <div id="toast"></div>
-  <div id="police" class="panel"></div>
   <div id="radio"><span id="radio-unit">DISPATCH</span><span id="radio-text"></span></div>
   <div id="bustwrap"><div class="lab imp">BUSTED  &mdash;  ESCAPE OR BE ARRESTED</div><div class="bar"><i id="bustbar"></i></div></div>
   <div id="hurt"></div>
-  <div id="mission" class="panel"><div class="lab" id="m-chapter">CHAPTER 1</div><div id="m-title" class="imp"></div><div id="m-obj"></div><div id="m-pips"></div><div id="m-timer" class="imp"></div></div>
-  <div id="solhud"></div>
   <div id="radiohud" class="panel"></div>
   <div id="callin" class="panel"><small>INCOMING CALL</small><b id="call-name"></b> &nbsp; <span>ENTER TO ANSWER</span></div>
   <div id="dlg"><canvas id="portrait" width="128" height="128"></canvas><div style="flex:1"><div id="dlg-name" class="imp"></div><div id="dlg-role"></div><div id="dlg-text"></div><div id="dlg-hint">ENTER  ·  CONTINUE</div></div></div>

@@ -92,35 +92,35 @@
   const CPS = [{ x: 160, z: -160 }, { x: 0, z: -80 }, { x: -160, z: 160 }];
 
   const MISSIONS = [
-    { t: 'WELCOME TO SOLMARA', who: 'luna', pay: 500, rep: 25,
+    { t: 'WELCOME TO SOLMARA', who: 'luna', pay: 500, rep: 25, nx: ['Drive it to the Fence yard at the harbour', 'Meet Teo Salvage'],
       brief: [['luna', 'Ray, wake up. Solmara will not rob itself.'], ['luna', 'Teo runs Harbour Fence & Salvage, down at the docks. He buys what we steal and pays in cash.'], ['ray', 'Find a car, find Teo. Got it.']],
       outro: [['teo', 'So you are Luna\'s people. Good. Come back when you have wheels with a story behind them.']],
       begin() { S.st = 0; },
       tick() { const m = CW.player.mode; if (S.st === 0 && m !== 'foot') S.st = 1; const f = fencePt(); obj(S.st ? 'Drive to Harbour Fence & Salvage (the $ diamond)' : 'Get a car: walk up to one and press E', f, S.st, 2); return near(f, 14); } },
-    { t: 'FENCE WORK', who: 'teo', pay: 700, rep: 30,
+    { t: 'FENCE WORK', who: 'teo', pay: 700, rep: 30, nx: ['Steal a second car', 'Collect your pay from Teo'],
       brief: [['teo', 'Two cars. Stolen, not borrowed. Bring them to my yard, stop inside and press G. I do the rest.'], ['teo', 'Hot cars, hot cash. Do not bring cops to my door.']],
       outro: [['teo', 'Clean work. The wheels will not be missed. Roxy wants a word, she has a favour.']],
       begin() { S.count = 0; },
       tick() { const f = fencePt(); obj('Steal cars and sell them at the Fence yard (' + S.count + '/2). Park inside, press G.', f, S.count, 2); return S.count >= 2; } },
-    { t: 'SPRAY AND PRAY', who: 'roxy', pay: 900, rep: 35,
+    { t: 'SPRAY AND PRAY', who: 'roxy', pay: 900, rep: 35, nx: ['Drive it to Roxy\'s garage', 'Press G in the bay for the free respray', 'Roxy pays out'],
       brief: [['roxy', 'Roxy here. Roxy\'s Repaint. I need a Vesper GT, any colour, so long as it is somebody else\'s.'], ['roxy', 'Bring it in, press G in the bay, and I will respray it free. First one is on the house.']],
       outro: [['roxy', 'Gorgeous. Come back any time heat gets stupid: a fresh coat clears your stars. For a price.']],
       begin() { S.st = 0; S.target = null; S.free = true; },
       tick() { const P = CW.player; if (S.st === 0 && P.mode === 'car' && P.car.type.id === 'sports') { S.st = 1; S.target = P.car; } if (S.st === 1 && (P.mode !== 'car' || P.car !== S.target) && !near(garagePt(), 60)) S.st = 0; const g = garagePt();
         obj(S.st === 0 ? 'Steal a VESPER GT (the low sports coupe)' : S.st === 1 ? 'Drive it into Roxy\'s garage bay (the garage icon), press G' : 'Repaint it', S.st ? g : null, S.st, 3); return S.st === 2; },
       end() { S.free = false; } },
-    { t: 'THE COURIER RUN', who: 'luna', pay: 1400, rep: 40,
+    { t: 'THE COURIER RUN', who: 'luna', pay: 1400, rep: 40, nx: ['Checkpoint 2, then 3. Do not stop', 'Last drop: checkpoint 3', 'Luna pays out'],
       brief: [['luna', 'Timed job. Three drops across town, one hundred and seventy seconds, no stopping.'], ['luna', 'Beachfront, Downtown, then the harbour. Do not get caught.']],
       outro: [['luna', 'Under the clock. You are better at this than Ray said.'], ['ray', 'I heard that.']],
       begin() { S.st = 0; S.timer = 170; },
       tick() { const c = CPS[S.st]; obj('Hit checkpoint ' + (S.st + 1) + ' of 3. Beat the clock!', c, S.st, 3); if (near(c, 11)) { S.st++; CW.sfx.play('pickup', 1); if (S.st >= 3) return true; CW.hud.toast('CHECKPOINT ' + S.st + '/3'); } return false; } },
-    { t: 'CABRAL\'S CORNER', who: 'ray', pay: 2000, rep: 50,
+    { t: 'CABRAL\'S CORNER', who: 'ray', pay: 2000, rep: 50, nx: ['Find the nearest Cabral gunman', 'Finish the last of the crews, then Luna pays out'],
       brief: [['ray', 'The Cabral crews run Downtown and the Westside. They have been squeezing Teo for months.'], ['ray', 'Six of them. Pick a gun: the shop on the boardwalk sells the good stuff. Hold Q for the wheel.']],
       outro: [['luna', 'The Cabrals will not forget this. Neither will Solmara. Check SolFeed.']],
       begin() { reviveGang([1, 2]); },
       tick() { const d = gangDead([1, 2]); const alive = CW.enemies.gang.filter((g) => [1, 2].indexOf(g.grp) >= 0 && g.state !== 'dead'); const f = foc(); let b = null, bd = 1e9; alive.forEach((g) => { const q = Math.hypot(g.x - f.x, g.z - f.z); if (q < bd) { bd = q; b = g; } });
         obj('Take out the Cabral crews, Downtown and Westside (' + d + '/6)', b ? { x: b.x, z: b.z } : null, d, 6); return d >= 6; } },
-    { t: 'HOT BAG', who: 'teo', pay: 2500, rep: 60,
+    { t: 'HOT BAG', who: 'teo', pay: 2500, rep: 60, nx: ['Shake the cops once you have the bag', 'Take the bag to Roxy\'s garage', 'Roxy pays out'],
       brief: [['teo', 'A courier left a bag at the beachfront hotel. Pick it up on foot. Cops will notice, they always do.'], ['teo', 'Shake them, then bring the bag to Roxy\'s garage. Fresh paint, fresh start.']],
       outro: [['roxy', 'Bag, car and a smile. I love my job.']],
       begin() { S.st = 0; S.bag = { x: 180, z: -164 }; },
@@ -128,7 +128,7 @@
         if (S.st === 0) { obj('Grab the bag at the beachfront hotel (on foot)', S.bag, 0, 3); if (near(S.bag, 4) && P.mode === 'foot') { S.st = 1; CW.police.raise(2.6, 'crime', true); CW.hud.toast('THE BAG IS HOT'); CW.sfx.play('pickup', 1); } }
         else if (S.st === 1) { obj('LOSE THE COPS (break line of sight, hide)', null, 1, 3); if (wantedZero()) S.st = 2; }
         else { obj('Deliver the bag to Roxy\'s garage', g, 2, 3); if (near(g, 12)) return true; } return false; } },
-    { t: 'SUNSTONE', who: 'luna', pay: 6000, rep: 100,
+    { t: 'SUNSTONE', who: 'luna', pay: 6000, rep: 100, nx: ['Land on the roof to take the stone', 'Fly back to the pad with the air unit on you', 'Teo pays out'],
       brief: [['luna', 'This is it. The Sunstone, a diamond the size of a fist, in a Downtown penthouse safe.'], ['luna', 'No lobby. We go in through the roof: fly the helicopter off the harbour pad and land on the marked tower.'], ['luna', 'When you have it, the air unit will be on you. Land back on the pad at the harbour. Teo is waiting. Do not crash.'], ['ray', 'I always wanted to fly this thing.']],
       outro: [['teo', 'The Sunstone. In my yard. Solmara will never be the same.'], ['luna', 'Ray, Luna, Solmara. Not bad for a first week. The city is yours: keep the crimewave rolling.']],
       begin() { S.st = 0; S.roof = roofTarget(); S.timer = 0; },
@@ -200,9 +200,12 @@
       const m = MISSIONS[S.idx], o = S.obj;
       set('m-chapter', 'ch', 'CHAPTER ' + (S.idx + 1) + ' OF ' + MISSIONS.length + '  ·  ' + CAST[m.who].name + ' CALLED');
       set('m-title', 'mt', m.t); set('m-obj', 'mo', o.text);
-      const pips = o.of ? o.of + ':' + o.n : ''; if (cache.pips !== pips) { cache.pips = pips; let h = ''; for (let i = 0; i < (o.of || 0); i++) h += '<i class="' + (i < o.n ? 'on' : '') + '"></i>'; $('m-pips').innerHTML = h; }
+      set('m-pt', 'pt', o.of ? o.n + '/' + o.of : '');
+      $('m-barfill').style.width = (o.of ? Math.round(Math.min(1, o.n / o.of) * 100) : 0) + '%';
+      set('m-next', 'nx', m.nx && o.of ? '<b>NEXT</b>' + m.nx[Math.min(m.nx.length - 1, Math.floor(o.n / o.of * m.nx.length))] : '', 'innerHTML');
       const tm = $('m-timer'); tm.style.display = S.timer > 0 ? 'block' : 'none'; if (S.timer > 0) { set('m-timer', 'tx', Math.floor(S.timer / 60) + ':' + ('0' + Math.floor(S.timer % 60)).slice(-2)); tm.classList.toggle('low', S.timer < 20); }
     }
+    $('obj').style.display = on ? 'none' : 'block';   // the mission panel carries the objective while a job is live
     const idle = S.state === 'idle' && S.idx < MISSIONS.length, done = S.idx >= MISSIONS.length;
     set('obj', 'free', done ? 'STORY COMPLETE. Free roam: sell cars, upgrade at Roxy\'s, hit the shops, chase the stars.' : idle ? 'Waiting for the next call... P opens the phone. Free roam until then.' : S.obj ? S.obj.text : 'Free roam.');
     // beam

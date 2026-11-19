@@ -145,10 +145,16 @@
     Wp.order.forEach((k) => Wp.give(k, 999)); Wp.refill();
     CW.story.idx = 5; CW.story.retry = true; CW.story.wait = 6;
   }
+  // &mission=<0-6>  staging only: jump to that chapter and start it live (skips the phone call) so the mission panel has real state
+  function stageMission() {
+    const m = capQ.get('mission'); if (m === null) return;
+    CW.story.idx = CW.clamp(parseInt(m, 10) || 0, 0, CW.story.missions.length - 1); CW.story.start();
+  }
   function captureStart() {
     const type = capType === 'sports' || !CW.CAR_TYPES[capType] ? (capType === 'sedan' ? 'sedan' : 'sports') : capType;
     game.start(false);
     if (stageQ === 'late') stageLate();
+    stageMission();
     const P = CW.player, W = CW.police, beach = capQ.get('loc') === 'beach';
     const S = beach ? CW.world.spawn : { x: stageQ === 'boom' ? -64 : -6, z: 2.7, h: Math.PI / 2 };   // DOWNTOWN: east-bound lane of the z=0 avenue, just short of the x=0 junction (clear sight line down the cross street)
     const h = S.h, sn = Math.sin(h), cs = Math.cos(h);
@@ -206,6 +212,6 @@
   CW.title.enter();
   requestAnimationFrame(frame);
   if (capType) captureStart();
-  else if (stageQ === 'late') { game.start(false); stageLate(); }
+  else if (stageQ === 'late') { game.start(false); stageLate(); stageMission(); }
   window.addEventListener('beforeunload', () => { if (game.state === 'play') save(); });
 })();

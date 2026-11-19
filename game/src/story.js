@@ -211,7 +211,7 @@
     if (p.style.display !== (on ? 'block' : 'none')) p.style.display = on ? 'block' : 'none';
     if (on) {
       const m = MISSIONS[S.idx], o = S.obj;
-      set('m-chapter', 'ch', 'CHAPTER ' + (S.idx + 1) + ' OF ' + MISSIONS.length + '  ·  ' + CAST[m.who].name + ' CALLED');
+      set('m-chapter', 'ch', 'CHAPTER ' + (S.idx + 1) + '/' + MISSIONS.length + '  ·  ' + CAST[m.who].name);
       set('m-title', 'mt', m.t); set('m-obj', 'mo', o.text);
       set('m-pt', 'pt', o.of ? o.n + '/' + o.of : '');
       $('m-barfill').style.width = (o.of ? Math.round(Math.min(1, o.n / o.of) * 100) : 0) + '%';

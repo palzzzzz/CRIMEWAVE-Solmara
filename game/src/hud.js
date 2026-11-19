@@ -65,6 +65,8 @@
     $('stars').innerHTML = s;
     H.layout();
     window.addEventListener('resize', H.layout);
+    const hs = () => document.documentElement.style.setProperty('--hs', String(Math.max(1, Math.min(2, innerHeight / 720)).toFixed(3)));
+    hs(); window.addEventListener('resize', hs);
   };
 
   H.show = function (v) { H.shown = v; $('hud').style.display = v ? 'block' : 'none'; };

@@ -205,6 +205,16 @@
         armL.sh.rotation.set(-0.75, 0, -0.55); armL.el.rotation.x = -1.9;
         armR.sh.rotation.set(-0.75, 0, 0.55); armR.el.rotation.x = -1.9;
         head.rotation.set(0.03, 0.15, 0.04);
+      } else if (pose === 'ray-pistol') {
+        // title: standing square to the lens, pistol in the right hand held low and forward, left hand relaxed; no other prop
+        body.rotation.x = -0.04; legL.rotation.set(0.05, 0, -0.1); legR.rotation.set(-0.04, 0, 0.12);
+        armR.sh.rotation.set(-1.15, 0, 0.1); armR.el.rotation.x = -0.35;
+        armL.sh.rotation.set(0.12, 0, -0.1); armL.el.rotation.x = -0.35; head.rotation.set(-0.04, -0.12, 0);
+      } else if (pose === 'luna-smg') {
+        // title: two-handed SMG at low ready (right hand on the grip, left hand under the foregrip)
+        body.rotation.x = -0.05; legL.rotation.set(0.1, 0, -0.12); legR.rotation.set(-0.08, 0, 0.1);
+        armR.sh.rotation.set(-1.2, 0, 0.08); armR.el.rotation.x = -0.4;
+        armL.sh.rotation.set(-1.25, 0, -0.34); armL.el.rotation.x = -0.75; head.rotation.set(0.02, 0.18, 0);
       } else if (pose === 'bike') {
         body.rotation.x = 0.3; body.position.y = -0.18; legL.rotation.set(-1.1, 0, -0.1); legR.rotation.set(-1.1, 0, 0.1);
         armL.sh.rotation.set(-1.15, 0, -0.1); armL.el.rotation.x = -0.35; armR.sh.rotation.set(-1.15, 0, 0.1); armR.el.rotation.x = -0.35; head.rotation.x = -0.25;

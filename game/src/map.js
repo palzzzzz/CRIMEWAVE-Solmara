@@ -55,7 +55,7 @@
   };
 
   function draw() {
-    const A = CW.hud.api, c = ctx, P = CW.player, U = Math.max(1, Math.min(W, H) / 700);
+    const A = CW.hud.api, c = ctx, P = CW.player, U = Math.max(1, Math.min(W, H) / 580);
     c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
     const base = A.getMap();
     const tl = toScr(-310, -310), br = toScr(300, 304);
@@ -65,10 +65,17 @@
     // frame around the sea
     c.strokeStyle = A.INK; c.lineWidth = 4; c.strokeRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
     // district names
-    c.save(); c.font = '900 ' + Math.round(17 * U) + 'px Impact, "Arial Black", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
-    [['DOWNTOWN', -110, -40], ['BEACHFRONT', 190, -40], ['SOLMARA HARBOUR', -10, 228]].forEach(([t, x, z]) => { const s = toScr(x, z); c.lineWidth = 5 * U; c.strokeStyle = 'rgba(255,255,255,.85)'; c.strokeText(t, s.x, s.y); c.fillStyle = 'rgba(15,42,58,.78)'; c.fillText(t, s.x, s.y); });
+    // (sizes are chosen so every label is still >= ~11 px when a 1280 px screenshot is shrunk to 640 px)
+    const tag = (t, x, y, align, size, bg, fg) => {   // pill label: dark ink plate, white text, anchored at (x, y)
+      c.save(); c.font = '900 ' + Math.round(size) + 'px Impact, "Arial Black", sans-serif'; c.textBaseline = 'middle'; c.textAlign = 'left';
+      const w = c.measureText(t).width + size * 0.8, h = size * 1.45, x0 = align === 'l' ? x : align === 'r' ? x - w : x - w / 2;
+      c.fillStyle = bg || 'rgba(15,42,58,.94)'; c.strokeStyle = '#fff'; c.lineWidth = 2; c.beginPath(); c.roundRect ? c.roundRect(x0, y - h / 2, w, h, h * 0.3) : c.rect(x0, y - h / 2, w, h); c.fill(); c.stroke();
+      c.fillStyle = fg || '#fff'; c.fillText(t, x0 + size * 0.4, y + size * 0.04); c.restore();
+    };
+    c.save(); c.font = '900 ' + Math.round(34 * U) + 'px Impact, "Arial Black", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
+    [['DOWNTOWN', -100, -268], ['BEACHFRONT', 190, -268], ['SOLMARA HARBOUR', -110, 268]].forEach(([t, x, z]) => { const s = toScr(x, z); c.lineWidth = 7 * U; c.strokeStyle = 'rgba(255,255,255,.92)'; c.strokeText(t, s.x, s.y); c.fillStyle = A.INK; c.fillText(t, s.x, s.y); });
     c.restore();
-    const ir = 11 * U;
+    const ir = 14 * U, LS = 20 * U;
     // police search zone
     const Wp = CW.police;
     if (Wp && Wp.level >= 1 && !Wp.seen) {
@@ -95,23 +102,24 @@
     let wlen = 0; if (CW.hud.wp) wlen = route(CW.hud.wp.x, CW.hud.wp.z, A.MAG);
     // landmarks + shops
     const lm = CW.world.landmarks;
-    if (lm.garage) { const s = toScr(lm.garage.x, lm.garage.z); A.badge(c, 'house', s.x, s.y, ir, A.INK, 'garage'); }
-    if (lm.fence) { const s = toScr(lm.fence.x, lm.fence.z); A.badge(c, 'diamond', s.x, s.y, ir * 0.95, A.INK, 'fence'); }
-    if (CW.air) { const s = toScr(CW.air.heli.x, CW.air.heli.z); A.badge(c, 'circle', s.x, s.y, ir * 0.95, A.WHITE, 'heli'); }
-    if (CW.shops) CW.shops.list.forEach((sh) => { const s = toScr(sh.cx, sh.cz); A.badge(c, sh.kind === 'boutique' ? 'circle' : sh.kind === 'gun' ? 'hex' : 'square', s.x, s.y, ir, A.GREEN, sh.kind === 'boutique' ? 'boutique' : sh.kind === 'gun' ? 'gun' : 'market'); });
+    if (lm.garage) { const s = toScr(lm.garage.x, lm.garage.z); A.badge(c, 'house', s.x, s.y, ir, A.INK, 'garage'); tag('GARAGE', s.x, s.y + ir * 2, 'c', LS); }
+    if (lm.fence) { const s = toScr(lm.fence.x, lm.fence.z); A.badge(c, 'diamond', s.x, s.y, ir * 0.95, A.INK, 'fence'); tag('FENCE', s.x, s.y + ir * 2, 'c', LS); }
+    if (CW.air) { const s = toScr(CW.air.heli.x, CW.air.heli.z); A.badge(c, 'circle', s.x, s.y, ir * 0.95, A.WHITE, 'heli'); tag('HELIPAD', s.x, s.y - ir * 2, 'c', LS); }
+    const SN = { boutique: 'SOL & SEAM', gun: 'BARREL & BULLET', mart: 'QUIK-MART' };
+    if (CW.shops) CW.shops.list.forEach((sh) => { const s = toScr(sh.cx, sh.cz); A.badge(c, sh.kind === 'boutique' ? 'circle' : sh.kind === 'gun' ? 'hex' : 'square', s.x, s.y, ir, A.GREEN, sh.kind === 'boutique' ? 'boutique' : sh.kind === 'gun' ? 'gun' : 'market'); tag(SN[sh.kind] || 'SHOP', s.x + ir * 1.5, s.y, 'l', LS * 0.9, 'rgba(10,90,80,.95)'); });
     // mission icon
     if (mk) {
       const s = toScr(mk.x, mk.z);
       c.lineWidth = 6 * U; c.strokeStyle = A.INK; c.beginPath(); c.arc(s.x, s.y, ir * 2, 0, 7); c.stroke();
       c.lineWidth = 3.4 * U; c.strokeStyle = A.YELLOW; c.beginPath(); c.arc(s.x, s.y, ir * 2, 0, 7); c.stroke();
-      A.badge(c, 'circle', s.x, s.y, ir * 1.5, A.YELLOW, 'mission');
+      A.badge(c, 'circle', s.x, s.y, ir * 1.5, A.YELLOW, 'mission'); tag('MISSION', s.x, s.y - ir * 3.2, 'c', LS, A.YELLOW, A.INK);
     }
     // checkpoint pin
     if (CW.hud.wp) {
       const s = toScr(CW.hud.wp.x, CW.hud.wp.z);
       c.lineWidth = 6 * U; c.strokeStyle = A.INK; c.beginPath(); c.arc(s.x, s.y, ir * 1.9, 0, 7); c.stroke();
       c.lineWidth = 3.4 * U; c.strokeStyle = A.MAG; c.beginPath(); c.arc(s.x, s.y, ir * 1.9, 0, 7); c.stroke();
-      A.badge(c, 'diamond', s.x, s.y, ir * 1.25, A.MAG, null);
+      A.badge(c, 'diamond', s.x, s.y, ir * 1.25, A.MAG, null); tag('CHECKPOINT', s.x, s.y - ir * 3.2, 'c', LS, A.MAG, A.INK);
     }
     // police dots
     if (Wp && Wp.level >= 1) Wp.cops.forEach((q) => { if (q.hidden || q.cs === 'idle' || q.cs === 'dead') return; const s = toScr(q.x, q.z); c.fillStyle = Math.floor(performance.now() / 250) % 2 ? A.RED : A.BLUE; c.strokeStyle = A.WHITE; c.lineWidth = 1.6 * U; c.beginPath(); c.arc(s.x, s.y, 4.5 * U, 0, 7); c.fill(); c.stroke(); });
@@ -122,21 +130,26 @@
     c.fillStyle = g; c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, 84 * k, va - 0.62, va + 0.62); c.closePath(); c.fill();
     c.rotate(-hd); c.lineJoin = 'round'; c.fillStyle = A.WHITE; c.strokeStyle = A.INK; c.lineWidth = 4.2 * U;
     c.beginPath(); c.moveTo(0, 15 * U); c.lineTo(-10.5 * U, -10 * U); c.lineTo(0, -4 * U); c.lineTo(10.5 * U, -10 * U); c.closePath(); c.stroke(); c.fill(); c.restore();
-    c.save(); c.font = '900 ' + Math.round(12 * U) + 'px Impact, "Arial Black", sans-serif'; c.textAlign = 'center'; c.lineJoin = 'round'; c.lineWidth = 4 * U; c.strokeStyle = A.INK; c.fillStyle = A.WHITE;
-    c.strokeText('YOU', ps.x, ps.y - 22 * U); c.fillText('YOU', ps.x, ps.y - 22 * U); c.restore();
+    tag('YOU', ps.x, ps.y - 30 * U, 'c', LS * 1.1, '#fff', A.INK);
+    // north marker (north = up, as on the minimap)
+    { const nx = Math.max(46 * U, tl.x - 44 * U), ny = tl.y + 62 * U; c.save(); c.translate(nx, ny); c.fillStyle = A.INK; c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.arc(0, 0, 26 * U, 0, 7); c.fill(); c.stroke();
+      c.fillStyle = '#ff3a4a'; c.beginPath(); c.moveTo(0, -23 * U); c.lineTo(8 * U, -4 * U); c.lineTo(-8 * U, -4 * U); c.closePath(); c.fill();
+      c.fillStyle = '#fff'; c.font = '900 ' + Math.round(22 * U) + 'px Impact, "Arial Black", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('N', 0, 12 * U); c.restore(); }
     // cursor
     const cs = toScr(M.cur.x, M.cur.z); c.save(); c.strokeStyle = A.INK; c.lineWidth = 4 * U; c.beginPath(); c.moveTo(cs.x - 12 * U, cs.y); c.lineTo(cs.x + 12 * U, cs.y); c.moveTo(cs.x, cs.y - 12 * U); c.lineTo(cs.x, cs.y + 12 * U); c.stroke();
     c.strokeStyle = A.WHITE; c.lineWidth = 2 * U; c.stroke(); c.restore();
     // header + legend + hints
     c.save(); c.textBaseline = 'top'; c.lineJoin = 'round';
-    c.font = '900 ' + Math.round(34 * U) + 'px Impact, "Arial Black", sans-serif'; c.textAlign = 'left'; c.fillStyle = '#ffc83d'; c.fillText('SOLMARA MAP', 26, 16 * U);
-    c.font = '700 ' + Math.round(14 * U) + 'px "Trebuchet MS", sans-serif'; c.fillStyle = '#fff1d6';
-    c.fillText(CW.hud.wp ? 'CHECKPOINT SET  ·  ROUTE ' + Math.round(wlen / 5) * 5 + ' M' : 'NO CHECKPOINT  ·  CLICK THE MAP TO SET ONE', 28, 16 * U + 40 * U);
-    c.textAlign = 'center'; c.fillStyle = '#ffd9a8';
-    c.fillText('CLICK  OR  ARROWS + ENTER: SET CHECKPOINT   ·   C / RIGHT-CLICK: CLEAR   ·   N / ESC: CLOSE', W / 2, H - 28 * U);
-    // legend
+    c.font = '900 ' + Math.round(40 * U) + 'px Impact, "Arial Black", sans-serif'; c.textAlign = 'left'; c.fillStyle = '#ffc83d'; c.fillText('SOLMARA MAP', 24, 14 * U);
+    c.font = '700 ' + Math.round(20 * U) + 'px "Trebuchet MS", sans-serif'; c.fillStyle = '#fff1d6';
+    c.fillText(CW.hud.wp ? 'ROUTE  ' + Math.round(wlen / 5) * 5 + ' M' : 'CLICK THE MAP TO SET A CHECKPOINT', 26, 14 * U + 48 * U);
+    c.textAlign = 'center'; c.fillStyle = '#ffd9a8'; c.font = '700 ' + Math.round(17 * U) + 'px "Trebuchet MS", sans-serif';
+    c.fillText('CLICK / ARROWS + ENTER: CHECKPOINT  ·  C: CLEAR  ·  N / ESC: CLOSE', W / 2, H - 22 * U);
+    // legend (top-right corner)
     const items = [[A.YELLOW, 'MISSION'], [A.MAG, 'CHECKPOINT'], [A.GREEN, 'SHOP'], [A.INK, 'GARAGE / FENCE'], ['rgba(255,58,74,.8)', 'POLICE SEARCH']];
-    c.textAlign = 'left'; let lx = W - 200 * U; items.forEach((it, i) => { const y = 24 * U + i * 20 * U; c.fillStyle = it[0]; c.strokeStyle = A.WHITE; c.lineWidth = 2; c.beginPath(); c.arc(lx, y + 7 * U, 6 * U, 0, 7); c.fill(); c.stroke(); c.fillStyle = '#fff1d6'; c.fillText(it[1], lx + 14 * U, y); });
+    c.font = '800 ' + Math.round(17 * U) + 'px "Trebuchet MS", sans-serif'; c.textAlign = 'left'; const lx = W - 220 * U;
+    c.fillStyle = 'rgba(5,20,28,.75)'; c.fillRect(lx - 18 * U, 8 * U, 230 * U, items.length * 26 * U + 14 * U);
+    items.forEach((it, i) => { const y = 18 * U + i * 26 * U; c.fillStyle = it[0]; c.strokeStyle = A.WHITE; c.lineWidth = 2; c.beginPath(); c.arc(lx, y + 9 * U, 8 * U, 0, 7); c.fill(); c.stroke(); c.fillStyle = '#fff1d6'; c.fillText(it[1], lx + 18 * U, y); });
     c.restore();
   }
   window.addEventListener('resize', () => { if (M.open) layout(); });

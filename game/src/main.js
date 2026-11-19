@@ -80,6 +80,7 @@
   function lock() { if (game.state === 'play' && !document.pointerLockElement && canvas.requestPointerLock) { try { const p = canvas.requestPointerLock(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* ignore */ } } }
 
   function save() {
+    if (capType || stageQ) return;   // staged / capture sessions never touch the real save
     const P = CW.player, e = P.active, st = CW.hud.state;
     const f = P.mode === 'car' && P.car ? P.car : e;
     const Wp = CW.weapons;
@@ -111,7 +112,7 @@
     }
     CW.vehicles.update(sdt, playing);
     if (live) CW.explosions.update(sdt, playing);   // after vehicles: layers the tumble over the car pose
-    if (capture && playing) captureStep();
+    if (capture && playing) captureStep(dt);
     if (playing) CW.gunner.update(dt);   // after the car has moved, so Luna stays glued to the seat
     if (capture && playing) { const c = CW.camera; c.updateMatrixWorld(true); }
     CW.world.update(dt, simT);
@@ -125,49 +126,86 @@
     CW.input.endFrame();
   }
 
-  // ---- staging / capture hook (OFF unless the URL has ?capture=sports|sedan|<car type id>) ------------------------
-  // Skips the title, puts Ray in the named car with Luna aboard, pins the wanted level at 4 stars with busted disabled,
-  // parks an invulnerable cruiser in SMG range, and holds a low front-3/4 camera on the passenger side, so a
-  // screenshot of Luna firing needs no chase timing. Optional: &cam=<metres side offset> &hr=<hour> &lean=<rad override>.
-  const capQ = new URLSearchParams(location.search), capType = capQ.get('capture');
+  // ---- staging / capture hooks (ALL OFF unless the URL carries ?capture= or ?stage=; normal play never reads them) ------
+  // ?capture=sports|sedan|<car type id>  Skips the title, puts Ray in the named car with Luna aboard, pins the wanted level at 4 stars
+  //   with busted disabled, parks an invulnerable cruiser in SMG range and holds the cinematic camera, so a screenshot of Luna
+  //   firing needs no chase timing. Spawns in DOWNTOWN (&loc=beach for the old beachfront road).
+  // ?stage=late   late-game state: big cash, REP 10, every weapon + full ammo, armour, story at chapter 6. Alone or with capture.
+  // ?stage=boom   (implies capture) three driverless cars parked nose to tail ahead of the player; the middle one is set burning
+  //   after &boom=<seconds> (default 2.5) and blows through the normal wreck path, thrown neighbours included. No police staging.
+  // Camera (capture only), all optional: &cam=<side metres, default 3.4> &camh=<lens height m, 0.9> &camf=<metres ahead, 6.4>
+  //   &fov=<deg> &hr=<hour> &hud=0.   cam is signed: negative swings the lens to the driver's side.
+  const capQ = new URLSearchParams(location.search), stageQ = capQ.get('stage');
+  const capType = capQ.get('capture') || (stageQ === 'boom' ? 'sports' : null);
   let capture = null;
+  const qn = (k, d) => { const v = parseFloat(capQ.get(k)); return isFinite(v) ? v : d; };
+  function stageLate() {
+    const st = CW.hud.state, Wp = CW.weapons;
+    st.cash = 485000; st.rep = 10; st.repXp = CW.story.repNeed(9) - 1; st.repNeed = CW.story.repNeed(10); st.armour = 100; st.hp = 100;
+    Wp.order.forEach((k) => Wp.give(k, 999)); Wp.refill();
+    CW.story.idx = 5; CW.story.retry = true; CW.story.wait = 6;
+  }
   function captureStart() {
     const type = capType === 'sports' || !CW.CAR_TYPES[capType] ? (capType === 'sedan' ? 'sedan' : 'sports') : capType;
     game.start(false);
-    const P = CW.player, W = CW.police, S = CW.world.spawn, h = S.h, sn = Math.sin(h), cs = Math.cos(h);
+    if (stageQ === 'late') stageLate();
+    const P = CW.player, W = CW.police, beach = capQ.get('loc') === 'beach';
+    const S = beach ? CW.world.spawn : { x: stageQ === 'boom' ? -64 : -6, z: 2.7, h: Math.PI / 2 };   // DOWNTOWN: east-bound lane of the z=0 avenue, just short of the x=0 junction (clear sight line down the cross street)
+    const h = S.h, sn = Math.sin(h), cs = Math.cos(h);
     const R = { x: -cs, z: sn };   // car-right (passenger side), as used by gunner.js
     const car = CW.vehicles.add(type, CW.CAR_TYPES[type].colors[0], S.x, S.z, h);
     CW.vehicles.enter(car); P.mode = 'car'; P.car = car; P.crew.ray.model.visible = false;
     car.mesh.position.set(car.x, 0, car.z); car.mesh.rotation.y = h;
-    const cop = W.cops[0];
-    CW.sky.hour = parseFloat(capQ.get('hr') || '17.2');
-    capture = { car, cop, R, h, side: parseFloat(capQ.get('cam') || (type === 'sports' ? '2.2' : '5')) };
+    CW.sky.hour = qn('hr', 17.2);
+    capture = { car, cop: W.cops[0], R, h, side: qn('cam', 3.4), camh: qn('camh', 0.9), camf: qn('camf', 6.4), fov: qn('fov', 40), boom: null, beach };
     W.dispT = 1e9; W.rbT = 1e9; W.busted = function () {};
+    if (stageQ === 'boom') {
+      // three parked cars nose to tail on the lane ahead; the middle one is the one that burns
+      const kinds = [['sedan', 1], ['hatch', 0], ['suv', 2]], cars = [];
+      kinds.forEach((k, i) => {
+        const cols = CW.CAR_TYPES[k[0]].colors, d = 17 + i * 5.6;
+        const c = CW.vehicles.add(k[0], cols[k[1] % cols.length], car.x + sn * d, car.z + cs * d + 0.4 * (i - 1), h);
+        c.awake = false; c.hp = 100; c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = h; cars.push(c);
+      });
+      capture.boom = { cars, t: 0, at: qn('boom', 2.5), lit: false, cx: cars[1].x, cz: cars[1].z };
+    }
     document.body.classList.add('capture');
     if (capQ.get('hud') === '0') document.getElementById('hud').style.visibility = 'hidden';
   }
-  function captureStep() {
-    const { car, cop, R, h, side } = capture, W = CW.police, st = CW.hud.state, P = CW.player, sn = Math.sin(h), cs = Math.cos(h);
-    CW.gunner.pause = 0;   // capture only: no burst pauses, so a still frame is likely to catch a flash
+  function captureStep(dt) {
+    const { car, cop, R, h, side, camh, camf, fov, boom } = capture, W = CW.police, st = CW.hud.state, P = CW.player, sn = Math.sin(h), cs = Math.cos(h), c = CW.camera;
     car.vx = car.vz = 0; car.speed = 0; car.hp = 100; st.hp = 100; P.mode = 'car'; P.car = car;
-    W.heat = 4; W.level = 4; W.lostT = 0; W.bust = 0; W.seen = true; st.wanted = 4;
-    W.cops.forEach((c) => { if (c !== cop && !c.hidden) { c.hidden = true; c.cs = 'idle'; } });
-    // staged cruiser: 21 m out the passenger side, 5 m ahead, broadside to Luna, never takes damage
-    cop.hidden = false; cop.awake = true; cop.cs = 'roadblock'; cop.rbMin = 1e9; cop.hp = 100; cop.ai = cop.ai || { cruise: 0, off: 0 };
-    cop.x = car.x + R.x * 21 + sn * 3; cop.z = car.z + R.z * 21 + cs * 3; cop.h = h + Math.PI / 2; cop.vx = cop.vz = 0; cop.speed = 0;
-    // low front 3/4 camera: ahead of the bonnet, out on Luna's side, ~1 m up, aimed at the window line
-    const c = CW.camera, hx = car.x + R.x * 0.6, hz = car.z + R.z * 0.6;
-    // near-frontal (looking back along the car) so Luna aims ~perpendicular to the view: gun, flash and tracer in profile
-    c.position.set(car.x + sn * 6.4 + R.x * side, 1.0, car.z + cs * 6.4 + R.z * side);
-    c.fov = 40; c.updateProjectionMatrix(); c.lookAt(hx, 1.25, hz);
-    CW.traffic.peds.forEach((p) => { if (Math.hypot(p.x - c.position.x, p.z - c.position.z) < 25) p.model.visible = false; });   // no bystanders in the evidence frame
-    // parked / traffic cars between the lens and Luna would hide her: hide anything else within 12 m of the camera
-    CW.vehicles.list.forEach((v) => { if (v !== car && v !== cop && Math.hypot(v.x - c.position.x, v.z - c.position.z) < 12) v.mesh.visible = false; });
+    let tx, tz, ty;   // what the lens looks at
+    if (boom) {
+      boom.t += dt; W.heat = 0; W.level = 0; st.wanted = 0;
+      W.cops.forEach((q) => { if (!q.hidden) { q.hidden = true; q.cs = 'idle'; } });
+      if (!boom.lit && boom.t >= boom.at) { boom.lit = true; boom.cars[1].hp = 0; }
+      // front 3/4, low, off the street axis: the lens sits behind the row and swings out, looking at the middle car
+      tx = boom.cx; tz = boom.cz; ty = 1.1;
+      c.position.set(tx - sn * (camf + 4) + R.x * (side + 2.5), camh, tz - cs * (camf + 4) + R.z * (side + 2.5));
+    } else {
+      CW.gunner.pause = 0;   // capture only: no burst pauses, so a still frame is likely to catch a flash
+      W.heat = 4; W.level = 4; W.lostT = 0; W.bust = 0; W.seen = true; st.wanted = 4;
+      W.cops.forEach((q) => { if (q !== cop && !q.hidden) { q.hidden = true; q.cs = 'idle'; } });
+      // staged cruiser: out the passenger side, a little ahead, broadside to Luna, never takes damage (closer downtown: narrower streets)
+      const out = capture.beach ? 21 : 14;
+      cop.hidden = false; cop.awake = true; cop.cs = 'roadblock'; cop.rbMin = 1e9; cop.hp = 100; cop.ai = cop.ai || { cruise: 0, off: 0 };
+      cop.x = car.x + R.x * out + sn * 3; cop.z = car.z + R.z * out + cs * 3; cop.h = h + Math.PI / 2; cop.vx = cop.vz = 0; cop.speed = 0;
+      // low front 3/4: ahead of the bonnet, swung out on Luna's side, aimed at the window line
+      tx = car.x + R.x * 0.6; tz = car.z + R.z * 0.6; ty = 1.25;
+      c.position.set(car.x + sn * camf + R.x * side, camh, car.z + cs * camf + R.z * side);
+    }
+    c.fov = fov; c.updateProjectionMatrix(); c.lookAt(tx, ty, tz);
+    const near = boom ? 7 : 25;
+    CW.traffic.peds.forEach((p) => { if (Math.hypot(p.x - c.position.x, p.z - c.position.z) < near) p.model.visible = false; });   // no bystanders in the evidence frame
+    // anything else within 12 m of the lens would hide the subject: hide it (the staged boom cars are exempt)
+    CW.vehicles.list.forEach((v) => { if (v !== car && v !== cop && !(boom && boom.cars.includes(v)) && Math.hypot(v.x - c.position.x, v.z - c.position.z) < 12) v.mesh.visible = false; });
   }
 
   game.state = 'title';
   CW.title.enter();
   requestAnimationFrame(frame);
   if (capType) captureStart();
+  else if (stageQ === 'late') { game.start(false); stageLate(); }
   window.addEventListener('beforeunload', () => { if (game.state === 'play') save(); });
 })();

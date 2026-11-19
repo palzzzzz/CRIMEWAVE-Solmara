@@ -1,6 +1,6 @@
 [
-  { "name": "1-chase.jpg", "query": "?capture=sports&chase=11&back=95&hr=17.8&mission=1&hold=card,radio&cam=4.6&camh=1.0&camf=8&fov=50&lookb=9&looky=3.2&hb=24&hy=9&hs=-6", "note": "COVER. golden hour downtown, Luna firing from the VESPER GT, two cruisers chasing behind, police heli overhead, full HUD" },
-  { "name": "2-explosion.jpg", "query": "?stage=boom&boom=2.5&hr=17.8&mission=1&hold=card,radio&cam=3.2&camh=1.1&camf=5&fov=50", "note": "burst of consecutive frames around the blast; peak fireball with one car launched and a second thrown" },
-  { "name": "3-heli-down.jpg", "query": "?capture=sports&chase=11&back=95&hr=17.8&mission=1&hold=card,radio&cam=4.6&camh=1.0&camf=8&fov=55&lookb=12&looky=4&hb=16&hy=13&hs=-3&hdown=1.5&ts=0.3", "note": "police heli shot down, smoking and spinning over the chase, Luna still firing" },
-  { "name": "4-title.jpg", "query": "", "note": "title screen, golden hour downtown" }
+  { "name": "1-heli-boom.jpg", "query": "?capture=sports&chase=11&back=95&hr=17.8&mission=1&hold=card,radio&cam=4.6&camh=1.0&camf=8&fov=55&lookb=12&looky=4&hb=16&hy=13&hs=-3&hdown=1.5&ts=0.3", "note": "COVER. police heli shot down and falling in flames behind the car, Luna firing, cruisers chasing, golden hour downtown; frame 12 of a burst" },
+  { "name": "2-market-war.jpg", "query": "?stage=market&hr=19.5&mission=1&hold=card,radio&camh=1.7&camf=0&fov=66&out=6&tx=278&ty=7&tz=7&px=-7&pz=5&hx=14&hy=16&hz=-3&ts=0.6&every=3", "note": "beach night market firefight: timber deck and stalls, lanterns, ferris wheel, police cruiser shooting, blast, crowd fleeing hands-up, heli above" },
+  { "name": "3-map.jpg", "query": "?capture=sports&hr=17.8&mission=1&hold=card,radio  (then press N, click the Beachfront tile)", "note": "city map: YOU in Downtown, checkpoint in Beachfront, route drawn, labels legible" },
+  { "name": "4-title.jpg", "query": "", "note": "title screen: rain, Luna + SMG, Ray + pistol, dog" }
 ]

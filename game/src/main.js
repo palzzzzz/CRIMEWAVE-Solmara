@@ -138,7 +138,7 @@
   // Camera (capture only), all optional: &cam=<side metres, default 3.4> &camh=<lens height m, 0.9> &camf=<metres ahead, 6.4>
   //   &fov=<deg> &hr=<hour> &hud=0.   cam is signed: negative swings the lens to the driver's side.
   const capQ = new URLSearchParams(location.search), stageQ = capQ.get('stage');
-  const capType = capQ.get('capture') || (stageQ === 'boom' ? 'sports' : null);
+  const capType = capQ.get('capture') || (stageQ === 'boom' || stageQ === 'market' ? 'sports' : null);
   let capture = null;
   const qn = (k, d) => { const v = parseFloat(capQ.get(k)); return isFinite(v) ? v : d; };
   function stageLate() {
@@ -158,7 +158,7 @@
     if (stageQ === 'late') stageLate();
     stageMission();
     const P = CW.player, W = CW.police, beach = capQ.get('loc') === 'beach';
-    const S = beach ? CW.world.spawn : { x: stageQ === 'boom' ? -64 : -6, z: 2.7, h: Math.PI / 2 };   // DOWNTOWN: east-bound lane of the z=0 avenue, just short of the x=0 junction (clear sight line down the cross street)
+    const S = beach ? CW.world.spawn : { x: stageQ === 'boom' ? -64 : stageQ === 'market' ? 258 : -6, z: stageQ === 'market' ? 6.5 : 2.7, h: Math.PI / 2 };   // DOWNTOWN: east-bound lane of the z=0 avenue, just short of the x=0 junction (clear sight line down the cross street)
     const h = S.h, sn = Math.sin(h), cs = Math.cos(h);
     const R = { x: -cs, z: sn };   // car-right (passenger side), as used by gunner.js
     const car = CW.vehicles.add(type, CW.CAR_TYPES[type].colors[0], S.x, S.z, h);
@@ -196,7 +196,7 @@
       W.heat = 4; W.level = 4; W.lostT = 0; W.bust = 0; W.seen = true; st.wanted = 4;
       W.cops.forEach((q) => { if (q !== cop && !q.hidden) { q.hidden = true; q.cs = 'idle'; } });
       // staged cruiser: out the passenger side, a little ahead, broadside to Luna, never takes damage (closer downtown: narrower streets)
-      const out = capture.beach ? 21 : 14;
+      const out = capture.beach ? 21 : qn('out', 14);
       if (capture.chase) {
         // &chase=<speed m/s>: the car cruises east on the avenue, two cruisers tail it, the police heli trails overhead (capture only)
         const v = capture.chase, A = CW.air.policeHeli;
@@ -214,6 +214,25 @@
         });
         W.cops.forEach((q, i) => { if (i > 1 && !q.hidden) { q.hidden = true; q.cs = 'idle'; } });
         capture.t = (capture.t || 0) + dt;
+        if (qn('scene', 0)) {   // &scene=1: street behind the chase filled with supercars (parked + cruising) and smouldering wrecks, all pinned relative to our car
+          const PK = CW.C.PARK;
+          if (!capture.sc) {
+            const S = [['sports', 2, 27, 2.7], ['sports', 1, 41, 2.7], ['sports', 3, 33, -2.7, -1], ['sports', 4, 52, -2.7, -1], ['sports', 0, 22, PK], ['suv', 2, 36, PK], ['sports', 1, 29, -PK], ['sports', 4, 46, PK], ['sports', 2, 60, 2.7], ['sports', 3, 66, -PK], ['sedan', 0, 58, -2.7, -1],
+              ['sedan', 1, 24, -1.0, 0, 1], ['hatch', 2, 20, -6.0, 0, 1], ['suv', 1, 47, 3.8, 0, 1], ['sedan', 3, 35, -4.5, 0, 1], ['hatch', 0, 56, 0.5, 0, 1]];
+            capture.sc = S.map(([ty, ci, back, z, dir, wreck], i) => {
+              const cols = CW.CAR_TYPES[ty].colors, hh = wreck ? h + (i % 2 ? 0.6 : -0.5) : dir ? h + Math.PI : h;
+              const v = CW.vehicles.add(ty, cols[ci % cols.length], car.x - back, z, hh); v.awake = false; v.ai = null;
+              if (wreck) { v.hp = 0; v._ws = 'after'; v._wt = 0; v._fuse = 1e9; v.mesh.traverse((o) => { if (o.isMesh && o.material && !o.material.isSpriteMaterial) { o.material = o.material.clone(); o.material.color.multiplyScalar(0.22); } }); }
+              return { v, back, z, dir: dir || 0, wreck, hh };
+            });
+          }
+          capture.sc.forEach((s) => {
+            const v = s.v; v.hidden = false; v.mesh.visible = true;
+            if (s.wreck) { v.hp = 0; v._wt = Math.min(v._wt || 0, 2.5); }
+            v.x = car.x - s.back + (s.dir ? -s.dir * 0 : 0); v.z = s.z; v.h = s.hh; v.vx = v.vz = 0; v.speed = 0;
+            v.mesh.position.set(v.x, 0, v.z); v.mesh.rotation.y = s.hh;
+          });
+        }
         if (qn('hdown', 0) && capture.t >= qn('hdown', 0) && A.state !== 'down') { A.state = 'down'; A.vy = 0; A.spin = 1.5; A.vx = car.vx; A.vz = car.vz; }   // &hdown=<s>: shot down at that moment
         if (A.state !== 'down') { A.hp = 400; A.ang = Math.atan2(-cs, -sn) + 0.5; }
       } else {
@@ -230,8 +249,30 @@
         if (A.state !== 'down') { A.x = car.x - sn * hb + R.x * hs; A.z = car.z - cs * hb + R.z * hs; A.y = hy; A.vx = car.vx; A.vz = car.vz; A.h = h; A.mk.root.position.set(A.x, A.y, A.z); }
       }
     }
+    const market = stageQ === 'market';
+    if (market) {
+      // &stage=market: night-market firefight. Crowd (all 28 peds) flees hands-up along the pavement, blasts every &every s, heli overhead.
+      const T = CW.traffic, A = CW.air.policeHeli, tm = capture.t = (capture.t || 0) + dt, ev = qn('every', 4);
+      if (!capture.mk && tm > 1.2) {
+        capture.mk = true;
+        if (!A.active) { A.active = true; A.state = 'orbit'; A.hp = 400; A.leaveT = 0; A.vx = A.vz = A.vy = 0; A.spot.x = car.x; A.spot.z = car.z; A.mk.root.visible = true; A.cone.visible = true; A.disc.visible = true; }
+        capture.shots = [];
+        capture.reseat = (p, i) => {   // seat a ped mid-crowd, fleeing; called again when it dies or runs out of the frame
+          p.state = 'flee'; p.t = 60; p.hp = 100; p.model.visible = true; p.model.rotation.x = 0; p.vx = p.vz = 0;
+          p.x = car.x + 8 + (i % 14) * 1.6 + (i % 3) * 0.4; p.z = 3 + (i % 4) * 2.6;
+          const k = i % 2 ? 1 : -1; p.fx = k * 0.8; p.fz = (i % 3 - 1) * 0.25;
+          p.model.position.set(p.x, 0, p.z);
+        };
+        T.peds.forEach(capture.reseat);
+      }
+      if (capture.reseat) T.peds.forEach((p, i) => { if (p.state === 'dead' || p.x < car.x + 2 || p.x > car.x + 30 || p.z < 1.5 || p.z > 12.5) capture.reseat(p, i); else p.t = 60; });
+      A.hp = 400; A.x = car.x + qn('hx', 16); A.z = car.z + qn('hz', -2); A.y = qn('hy', 26); A.vx = A.vz = 0; A.h = h; A.mk.root.position.set(A.x, A.y, A.z);
+      const ph = tm % ev, n = Math.floor(tm / ev);
+      if (capture.shots) [[0.5, 9, 7], [1.1, 24, 9], [1.7, 16, 4.5]].forEach(([at, dx, zz], i) => { const id = n * 3 + i; if (ph >= at && !capture.shots[id]) { capture.shots[id] = 1; CW.fx.explode(car.x + dx, zz, 5.5); } });
+      if (qn('tx', null) !== null) { tx = qn('tx', tx); ty = qn('ty', ty); tz = qn('tz', tz); c.position.set(car.x + qn('px', 0), camh, qn('pz', -8)); }
+    }
     c.fov = fov; c.updateProjectionMatrix(); c.lookAt(tx, ty, tz);
-    const near = boom ? 7 : 25;
+    const near = boom ? 7 : market ? 0 : 25;
     CW.traffic.peds.forEach((p) => { if (Math.hypot(p.x - c.position.x, p.z - c.position.z) < near) p.model.visible = false; });   // no bystanders in the evidence frame
     // anything else within 12 m of the lens would hide the subject: hide it (the staged boom cars are exempt)
     CW.vehicles.list.forEach((v) => { if (v !== car && v !== cop && !(capture.chase && v === CW.police.cops[1]) && !(boom && boom.cars.includes(v)) && Math.hypot(v.x - c.position.x, v.z - c.position.z) < 12) v.mesh.visible = false; });

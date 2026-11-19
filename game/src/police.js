@@ -351,8 +351,8 @@
     if (car.burnT < 0.1) CW.hud.toast('CAR ON FIRE — GET OUT! (E)');
     if (Math.random() < dt * 24) CW.fx.puff(car.x, 1.2, car.z, { color: Math.random() < 0.5 ? 0xff7a1a : 0x222222, size: 0.9, grow: 1.8, vy: 2.4, a: 0.7, life: 1.1 });
     if (car.burnT > 4.5) {
-      for (let i = 0; i < 14; i++) CW.fx.puff(car.x + (Math.random() - 0.5) * 3, 1 + Math.random(), car.z + (Math.random() - 0.5) * 3, { color: i % 2 ? 0xffa020 : 0x333333, size: 1.6, grow: 3, vy: 3 + Math.random() * 2, a: 0.8, life: 1.6 });
-      T.danger(car.x, car.z, 30, 5); car.hidden = true; car.mesh.visible = false;
+      CW.fx.explode(car.x, car.z, 8, { src: car, noHurt: true });
+      car.hidden = true; car.mesh.visible = false;
       W.wasted('Your car exploded');
     }
   }

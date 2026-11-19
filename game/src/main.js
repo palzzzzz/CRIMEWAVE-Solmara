@@ -22,6 +22,7 @@
   CW.world.build(scene);
   CW.sky.init(scene);
   CW.fx.init(scene);
+  CW.explosions.init(scene);   // the one permanent blast PointLight is created here, before the first render
   CW.vehicles.spawnParked();
   CW.traffic.init();
   CW.police.init();
@@ -109,6 +110,7 @@
       CW.sfx.sea(playing ? CW.clamp((CW.player.focus().x - 120) / 120, 0, 1) : 0.6, simT);
     }
     CW.vehicles.update(sdt, playing);
+    if (live) CW.explosions.update(sdt, playing);   // after vehicles: layers the tumble over the car pose
     if (capture && playing) captureStep();
     if (playing) CW.gunner.update(dt);   // after the car has moved, so Luna stays glued to the seat
     if (capture && playing) { const c = CW.camera; c.updateMatrixWorld(true); }

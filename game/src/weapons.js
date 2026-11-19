@@ -265,7 +265,7 @@
         if (!c.circles().some((q) => Math.hypot(q[0] - f.x, q[1] - f.z) < f.r + q[2])) return;
         const was = c.hp; c.hp = Math.max(0, c.hp - 26 * dt); c.hitFlash = 0.1;
         if (c.cop && was > 0) W.crime('assault', c.x, c.z, 0.3, 0);
-        if (was > 0 && c.hp <= 0 && !c.driven) { for (let n = 0; n < 8; n++) puff(c.x + (Math.random() - 0.5) * 3, 1 + Math.random(), c.z + (Math.random() - 0.5) * 3, { color: n % 2 ? 0xffa020 : 0x333333, size: 1.5, grow: 3, vy: 3, a: 0.8, life: 1.2 }); Wp.sound('explode', c.x, c.z); T.danger(c.x, c.z, 24, 5); }
+        if (was > 0 && c.hp <= 0 && !c.driven) T.danger(c.x, c.z, 24, 5);   // the fire + (driverless) blast now live in explosions.js
       });
       const pf = P.focus(); if (P.mode !== 'heli' && Math.hypot(pf.x - f.x, pf.z - f.z) < f.r - 0.4) W.hurt(14 * dt, 'BURNED ALIVE');
     }

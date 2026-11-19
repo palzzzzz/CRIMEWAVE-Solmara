@@ -3,10 +3,11 @@
 (function () {
   const CW = window.CW, T = CW.traffic, roads = CW.roads, L = CW.C.LINES, DIRS = roads.DIRS;
   const $ = (id) => document.getElementById(id);
-  const CALLS = ['KILO-12', 'LIMA-07', 'ROMEO-31', 'TANGO-04', 'DELTA-19', 'ECHO-22', 'SIERRA-15', 'VICTOR-09', 'ALPHA-28', 'OSCAR-16'];
+  // unit callsign = district code of where the car is right now + a fixed unit number: BF-12 / DT-07 / HB-31 (AIR-1 is the helicopter)
+  const NUMS = ['12', '07', '31', '04', '19', '22', '15', '09', '28', '16'], DCODE = ['BF', 'DT', 'HB'];
   const NEED = [0, 2, 3, 4, 5, 6];            // pursuit cars wanted per star level
   const VMAX = [0, 30, 34, 38, 42, 46];
-  const STATE_LABEL = { pursuit: 'PURSUIT', ram: 'RAMMING', roadblock: 'ROADBLOCK', search: 'SEARCH', foot: 'ON FOOT', searchlight: 'SEARCHLIGHT' };
+  const STATE_LABEL = { pursuit: 'PURSUING', ram: 'RAMMING', roadblock: 'ROADBLOCK', search: 'SEARCHING', foot: 'ON FOOT' };
   const W = (CW.police = { level: 0, heat: 0, cops: [], officers: [], seen: false, lostT: 0, seenT: 0, last: { x: 0, z: 0 }, bust: 0, ended: null, active: false, time: 0 });
   const rnd = CW.makeRng(99);
   const COMPASS = ['SOUTH', 'EAST', 'NORTH', 'WEST'];   // +z is south on the minimap (north = -z)
@@ -133,7 +134,8 @@
   // ---- cop cars -----------------------------------------------------------------------------------------
   function makeCop(idx) {
     const car = CW.vehicles.add('cruiser', 0xf2f6f8, 0, 0, 0);
-    car.cop = true; car.hidden = true; car.cs = 'idle'; car.call = CALLS[idx % CALLS.length]; car.owned = true;
+    car.cop = true; car.hidden = true; car.cs = 'idle'; car.owned = true;
+    const num = NUMS[idx % NUMS.length]; Object.defineProperty(car, 'call', { get() { return DCODE[CW.districtAt(car.x, car.z)] + '-' + num; } });
     const t = car.type, m = car.mesh, roof = 0.3 + t.bh + t.ch + 0.1;
     const red = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.14, 0.34), new THREE.MeshBasicMaterial({ color: 0xff2a2a }));
     const blue = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.14, 0.34), new THREE.MeshBasicMaterial({ color: 0x2a6bff }));
@@ -360,20 +362,23 @@
   // ---- HUD pieces -----------------------------------------------------------------------------------------
   let panelT = 0, lastHTML = '';
   function panel(dt, p) {
-    panelT -= dt; if (panelT > 0) return; panelT = 0.2;
+    panelT -= dt; if (panelT > 0) return; panelT = 0.25;   // ~4 Hz
     const box = $('police');
     if (W.level < 1) { box.style.display = 'none'; return; }
     box.style.display = 'block';
     const units = [];
     W.cops.forEach((c) => {
       if (c.hidden || c.cs === 'idle' || c.cs === 'patrol' || c.cs === 'leave' || c.cs === 'dead') return;
-      units.push({ call: c.call, d: Math.hypot(c.x - p.x, c.z - p.z), st: STATE_LABEL[c.cs] || 'PURSUIT', hp: c.hp });
+      const d = Math.hypot(c.x - p.x, c.z - p.z);
+      // "SHOOTING" mirrors enemies.js: roadblock cars and foot units fire within 50 m, pursuit cars from 4 stars within 34 m (sight is approximated by W.seen)
+      const shoots = W.seen && W.level >= 2 && ((c.cs === 'roadblock' || c.cs === 'foot') && d < 50 || (W.level >= 4 && c.cs === 'pursuit' && d < 34));
+      units.push({ call: c.call, d, st: shoots ? 'SHOOTING' : STATE_LABEL[c.cs] || 'PURSUING' });
     });
-    if (CW.air && CW.air.policeHeli && CW.air.policeHeli.active) units.push(CW.air.policeHeli.panelRow(p));
+    const ph = CW.air && CW.air.policeHeli;
+    if (ph && ph.active) { const r = ph.panelRow(p); units.push({ call: r.call, d: r.d, st: 'SPOTLIGHT', air: true }); }
     units.sort((a, b) => a.d - b.d);
     let h = '<div class="ph"><span>POLICE RESPONSE</span><b>' + units.length + ' UNIT' + (units.length === 1 ? '' : 'S') + '</b></div>';
-    h += '<div class="ps ' + (W.seen ? 'seen' : 'lost') + '">' + (W.seen ? 'SUSPECT IN SIGHT' : 'SEARCHING  ' + Math.max(0, Math.ceil(W.lostT)) + 's  ·  LAST KNOWN ON MAP') + '</div>';
-    units.slice(0, 6).forEach((u) => { h += '<div class="u"><b>' + u.call + '</b><span>' + (u.d >= 1000 ? (u.d / 1000).toFixed(1) + ' km' : Math.round(u.d) + ' m') + '</span><em class="s-' + u.st.replace(' ', '') + '">' + u.st + '</em></div>'; });
+    units.slice(0, 5).forEach((u) => { h += '<div class="u' + (u.air ? ' air' : '') + '"><b>' + (u.air ? '&#9992; ' : '') + u.call + '</b><span>' + (u.d >= 1000 ? (u.d / 1000).toFixed(1) + ' km' : Math.round(u.d) + ' m') + '</span><em class="s-' + u.st + '">' + u.st + '</em></div>'; });
     if (!units.length) h += '<div class="u"><b>—</b><span></span><em>NO UNITS NEARBY</em></div>';
     if (h !== lastHTML) { lastHTML = h; box.innerHTML = h; }
   }

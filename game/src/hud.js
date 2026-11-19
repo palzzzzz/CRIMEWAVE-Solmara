@@ -9,6 +9,7 @@
   const $ = (id) => document.getElementById(id);
   let mm = null, mctx = null, lastDistrict = -1, bannerT = 0, toastT = 0;
   const cache = {};
+  const COMPASS8 = ['NORTH', 'NORTH-EAST', 'EAST', 'SOUTH-EAST', 'SOUTH', 'SOUTH-WEST', 'WEST', 'NORTH-WEST'];   // north = -z, as on the minimap
   const setText = (id, v) => { if (cache[id] !== v) { cache[id] = v; $(id).textContent = v; } };
   const setW = (id, pct) => { const k = id + '%'; const v = Math.round(pct); if (cache[k] !== v) { cache[k] = v; $(id).style.width = v + '%'; } };
 
@@ -230,6 +231,18 @@
     setText('replv', 'REP LV ' + st.rep + '   ' + st.repXp + '/' + st.repNeed);
     const stars = $('stars').children;
     for (let i = 0; i < 5; i++) { const on = i < st.wanted; if (stars[i].dataset.on !== String(on)) { stars[i].dataset.on = String(on); stars[i].classList.toggle('on', on); } }
+    // wanted status: big stars + whether the police can see you; when they cannot, where the search zone is (same circle the minimap draws)
+    const Wp = CW.police, wb = $('wanted'), wOn = st.wanted > 0;
+    if (cache.wOn !== wOn) { cache.wOn = wOn; wb.style.display = wOn ? 'block' : 'none'; }
+    if (wOn) {
+      const seen = Wp.seen; setText('wstat', seen ? 'IN SIGHT' : 'SEARCHING'); if (cache.wcls !== seen) { cache.wcls = seen; $('wstat').className = seen ? 'seen' : 'lost'; }
+      let sub = '';
+      if (!seen) {
+        const pf = P.focus(), dx = Wp.last.x - pf.x, dz = Wp.last.z - pf.z, dist = Math.hypot(dx, dz), inside = dist < 52 + Wp.level * 11;
+        sub = inside ? 'INSIDE THE SEARCH ZONE  ·  STAY HIDDEN' : 'SEARCH ZONE ' + COMPASS8[(Math.round(Math.atan2(dx, -dz) / (Math.PI / 4)) + 8) % 8] + '  ·  ' + Math.round(dist / 5) * 5 + ' M';
+      }
+      setText('wsub', sub);
+    }
     const car = P.mode === 'car' ? P.car : null;
     $('carpanel').style.display = car ? 'block' : 'none';
     if (car) {

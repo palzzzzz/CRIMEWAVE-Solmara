@@ -56,7 +56,10 @@
   #hpbar { background: linear-gradient(90deg, #ff4e4e, #ff8a5c); } #arbar { background: linear-gradient(90deg, #4aa8ff, #7fd4ff); width: 0; } #repbar { background: linear-gradient(90deg, #ffc83d, #fff08a); width: 0; } #carhp { background: linear-gradient(90deg, #ff6b4a, #ffc83d); }
   #topr { position: absolute; right: 22px; top: 18px; width: 300px; text-align: right; }
   #cash { font-size: 44px; color: #8dff9c; line-height: 1; } #clock { font-size: 20px; color: var(--cream); margin-top: 4px; }
-  #stars { margin-top: 6px; font-size: 30px; letter-spacing: 4px; } .star { color: rgba(255,255,255,.22); } .star.on { color: #ffd23f; text-shadow: 0 0 10px #ff9d00; }
+  #wanted { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); min-width: 270px; padding: 4px 18px 7px; text-align: center; display: none; border-color: rgba(255,210,63,.55); }
+  #stars { font-size: 44px; line-height: 1.05; letter-spacing: 6px; margin-right: -6px; } .star { color: rgba(255,255,255,.2); } .star.on { color: #ffd23f; text-shadow: 0 0 12px #ff9d00, 0 2px 0 #7a3b00; }
+  #wstat { font-size: 20px; letter-spacing: .22em; font-weight: bold; } #wstat.seen { color: #ff6b6b; } #wstat.lost { color: #ffd23f; }
+  #wsub { font-size: 12px; letter-spacing: .14em; color: #ffe9a8; min-height: 15px; }
   #weap { display: flex; gap: 6px; justify-content: flex-end; margin-top: 8px; }
   .slot { padding: 5px 7px; min-width: 62px; text-align: center; font-size: 11px; background: rgba(10,30,38,.62); border: 2px solid rgba(255,241,214,.2); border-radius: 6px; opacity: .55; }
   .slot.on { opacity: 1; border-color: var(--gold); } .slot b { display: block; font-size: 15px; color: var(--gold); }
@@ -66,10 +69,10 @@
   #carpanel { position: absolute; right: 22px; bottom: 22px; width: 250px; padding: 10px 14px 12px; display: none; text-align: right; }
   #spd { font-size: 76px; line-height: .95; color: #fff; } #spdu { font-size: 16px; color: var(--gold); letter-spacing: .15em; } #carname { font-size: 22px; color: var(--gold); margin-bottom: 4px; }
   #drift { position: absolute; right: 22px; bottom: 190px; font-size: 26px; color: #ff9bd1; opacity: 0; transition: opacity .2s; }
-  #bannerwrap { position: absolute; left: 0; right: 0; top: 13%; text-align: center; opacity: 0; pointer-events: none; }
+  #bannerwrap { position: absolute; left: 0; right: 0; top: 124px; text-align: center; opacity: 0; pointer-events: none; }
   #banner { font-size: min(3.9vw, 50px); color: var(--cream); font-style: italic; text-shadow: 0 4px 0 #0f6f73, 0 0 30px rgba(0,0,0,.5); } #bannersub { font-size: 16px; letter-spacing: .3em; color: var(--gold); }
   #prompt { position: absolute; left: 50%; bottom: 17%; transform: translateX(-50%); padding: 8px 20px; font-size: 22px; background: rgba(10,30,38,.78); border: 2px solid var(--gold); border-radius: 8px; opacity: 0; letter-spacing: .1em; }
-  #toast { position: absolute; left: 50%; top: 6%; transform: translateX(-50%); padding: 7px 18px; background: rgba(10,30,38,.78); border-radius: 8px; letter-spacing: .14em; font-size: 15px; opacity: 0; transition: opacity .3s; }
+  #toast { position: absolute; left: 50%; top: 214px; transform: translateX(-50%); padding: 7px 18px; background: rgba(10,30,38,.78); border-radius: 8px; letter-spacing: .14em; font-size: 15px; opacity: 0; transition: opacity .3s; }
   #fpsbox { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); font-size: 11px; opacity: .45; }
   /* ---------- law: response panel, radio, bust meter, end screens ---------- */
   #police { padding: 8px 12px 9px; display: none; border-color: rgba(90,140,255,.7); background: rgba(8,20,44,.72); }
@@ -80,6 +83,9 @@
   #police .u { display: grid; grid-template-columns: 1fr 64px 104px; gap: 4px; font-size: 13px; padding: 2px 0; border-top: 1px solid rgba(255,255,255,.1); }
   #police .u b { color: #fff; letter-spacing: .08em; } #police .u span { text-align: right; color: #cfe3ff; }
   #police .u em { font-style: normal; text-align: right; font-size: 11px; font-weight: bold; letter-spacing: .1em; color: #ffd23f; align-self: center; }
+  #police .u.air { background: rgba(230,246,255,.12); border-left: 3px solid #e8f6ff; padding-left: 5px; } #police .u.air b { color: #e8f6ff; }
+  #police .s-SHOOTING { color: #ff3b3b !important; animation: blink .5s steps(2) infinite; } #police .s-SPOTLIGHT { color: #e8f6ff !important; }
+  #police .s-PURSUING { color: #ff7a5c !important; } #police .s-SEARCHING { color: #ffd23f !important; }
   #police .s-PURSUIT { color: #ff7a5c !important; } #police .s-RAMMING { color: #ff3b3b !important; animation: blink .5s steps(2) infinite; } #police .s-ROADBLOCK { color: #ffa63d !important; } #police .s-SEARCH { color: #ffd23f !important; } #police .s-ONFOOT { color: #7fd4ff !important; } #police .s-SEARCHLIGHT { color: #e8f6ff !important; }
   @keyframes blink { 50% { opacity: .35; } }
   #stars.search .star.on { animation: blink .7s steps(2) infinite; }
@@ -126,11 +132,11 @@
   #solhud.hot { border-color: #ffd23f; color: #fff2a8; animation: blink 1s steps(2) infinite; } #solhud.cool { background: rgba(10,50,60,.7); border-color: #7fd4ff; color: #d8f6ff; }
   #radiohud { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); padding: 5px 16px; display: none; font-size: 14px; letter-spacing: .1em; white-space: nowrap; }
   #radiohud b { color: var(--gold); margin-right: 8px; } #radiohud small { opacity: .65; margin-left: 10px; letter-spacing: .14em; font-size: 10px; }
-  #dlg { position: absolute; left: 41%; top: 24%; transform: translateX(-50%); width: min(640px, 62vw); display: none; gap: 14px; padding: 10px 16px 10px 10px; background: rgba(8,22,30,.9); border: 3px solid var(--gold); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,.55); pointer-events: auto; z-index: 12; }
+  #dlg { position: absolute; left: 41%; top: 36%; transform: translateX(-50%); width: min(640px, 62vw); display: none; gap: 14px; padding: 10px 16px 10px 10px; background: rgba(8,22,30,.9); border: 3px solid var(--gold); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,.55); pointer-events: auto; z-index: 12; }
   #dlg canvas { width: 112px; height: 112px; flex: 0 0 112px; border-radius: 8px; border: 2px solid rgba(255,241,214,.45); background: #123; }
   #dlg-name { font-size: 24px; color: var(--gold); } #dlg-role { font-size: 10px; letter-spacing: .24em; opacity: .7; margin-bottom: 5px; } #dlg-text { font-size: 18px; line-height: 1.4; min-height: 50px; color: var(--cream); } #dlg-hint { font-size: 10px; letter-spacing: .24em; opacity: .6; text-align: right; }
   #dlg.phone::before { content: '\260E  PHONE'; position: absolute; top: -13px; left: 18px; background: var(--teal); color: #05222a; font-weight: bold; font-size: 11px; letter-spacing: .2em; padding: 1px 10px; border-radius: 4px; }
-  #callin { position: absolute; left: 50%; top: 76px; transform: translateX(-50%); display: none; padding: 9px 20px; text-align: center; border-color: var(--teal); animation: blink .8s steps(2) infinite; font-size: 17px; letter-spacing: .1em; }
+  #callin { position: absolute; left: 50%; top: 124px; transform: translateX(-50%); display: none; padding: 9px 20px; text-align: center; border-color: var(--teal); animation: blink .8s steps(2) infinite; font-size: 17px; letter-spacing: .1em; }
   #callin b { color: var(--gold); } #callin small { display: block; letter-spacing: .24em; font-size: 10px; opacity: .8; }
   #phone { position: fixed; right: 4vw; top: 50%; transform: translateY(-50%); width: 330px; height: min(580px, 92vh); z-index: 16; display: none; flex-direction: column; background: #101c24; border: 6px solid #0a1217; border-radius: 34px; box-shadow: 0 0 0 3px #3b4f5b, 0 24px 70px rgba(0,0,0,.7); overflow: hidden; pointer-events: auto; }
   #ph-top { display: flex; justify-content: space-between; padding: 10px 22px 4px; font-size: 12px; letter-spacing: .1em; background: linear-gradient(90deg, #c0267a, #ff6b4a); } #ph-app { padding: 4px 22px 8px; font-size: 24px; background: linear-gradient(90deg, #c0267a, #ff6b4a); color: #fff; }
@@ -200,10 +206,10 @@
   <div id="topr">
     <div class="lab">CASH</div><div id="cash" class="imp">$2,500</div>
     <div id="clock" class="imp">17:00</div>
-    <div class="lab" style="margin-top:6px">WANTED LEVEL</div><div id="stars"></div>
     <div class="lab" style="margin-top:6px">WEAPONS &middot; HOLD Q FOR WHEEL</div>
     <div id="weap"></div>
   </div>
+  <div id="wanted" class="panel"><div class="lab">WANTED</div><div id="stars"></div><div id="wstat"></div><div id="wsub"></div></div>
   <div id="mmwrap"><canvas id="mm" width="214" height="214"></canvas><span id="dname" class="imp">BEACHFRONT</span></div>
   <div id="bars" class="panel">
     <div class="row"><div class="lab">HEALTH</div><div class="bar"><i id="hpbar"></i></div></div>

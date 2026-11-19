@@ -229,18 +229,5 @@
     }
   };
 
-  E.drawMap = function (ctx, scale, p) {
-    ctx.save();
-    E.pickups.forEach((k) => {
-      if (!k.on || Math.hypot(k.x - p.x, k.z - p.z) > 112) return;
-      ctx.fillStyle = '#' + ('000000' + COL[k.type].toString(16)).slice(-6); ctx.strokeStyle = '#0b2a33'; ctx.lineWidth = 1.2 / scale;
-      const s = 3.6 / scale; ctx.beginPath(); ctx.rect(k.x - s, k.z - s, s * 2, s * 2); ctx.fill(); ctx.stroke();
-    });
-    E.gang.forEach((g) => {
-      if (g.state === 'dead' || Math.hypot(g.x - p.x, g.z - p.z) > 112) return;
-      ctx.fillStyle = g.state === 'fight' ? '#ff2a2a' : '#b26bff'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2 / scale;
-      ctx.beginPath(); ctx.arc(g.x, g.z, 3.4 / scale, 0, 7); ctx.fill(); ctx.stroke();
-    });
-    ctx.restore();
-  };
+  // (the minimap draws pickups and gang members from E.pickups / E.gang in hud.js)
 })();

@@ -378,26 +378,7 @@
     if (h !== lastHTML) { lastHTML = h; box.innerHTML = h; }
   }
 
-  W.drawMap = function (ctx, scale, p) {
-    if (W.level < 1) return;
-    const t = W.time;
-    const r = 52 + W.level * 11;
-    if (!W.seen) {
-      ctx.save(); ctx.fillStyle = 'rgba(255,50,60,' + (0.16 + 0.07 * Math.sin(t * 5)) + ')'; ctx.strokeStyle = 'rgba(255,80,80,.95)'; ctx.lineWidth = 2.5 / scale; ctx.setLineDash([9 / scale, 6 / scale]);
-      ctx.beginPath(); ctx.arc(W.last.x, W.last.z, r, 0, 7); ctx.fill(); ctx.stroke(); ctx.restore();
-    }
-    const flash = Math.floor(t * 4) % 2 === 0;
-    W.cops.forEach((c) => {
-      if (c.hidden || c.cs === 'idle' || c.cs === 'dead') return;
-      let dx = c.x - p.x, dz = c.z - p.z; const d = Math.hypot(dx, dz), lim = 97;
-      if (c.cs === 'patrol' && W.level === 0) return;
-      let x = c.x, z = c.z; if (d > lim) { x = p.x + (dx / d) * lim; z = p.z + (dz / d) * lim; }
-      ctx.fillStyle = c.cs === 'roadblock' ? '#ff3030' : flash ? '#ff3030' : '#3a7bff'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.4 / scale;
-      ctx.beginPath();
-      if (c.cs === 'roadblock') ctx.rect(x - 4 / scale, z - 4 / scale, 8 / scale, 8 / scale); else ctx.arc(x, z, (d > lim ? 3 : 4.4) / scale, 0, 7);
-      ctx.fill(); ctx.stroke();
-    });
-  };
+  // (the minimap's search zone and cop dots are drawn by hud.js from W.level / W.seen / W.last / W.cops)
 
   // ---- per-frame ----------------------------------------------------------------------------------------
   let sightT = 0;

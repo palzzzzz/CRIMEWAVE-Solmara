@@ -96,7 +96,7 @@
       brief: [['luna', 'Ray, wake up. Solmara will not rob itself.'], ['luna', 'Teo runs Harbour Fence & Salvage, down at the docks. He buys what we steal and pays in cash.'], ['ray', 'Find a car, find Teo. Got it.']],
       outro: [['teo', 'So you are Luna\'s people. Good. Come back when you have wheels with a story behind them.']],
       begin() { S.st = 0; },
-      tick() { const m = CW.player.mode; if (S.st === 0 && m !== 'foot') S.st = 1; const f = fencePt(); obj(S.st ? 'Drive to Harbour Fence & Salvage (purple dot)' : 'Get a car: walk up to one and press E', f, S.st, 2); return near(f, 14); } },
+      tick() { const m = CW.player.mode; if (S.st === 0 && m !== 'foot') S.st = 1; const f = fencePt(); obj(S.st ? 'Drive to Harbour Fence & Salvage (the $ diamond)' : 'Get a car: walk up to one and press E', f, S.st, 2); return near(f, 14); } },
     { t: 'FENCE WORK', who: 'teo', pay: 700, rep: 30,
       brief: [['teo', 'Two cars. Stolen, not borrowed. Bring them to my yard, stop inside and press G. I do the rest.'], ['teo', 'Hot cars, hot cash. Do not bring cops to my door.']],
       outro: [['teo', 'Clean work. The wheels will not be missed. Roxy wants a word, she has a favour.']],
@@ -107,7 +107,7 @@
       outro: [['roxy', 'Gorgeous. Come back any time heat gets stupid: a fresh coat clears your stars. For a price.']],
       begin() { S.st = 0; S.target = null; S.free = true; },
       tick() { const P = CW.player; if (S.st === 0 && P.mode === 'car' && P.car.type.id === 'sports') { S.st = 1; S.target = P.car; } if (S.st === 1 && (P.mode !== 'car' || P.car !== S.target) && !near(garagePt(), 60)) S.st = 0; const g = garagePt();
-        obj(S.st === 0 ? 'Steal a VESPER GT (the low sports coupe)' : S.st === 1 ? 'Drive it into Roxy\'s garage bay (orange dot), press G' : 'Repaint it', S.st ? g : null, S.st, 3); return S.st === 2; },
+        obj(S.st === 0 ? 'Steal a VESPER GT (the low sports coupe)' : S.st === 1 ? 'Drive it into Roxy\'s garage bay (the garage icon), press G' : 'Repaint it', S.st ? g : null, S.st, 3); return S.st === 2; },
       end() { S.free = false; } },
     { t: 'THE COURIER RUN', who: 'luna', pay: 1400, rep: 40,
       brief: [['luna', 'Timed job. Three drops across town, one hundred and seventy seconds, no stopping.'], ['luna', 'Beachfront, Downtown, then the harbour. Do not get caught.']],
@@ -166,14 +166,7 @@
     const ring = new THREE.Mesh(new THREE.RingGeometry(2.6, 3.3, 28), new THREE.MeshBasicMaterial({ color: 0xffd23f, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false, fog: false }));
     ring.rotation.x = -Math.PI / 2; ring.position.y = 0.3; beam.add(ring); beam.userData.ring = ring; beam.visible = false; scene.add(beam);
   };
-  S.drawMap = function (ctx, scale, p) {
-    const o = S.obj; if (!o || !o.mk) return;
-    const dx = o.mk.x - p.x, dz = o.mk.z - p.z, d = Math.hypot(dx, dz), lim = 94; let x = o.mk.x, z = o.mk.z;
-    if (d > lim) { x = p.x + (dx / d) * lim; z = p.z + (dz / d) * lim; }
-    ctx.save(); const pulse = 1 + Math.sin(performance.now() / 220) * 0.18;
-    ctx.fillStyle = '#ffd23f'; ctx.strokeStyle = '#0b2a33'; ctx.lineWidth = 1.8 / scale; ctx.beginPath(); if (d > lim) { ctx.moveTo(x, z - 7 / scale); ctx.lineTo(x + 6 / scale, z); ctx.lineTo(x, z + 7 / scale); ctx.lineTo(x - 6 / scale, z); ctx.closePath(); } else ctx.arc(x, z, 6.5 / scale * pulse, 0, 7); ctx.fill(); ctx.stroke();
-    ctx.restore();
-  };
+  // (the minimap mission icon and GPS route are drawn by hud.js from S.obj.mk)
 
   // ---- save -------------------------------------------------------------------------------------------------------------------------------
   S.serialize = function () { return { idx: S.idx, log: S.log.slice(0, 12) }; };

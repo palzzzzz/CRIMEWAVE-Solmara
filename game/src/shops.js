@@ -218,9 +218,5 @@
     if (prompt) P.prompt = prompt;
   };
 
-  X.drawMap = function (ctx, scale, p) {
-    ctx.save(); const s = 5 / scale; ctx.font = '900 ' + 9 / scale + 'px Impact, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    X.list.forEach((sh) => { if (Math.hypot(sh.cx - p.x, sh.cz - p.z) > 112) return; ctx.fillStyle = sh.kind === 'boutique' ? '#e8456f' : sh.kind === 'gun' ? '#33414a' : '#12a7a0'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.4 / scale; ctx.fillRect(sh.cx - s, sh.cz - s, s * 2, s * 2); ctx.strokeRect(sh.cx - s, sh.cz - s, s * 2, s * 2); ctx.fillStyle = '#fff'; ctx.fillText(sh.kind === 'boutique' ? 'B' : sh.kind === 'gun' ? 'G' : 'M', sh.cx, sh.cz + 0.4 / scale); });
-    ctx.restore();
-  };
+  // (the minimap draws the shop icons from X.list in hud.js)
 })();

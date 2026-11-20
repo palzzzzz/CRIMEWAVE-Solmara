@@ -172,7 +172,7 @@
     car.liftY = CW.damp(car.liftY || 0, M.LIFT_Y, 6, rdt);
     car.mesh.position.set(L.x, car.liftY, L.z); car.mesh.rotation.set(0, car.h, 0);
     X.lift.userData.disc.rotation.y = car.h;
-    const c = CW.camera, R = Math.max(12, car.type.l * 3);
+    const c = CW.camera, R = Math.max(10.5, car.type.l * 2.6);
     c.position.set(L.x + R * 0.42, 3.9, L.z - R * 0.9); c.fov = 40; c.updateProjectionMatrix();
     c.lookAt(L.x, M.LIFT_Y + 0.75, L.z);
   }

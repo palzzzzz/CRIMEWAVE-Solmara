@@ -54,6 +54,16 @@
     sky.starMat = new THREE.PointsMaterial({ size: 3, color: 0xffffff, transparent: true, opacity: 0, fog: false, depthWrite: false, sizeAttenuation: false });
     sky.stars = new THREE.Points(sg, sky.starMat); sky.stars.frustumCulled = false; scene.add(sky.stars);
     sky.apply(sky.hour);
+    // reflection environment for glossy car paint + chrome: the sky dome itself (same shader, same uniforms) baked to a PMREM
+    // cube, re-baked every half game-hour so dawn / dusk / night reflections follow the clock
+    const envScene = new THREE.Scene(); envScene.add(new THREE.Mesh(sky.dome.geometry, mat));
+    const pm = new THREE.PMREMGenerator(CW.renderer); let rt = null;
+    sky.bakeEnv = function () {
+      const old = rt; rt = pm.fromScene(envScene, 0, 1, 2000); sky.envHour = sky.hour;
+      CW.envMats.forEach((m) => { const first = !m.envMap; m.envMap = rt.texture; if (first) m.needsUpdate = true; });
+      if (old) old.dispose();
+    };
+    sky.bakeEnv();
   };
 
   function sample(h) {
@@ -101,6 +111,11 @@
     sky.sunLight.position.set(f.x + ldir.x * 200, ldir.y * 200, f.z + ldir.z * 200);
     sky.sunLight.target.updateMatrixWorld();
     sky.dome.position.copy(cam.position); sky.stars.position.copy(cam.position);
+    let dh = Math.abs(sky.hour - sky.envHour); if (dh > 12) dh = 24 - dh;
+    if (dh > 0.5) sky.bakeEnv();
+    // car glints: sun direction in view space, only in daylight and dry weather
+    const S = CW.spark; S.sun.value.copy(ldir).transformDirection(cam.matrixWorldInverse);
+    S.k.value = (1 - sky.night) * (CW.weather ? 1 - CW.weather.wet : 1) * (sky.dir.y > 0 ? 1 : 0);
   };
 
   sky.clock = function () {

@@ -230,6 +230,32 @@
       lamp: new THREE.MeshBasicMaterial({ vertexColors: true }),
       asphalt: new THREE.MeshLambertMaterial({ map: CW.makeAsphaltTexture() }),
     };
+    // Cars: clearcoat gloss (low roughness, strong reflections of the live sky environment), chrome rims, rubber tyres.
+    // Sparse sun glints are added in the car shader: a hashed grid of tiny facets, each with its own jittered normal, so a few
+    // sparkle as the view / sun angle lines up. sky.js keeps the sun direction (view space) and the daylight gate current.
+    const spark = (CW.spark = { sun: { value: new THREE.Vector3(0, 1, 0) }, k: { value: 0 } });
+    const car = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.3, metalness: 0.3, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 0.8 });
+    car.onBeforeCompile = (sh) => {
+      sh.uniforms.sparkSun = spark.sun; sh.uniforms.sparkK = spark.k;
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vOP;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvOP = transformed;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vOP; uniform vec3 sparkSun; uniform float sparkK;')
+        .replace('#include <output_fragment>', [
+          '{ vec3 cell = floor(vOP * 9.0);',
+          '  float h1 = fract(sin(dot(cell, vec3(12.9898, 78.233, 37.719))) * 43758.5453);',
+          '  float h2 = fract(sin(dot(cell, vec3(39.346, 11.135, 83.155))) * 24634.6345);',
+          '  float h3 = fract(sin(dot(cell, vec3(73.156, 52.235, 9.151))) * 31415.9265);',
+          '  vec3 vd = normalize(vViewPosition);',
+          '  vec3 n2 = normalize(normal + (vec3(h2, h3, fract(h1 * 91.7)) - 0.5) * 0.9);',
+          '  float g = pow(max(dot(reflect(-vd, n2), sparkSun), 0.0), 36.0);',
+          '  float fade = 1.0 - smoothstep(14.0, 38.0, length(vViewPosition));',
+          '  outgoingLight += vec3(1.0, 0.96, 0.86) * step(0.93, h1) * g * sparkK * fade * 2.6; }',
+          '#include <output_fragment>'].join('\n'));
+    };
+    car.customProgramCacheKey = () => 'carspark1';
+    CW.mats.car = car;
+    CW.mats.tyre = new THREE.MeshLambertMaterial({ vertexColors: true });
+    CW.mats.chrome = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.06, metalness: 1, envMapIntensity: 1.35 });
+    CW.envMats = [car, CW.mats.chrome];   // everything that reflects the sky environment (sky.js fills envMap)
     CW.glowTex = CW.makeGlowTexture();
     CW.smokeTex = CW.makeSmokeTexture();
   };

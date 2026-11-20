@@ -14,30 +14,31 @@
   CW.cylAlong = cylAlong;
 
   // ---- cars ----------------------------------------------------------------
-  const carGeoCache = {};
+  const carGeoCache = {}, wheelGeoCache = {};
   CW.carGeometry = function (typeId, color) {
     const key = typeId + ':' + color;
     if (carGeoCache[key]) return carGeoCache[key];
     const t = CW.CAR_TYPES[typeId];
-    const b = B();
+    const b = B(), tb = B(), rb = B();   // body (glossy clearcoat), tyres (rubber), rims (chrome): three meshes per car
     const glass = 0x1f3a48, dark = 0x23282c, lightF = 0xfff3b8, lightR = 0xff3b30;
+    const keepWheels = () => { if (!wheelGeoCache[typeId]) wheelGeoCache[typeId] = { tyre: tb.build(CW.mats.tyre).geometry, rim: rb.build(CW.mats.chrome).geometry }; };
     const y0 = 0.3, top = y0 + t.bh, roof = top + t.ch;
     const hw = t.w / 2, hl = t.l / 2;
     const isVan = typeId === 'van', isSuv = typeId === 'suv', isPick = typeId === 'pickup';
     if (typeId === 'bike') {
       const bl = t.l / 2, wr0 = 0.36;
-      [1, -1].forEach((s) => { b.cyl(0, wr0, s * (bl - 0.4), wr0, wr0, 0.16, 12, 0x15181a, 0, 0, Math.PI / 2); b.cyl(0, wr0, s * (bl - 0.4), wr0 * 0.55, wr0 * 0.55, 0.18, 8, 0xc9ced1, 0, 0, Math.PI / 2); });
+      [1, -1].forEach((s) => { tb.cyl(0, wr0, s * (bl - 0.4), wr0, wr0, 0.16, 12, 0x15181a, 0, 0, Math.PI / 2); rb.cyl(0, wr0, s * (bl - 0.4), wr0 * 0.55, wr0 * 0.55, 0.18, 12, 0xffffff, 0, 0, Math.PI / 2); });
       b.box(0, 0.55, -0.05, 0.2, 0.2, 1.1, dark); b.box(0, 0.86, 0.22, 0.34, 0.3, 0.58, color); b.box(0, 0.78, -0.4, 0.3, 0.1, 0.72, 0x1c1f22);
       b.box(0, 0.62, -0.82, 0.22, 0.08, 0.5, color); b.box(0.22, 0.4, -0.3, 0.09, 0.09, 0.85, 0xc9ced1); b.box(0, 0.5, 0.2, 0.3, 0.3, 0.4, 0x30363b);
       cylAlong(b, [0, 1.0, 0.55], [0, 0.4, 0.7], 0.04, 0.05, 6, 0xc9ced1); b.box(0, 1.08, 0.52, 0.72, 0.06, 0.06, dark);
       b.box(0, 0.92, 0.74, 0.22, 0.2, 0.12, lightF); b.box(0, 0.86, -1.02, 0.22, 0.09, 0.05, lightR); b.box(0, 0.5, 0.74, 0.06, 0.35, 0.06, 0xc9ced1);
-      const gb = b.build(CW.mats.solid).geometry; carGeoCache[key] = gb; return gb;
+      keepWheels(); const gb = b.build(CW.mats.car).geometry; carGeoCache[key] = gb; return gb;
     }
     // wheels
     const wr = isSuv || isVan || isPick ? 0.42 : 0.36;
     [[1, 1], [-1, 1], [1, -1], [-1, -1]].forEach(([sx, sz]) => {
-      b.cyl(sx * (hw - 0.1), wr, sz * hl * 0.62, wr, wr, 0.28, 10, 0x15181a, 0, 0, Math.PI / 2);
-      b.cyl(sx * (hw - 0.0), wr, sz * hl * 0.62, wr * 0.55, wr * 0.55, 0.3, 8, 0xc9ced1, 0, 0, Math.PI / 2);
+      tb.cyl(sx * (hw - 0.1), wr, sz * hl * 0.62, wr, wr, 0.28, 14, 0x15181a, 0, 0, Math.PI / 2);
+      rb.cyl(sx * (hw - 0.0), wr, sz * hl * 0.62, wr * 0.55, wr * 0.55, 0.3, 14, 0xffffff, 0, 0, Math.PI / 2);
     });
     b.box(0, y0 - 0.02, 0, t.w * 0.9, 0.18, t.l * 0.96, dark);                   // underbody
     if (typeId === 'sports') {
@@ -110,7 +111,8 @@
       b.box(hw * 0.5, roof + 0.12, t.cz, 0.08, 0.06, t.cl * 0.8, dark);
       b.box(-hw * 0.5, roof + 0.12, t.cz, 0.08, 0.06, t.cl * 0.8, dark);
     }
-    const g = b.build(CW.mats.solid).geometry;
+    keepWheels();
+    const g = b.build(CW.mats.car).geometry;
     carGeoCache[key] = g;
     return g;
   };
@@ -118,9 +120,12 @@
   CW.makeCarMesh = function (typeId, color) {
     const grp = new THREE.Group();
     grp.rotation.order = 'YXZ';
-    const m = new THREE.Mesh(CW.carGeometry(typeId, color), CW.mats.solid);
+    const m = new THREE.Mesh(CW.carGeometry(typeId, color), CW.mats.car);
     m.castShadow = true; m.receiveShadow = false;
     grp.add(m);
+    const w = wheelGeoCache[typeId];   // filled by carGeometry above
+    const tm = new THREE.Mesh(w.tyre, CW.mats.tyre), rm = new THREE.Mesh(w.rim, CW.mats.chrome);
+    tm.castShadow = true; rm.castShadow = true; grp.add(tm, rm);
     grp.userData.body = m;
     return grp;
   };

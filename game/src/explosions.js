@@ -104,9 +104,9 @@
   function setChar(car, k) {
     if (!car._cm) {
       car._cm = [];
-      car.mesh.traverse((o) => { if (o.isMesh && o.material && !o.material.isSpriteMaterial) { car._cm.push({ o, orig: o.material, c0: o.material.color.clone() }); o.material = o.material.clone(); } });
+      car.mesh.traverse((o) => { if (o.isMesh && o.material && !o.material.isSpriteMaterial) { const om = o.material; car._cm.push({ o, orig: om, c0: om.color.clone(), r0: om.roughness }); o.material = om.clone(); o.material.onBeforeCompile = om.onBeforeCompile; o.material.customProgramCacheKey = om.customProgramCacheKey; } });
     }
-    car._cm.forEach((e) => { e.o.material.color.copy(e.c0).lerp(CHAR, 0.8 * k); });
+    car._cm.forEach((e) => { const m = e.o.material; m.color.copy(e.c0).lerp(CHAR, 0.8 * k); if (e.r0 !== undefined) { m.roughness = e.r0 + (0.9 - e.r0) * k; if (m.clearcoat) m.clearcoat = 1 - k; } });
   }
   function clear(car) {
     if (car._cm) { car._cm.forEach((e) => { e.o.material.dispose(); e.o.material = e.orig; }); car._cm = null; }

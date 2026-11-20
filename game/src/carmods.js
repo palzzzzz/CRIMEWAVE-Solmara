@@ -17,7 +17,12 @@
   // ---- shared geometry + materials ------------------------------------------------------------------------------------------
   const UB = new THREE.BoxGeometry(1, 1, 1), UC = new THREE.CylinderGeometry(1, 1, 1, 24);
   const matCache = {};
-  const gloss = (c, r, m) => { const k = c + '|' + r + '|' + m; return matCache[k] || (matCache[k] = new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m })); };
+  const gloss = (c, r, m) => {
+    const k = c + '|' + r + '|' + m; if (matCache[k]) return matCache[k];
+    const mat = matCache[k] = new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m, envMapIntensity: 1.25 });
+    mat.envMap = CW.envMats[0].envMap; CW.envMats.push(mat);   // reflect the same baked sky as the car paint (sky.js re-bakes it)
+    return mat;
+  };
   const neonMat = {};
   const glowMat = (c) => neonMat['g' + c] || (neonMat['g' + c] = new THREE.MeshBasicMaterial({ color: c, map: CW.glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.85, fog: false }));
   const tubeMat = (c) => neonMat['t' + c] || (neonMat['t' + c] = new THREE.MeshBasicMaterial({ color: c, fog: false }));

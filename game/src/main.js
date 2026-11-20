@@ -96,7 +96,7 @@
       story: CW.story.serialize(), shops: CW.shops.save(), wp: { own: Wp.own, ammo: Wp.ammo, cur: Wp.cur } });
   }
 
-  let last = performance.now(), simT = 0, fpsAcc = 0, fpsN = 0, frozen = false, simNow = 0;
+  let last = performance.now(), simT = 0, fpsAcc = 0, fpsN = 0, frozen = false, simNow = 0, stepNo = 0;
   function frame(now) {
     requestAnimationFrame(frame);
     const ff = capType && FIXED && FREEZE > 0 && qn('skip', 0) ? 10 : 1;   // &skip=1 (with &fixed and &freeze): ten fixed steps per animation frame until the freeze
@@ -105,7 +105,7 @@
   function frameStep(now) {
     if (frozen) { renderer.render(scene, CW.camera); return; }   // capture only: &freeze reached, the frame stays put
     let dt = Math.min(0.05, (now - last) / 1000); last = now;
-    if (capType && FIXED) { dt = FIXED; simNow += FIXED * 1000; }   // capture only: &fixed=<dt> makes every frame the same length, wall clock out of the loop
+    if (capType && FIXED) { dt = FIXED; simNow += FIXED * 1000; if (window.__reseed) window.__reseed(stepNo++); }   // capture only: &fixed=<dt> makes every frame the same length, wall clock out of the loop
     if (capture) dt *= qn('ts', 1);   // capture only: &ts=<scale> slows the simulation so a burst of screenshots can resolve a fast event
     if (CW.weapons.wheelOpen) dt *= 0.22;   // the weapon wheel slows the world right down
     if (CW.solfeed.open || CW.shops.menu || CW.bigmap.open) dt *= 0.05;   // phone + shop menus + the full map nearly freeze it
@@ -164,7 +164,7 @@
   const qn = (k, d) => { const v = parseFloat(capQ.get(k)); return isFinite(v) ? v : d; };
   const FIXED = capType ? qn('fixed', 0) : 0, FREEZE = capType ? qn('freeze', 0) : 0;
   function stageDeterminism() {
-    if (capQ.get('seed') !== null) { let a = (qn('seed', 1) >>> 0) || 1; Math.random = () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+    // (&seed is applied by the inline script in index.html, before any module binds Math.random)
     if (FIXED) performance.now = () => simNow;
   }
   function stageLate() {

@@ -274,6 +274,17 @@
 <div id="endscreen"><h1 id="end-title" class="imp">BUSTED</h1><div id="end-sub"></div><div id="end-hint" class="imp">PRESS ENTER TO CONTINUE</div></div>
 <p id="status" role="status" aria-live="polite"></p>
 
+<script>
+// capture/staging only: ?seed=<n> (with ?capture= or ?stage=) swaps in a seeded Math.random before any module loads (explosions.js keeps a reference to it); normal play never carries these
+(function () {
+  const q = new URLSearchParams(location.search);
+  if (q.get('seed') === null || !(q.get('capture') || q.get('stage'))) return;
+  let a = (parseFloat(q.get('seed')) >>> 0) || 1;
+  const base = a;
+  window.__reseed = function (n) { a = (Math.imul(base ^ 0x9e3779b9, 2654435761) + Math.imul(n + 1, 40503)) >>> 0 || 1; };   // a fixed-step run reseeds every step, so a timer callback that draws between steps cannot shift the stream
+  Math.random = function () { a =(a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+})();
+</script>
 <script src="vendor/three.min.js"></script>
 <script src="src/config.js"></script>
 <script src="src/input.js"></script>

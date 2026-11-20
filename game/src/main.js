@@ -9,7 +9,7 @@
   // The game's colours are authored for a straight (linear) output, so a stock filmic curve greys them out. Instead the linear
   // tone-mapping slot gets a hue-keeping S-curve (smoothstep blend) with a soft highlight shoulder: deeper shadows, brighter lights.
   THREE.ShaderChunk.tonemapping_pars_fragment = THREE.ShaderChunk.tonemapping_pars_fragment.replace('vec3 LinearToneMapping( vec3 color ) {\n\treturn toneMappingExposure * color;\n}',
-    'vec3 LinearToneMapping( vec3 color ) {\n\tvec3 c = toneMappingExposure * color;\n\tvec3 s = clamp( c, 0.0, 1.0 ); s = s * s * ( 3.0 - 2.0 * s );\n\treturn mix( min( c, vec3( 1.0 ) ), s, 0.6 ) + max( c - 1.0, 0.0 ) * 0.45;\n}');
+    'vec3 LinearToneMapping( vec3 color ) {\n\tvec3 c = toneMappingExposure * color;\n\tvec3 hi = max( c - 0.76, 0.0 );\n\tc = min( c, vec3( 0.76 ) ) + 0.24 * ( 1.0 - exp( -hi / 0.24 ) );\n\tvec3 s = clamp( c, 0.0, 1.0 ); s = s * s * ( 3.0 - 2.0 * s );\n\treturn mix( c, s, 0.6 );\n}');
   renderer.toneMapping = THREE.LinearToneMapping; renderer.toneMappingExposure = 0.97;
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene();

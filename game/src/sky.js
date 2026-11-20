@@ -57,8 +57,13 @@
     // reflection environment for glossy car paint + chrome: the sky dome itself (same shader, same uniforms) baked to a PMREM
     // cube, re-baked every half game-hour so dawn / dusk / night reflections follow the clock
     const envScene = new THREE.Scene(); envScene.add(new THREE.Mesh(sky.dome.geometry, mat));
+    // bright sky strips (a low horizon band + two overhead softboxes) give flat panels something crisp to mirror: the "gloss" read
+    const strip = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, fog: false });
+    for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2, p = new THREE.Mesh(new THREE.PlaneGeometry(250, 380), strip); p.position.set(Math.cos(a) * 600, 250, Math.sin(a) * 600); p.lookAt(0, 250, 0); envScene.add(p); }   // window-like slats: panels sweep light across the paint as a car turns
+    [[-260, 480, 180, 520, 120], [300, 430, -260, 420, 100]].forEach(([x, y, z, w, h]) => { const p = new THREE.Mesh(new THREE.PlaneGeometry(w, h), strip); p.position.set(x, y, z); p.lookAt(0, 0, 0); envScene.add(p); });
     const pm = new THREE.PMREMGenerator(CW.renderer); let rt = null;
     sky.bakeEnv = function () {
+      strip.color.copy(sky.sunLight.color).multiplyScalar(0.12 + 1.1 * (1 - sky.night));
       const old = rt; rt = pm.fromScene(envScene, 0, 1, 2000); sky.envHour = sky.hour;
       CW.envMats.forEach((m) => { const first = !m.envMap; m.envMap = rt.texture; if (first) m.needsUpdate = true; });
       if (old) old.dispose();

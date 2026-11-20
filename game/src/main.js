@@ -96,10 +96,16 @@
       story: CW.story.serialize(), shops: CW.shops.save(), wp: { own: Wp.own, ammo: Wp.ammo, cur: Wp.cur } });
   }
 
-  let last = performance.now(), simT = 0, fpsAcc = 0, fpsN = 0;
+  let last = performance.now(), simT = 0, fpsAcc = 0, fpsN = 0, frozen = false, simNow = 0;
   function frame(now) {
     requestAnimationFrame(frame);
+    const ff = capType && FIXED && FREEZE > 0 && qn('skip', 0) ? 10 : 1;   // &skip=1 (with &fixed and &freeze): ten fixed steps per animation frame until the freeze
+    for (let i = 0; i < ff && !(frozen && i); i++) frameStep(now);
+  }
+  function frameStep(now) {
+    if (frozen) { renderer.render(scene, CW.camera); return; }   // capture only: &freeze reached, the frame stays put
     let dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (capType && FIXED) { dt = FIXED; simNow += FIXED * 1000; }   // capture only: &fixed=<dt> makes every frame the same length, wall clock out of the loop
     if (capture) dt *= qn('ts', 1);   // capture only: &ts=<scale> slows the simulation so a burst of screenshots can resolve a fast event
     if (CW.weapons.wheelOpen) dt *= 0.22;   // the weapon wheel slows the world right down
     if (CW.solfeed.open || CW.shops.menu || CW.bigmap.open) dt *= 0.05;   // phone + shop menus + the full map nearly freeze it
@@ -132,8 +138,9 @@
       CW.hud.update(dt);
       game.saveT += dt; if (game.saveT > 5) { game.saveT = 0; save(); }
     }
-    renderer.render(scene, CW.camera);
+    if (!(capture && FIXED && qn('skip', 0) && FREEZE > 0 && (capture.t || 0) < FREEZE - 0.35)) renderer.render(scene, CW.camera);   // &skip=1: no drawing until just before &freeze, so a slow machine reaches the frame fast
     CW.input.endFrame();
+    if (capture && FREEZE > 0 && (capture.t || 0) >= FREEZE) { frozen = true; document.body.classList.add('frozen'); window.__frozen = true; }
   }
 
   // ---- staging / capture hooks (ALL OFF unless the URL carries ?capture= or ?stage=; normal play never reads them) ------
@@ -145,10 +152,21 @@
   //   after &boom=<seconds> (default 2.5) and blows through the normal wreck path, thrown neighbours included. No police staging.
   // Camera (capture only), all optional: &cam=<side metres, default 3.4> &camh=<lens height m, 0.9> &camf=<metres ahead, 6.4>
   //   &fov=<deg> &hr=<hour> &hud=0.   cam is signed: negative swings the lens to the driver's side.
+  // Beachfront chase staging (&chase=<m/s>, all optional): &loc=strip puts the run on the coastal avenue x=240 (&sh=<heading rad, 0 = south>);
+  //   &wl=<1-5> wanted stars (default 4); &cops=<2-10> pursuit cruisers in formation behind/around the car; &peds=<n> pedestrians on both pavements;
+  //   &scene=1 parked/cruising/wrecked street dressing (follows the strip axis); &near=<m> bystander-hide radius round the lens (default 25).
+  //   &hold=dlg keeps a phone-call dialogue box on screen (with card/radio it shows all three); &mission=<n> fills the mission panel.
+  //   Determinism: &seed=<n> seeds Math.random, &fixed=<dt s> fixes the frame length (and the performance.now clock), &freeze=<s of chase time> stops the
+  //   world there: window.__frozen turns true and the page renders the same last frame for as long as you like.
   const capQ = new URLSearchParams(location.search), stageQ = capQ.get('stage');
   const capType = capQ.get('capture') || (stageQ === 'boom' || stageQ === 'market' ? 'sports' : null);
   let capture = null;
   const qn = (k, d) => { const v = parseFloat(capQ.get(k)); return isFinite(v) ? v : d; };
+  const FIXED = capType ? qn('fixed', 0) : 0, FREEZE = capType ? qn('freeze', 0) : 0;
+  function stageDeterminism() {
+    if (capQ.get('seed') !== null) { let a = (qn('seed', 1) >>> 0) || 1; Math.random = () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+    if (FIXED) performance.now = () => simNow;
+  }
   function stageLate() {
     const st = CW.hud.state, Wp = CW.weapons;
     st.cash = 485000; st.rep = 10; st.repXp = CW.story.repNeed(9) - 1; st.repNeed = CW.story.repNeed(10); st.armour = 100; st.hp = 100;
@@ -161,19 +179,21 @@
     CW.story.idx = CW.clamp(parseInt(m, 10) || 0, 0, CW.story.missions.length - 1); CW.story.start();
   }
   function captureStart() {
+    stageDeterminism();
     const type = capType === 'sports' || !CW.CAR_TYPES[capType] ? (capType === 'sedan' ? 'sedan' : 'sports') : capType;
     game.start(false);
     if (stageQ === 'late') stageLate();
     stageMission();
-    const P = CW.player, W = CW.police, beach = capQ.get('loc') === 'beach';
-    const S = beach ? CW.world.spawn : { x: stageQ === 'boom' ? -64 : stageQ === 'market' ? 258 : -6, z: stageQ === 'market' ? 6.5 : 2.7, h: Math.PI / 2 };   // DOWNTOWN: east-bound lane of the z=0 avenue, just short of the x=0 junction (clear sight line down the cross street)
+    if (CW.hud.hold.indexOf('dlg') >= 0) CW.story.say([['luna', capQ.get('say') || 'Five stars and a chopper, Ray. Keep it above a hundred.']], true);   // staging: a phone call held open over the chase
+    const P = CW.player, W = CW.police, beach = capQ.get('loc') === 'beach', strip = capQ.get('loc') === 'strip';
+    const S = strip ? { x: 240 - CW.C.LANE * Math.cos(qn('sh', 0)), z: 0, h: qn('sh', 0) } : beach ? CW.world.spawn : { x: stageQ === 'boom' ? -64 : stageQ === 'market' ? 258 : -6, z: stageQ === 'market' ? 6.5 : 2.7, h: Math.PI / 2 };   // DOWNTOWN: east-bound lane of the z=0 avenue, just short of the x=0 junction (clear sight line down the cross street)
     const h = S.h, sn = Math.sin(h), cs = Math.cos(h);
     const R = { x: -cs, z: sn };   // car-right (passenger side), as used by gunner.js
     const car = CW.vehicles.add(type, CW.CAR_TYPES[type].colors[0], S.x, S.z, h);
     CW.vehicles.enter(car); P.mode = 'car'; P.car = car; P.crew.ray.model.visible = false;
     car.mesh.position.set(car.x, 0, car.z); car.mesh.rotation.y = h;
     CW.sky.hour = qn('hr', 17.2);
-    capture = { car, cop: W.cops[0], R, h, chase: qn('chase', 0), side: qn('cam', 3.4), camh: qn('camh', 0.9), camf: qn('camf', 6.4), fov: qn('fov', 40), boom: null, beach };
+    capture = { car, cop: W.cops[0], R, h, chase: qn('chase', 0), side: qn('cam', 3.4), camh: qn('camh', 0.9), camf: qn('camf', 6.4), fov: qn('fov', 40), boom: null, beach, axisX: strip ? 240 : null };
     W.dispT = 1e9; W.rbT = 1e9; W.busted = function () {};
     if (stageQ === 'boom') {
       // three parked cars nose to tail on the lane ahead; the middle one is the one that burns
@@ -187,6 +207,27 @@
     }
     document.body.classList.add('capture');
     if (capQ.get('hud') === '0') document.getElementById('hud').style.visibility = 'hidden';
+    if (capQ.get('nobanner') === '1') ['bannerwrap', 'toast'].forEach((id) => { document.getElementById(id).style.visibility = 'hidden'; });   // staging: the district banner and the toast stay out of the heli's way
+  }
+  // &peds=<n>: n pedestrians planted on both pavements (10 m off the avenue axis) around where the car will be at &freeze, alert and running in place;
+  // positions are absolute, so the frozen frame is the same every run
+  function stagePeds(car, v, sn, cs, R, dt) {
+    const T = CW.traffic, n = Math.min(T.peds.length, Math.round(qn('peds', 0)));
+    if (!capture.pedZero) capture.pedZero = { x: car.x, z: car.z };
+    // the car really covers about twice &chase per second (vehicles.js integrates its velocity on top of the staged step), so measure the true ground speed
+    if (capture.pp && capture.pf > 2) { const e = Math.hypot(car.x - capture.pp.x, car.z - capture.pp.z) / dt; if (e > 1) capture.eff = e; }
+    capture.pp = { x: car.x, z: car.z }; capture.pf = (capture.pf || 0) + 1;
+    const z0 = capture.pedZero, tf = qn('freeze', 3), ve = capture.eff || 2 * v;
+    for (let i = 0; i < n; i++) {
+      const cross = i % 4 === 3;   // every fourth one is caught in the road, bolting across it
+      const p = T.peds[i], side = i % 2 ? 1 : -1, back = 6 + (i * 37 % 61) * 0.7 + (i % 3), lat = cross ? -2 + (i * 7 % 9) * 0.7 : 10.4 + (i % 4) * 0.5 + (i % 5 === 0 ? 1.6 : 0);
+      const ax = z0.x + sn * ve * tf - sn * back, az = z0.z + cs * ve * tf - cs * back;   // a point on the car's track `back` metres behind where it will be at freeze
+      p.state = 'flee'; p.t = 60; p.hp = 100; p.model.visible = true; p.model.rotation.x = 0;
+      p.fx = R.x * side * (cross ? 1.4 : 0.9) - sn * 0.3; p.fz = R.z * side * (cross ? 1.4 : 0.9) - cs * 0.3; p.vx = p.fx * 3; p.vz = p.fz * 3; p.h = Math.atan2(p.fx, p.fz);
+      p.x = (capture.axisX !== null ? capture.axisX : ax) + R.x * side * lat; p.z = az + R.z * side * lat;
+      if (capture.axisX === null) p.x = ax + R.x * side * lat;
+      p.model.position.set(p.x, 0, p.z); p.model.rotation.y = p.h;
+    }
   }
   function captureStep(dt) {
     const { car, cop, R, h, side, camh, camf, fov, boom } = capture, W = CW.police, st = CW.hud.state, P = CW.player, sn = Math.sin(h), cs = Math.cos(h), c = CW.camera;
@@ -201,8 +242,10 @@
       c.position.set(tx - sn * (camf + 4) + R.x * (side + 2.5), camh, tz - cs * (camf + 4) + R.z * (side + 2.5));
     } else {
       CW.gunner.pause = 0;   // capture only: no burst pauses, so a still frame is likely to catch a flash
-      W.heat = 4; W.level = 4; W.lostT = 0; W.bust = 0; W.seen = true; st.wanted = 4;
-      W.cops.forEach((q) => { if (q !== cop && !q.hidden) { q.hidden = true; q.cs = 'idle'; } });
+      const wl = CW.clamp(Math.round(qn('wl', 4)), 1, 5), nC = capture.chase ? CW.clamp(Math.round(qn('cops', 2)), 2, W.cops.length) : 1, fleet = W.cops.slice(0, nC);
+      W.heat = wl; W.level = wl; W.lostT = 0; W.bust = 0; W.seen = true; st.wanted = wl;
+      capture.fleet = fleet;
+      W.cops.forEach((q) => { if (!fleet.includes(q) && !q.hidden) { q.hidden = true; q.cs = 'idle'; } });
       // staged cruiser: out the passenger side, a little ahead, broadside to Luna, never takes damage (closer downtown: narrower streets)
       const out = capture.beach ? 21 : qn('out', 14);
       if (capture.chase) {
@@ -214,14 +257,14 @@
         }
         car.x += sn * v * dt; car.z += cs * v * dt; car.vx = sn * v; car.vz = cs * v; car.speed = v;
         car.mesh.position.set(car.x, 0, car.z); car.mesh.rotation.y = h;
-        const offs = [[qn('c1', 9), qn('c1s', 3.0)], [qn('c2', 16), qn('c2s', 2.2)]];   // both on Luna's side so her line of fire does not cross our own hull
-        [cop, W.cops[1]].forEach((q, i) => {
+        const offs = [[qn('c1', 9), qn('c1s', 3.0)], [qn('c2', 16), qn('c2s', 2.2)], [19, 3.0], [26, -3.0], [33, 2.6], [40, -2.6], [47, 3.0], [54, -2.2], [61, 2.8], [68, -2.8]];   // first two on Luna's side so her line of fire does not cross our own hull; the rest fan out across the avenue
+        fleet.forEach((q, i) => {
           q.hidden = false; q.awake = true; q.cs = 'pursuit'; q.hp = 100; q.ai = q.ai || { cruise: 0, off: 0 };
           q.x = car.x - sn * offs[i][0] + R.x * offs[i][1]; q.z = car.z - cs * offs[i][0] + R.z * offs[i][1]; q.h = h; q.vx = sn * v; q.vz = cs * v; q.speed = v;
           q.mesh.position.set(q.x, 0, q.z); q.mesh.rotation.y = h;
         });
-        W.cops.forEach((q, i) => { if (i > 1 && !q.hidden) { q.hidden = true; q.cs = 'idle'; } });
         capture.t = (capture.t || 0) + dt;
+        if (qn('peds', 0)) stagePeds(car, v, sn, cs, R, dt);
         if (qn('scene', 0)) {   // &scene=1: street behind the chase filled with supercars (parked + cruising) and smouldering wrecks, all pinned relative to our car
           const PK = CW.C.PARK;
           if (!capture.sc) {
@@ -237,7 +280,8 @@
           capture.sc.forEach((s) => {
             const v = s.v; v.hidden = false; v.mesh.visible = true;
             if (s.wreck) { v.hp = 0; v._wt = Math.min(v._wt || 0, 2.5); }
-            v.x = car.x - s.back + (s.dir ? -s.dir * 0 : 0); v.z = s.z; v.h = s.hh; v.vx = v.vz = 0; v.speed = 0;
+            if (capture.axisX !== null) { v.x = capture.axisX + R.x * s.z - sn * s.back; v.z = car.z - cs * s.back; } else { v.x = car.x - s.back; v.z = s.z; }   // strip: lateral offset measured from the avenue axis, along-track relative to the car
+            v.h = s.hh; v.vx = v.vz = 0; v.speed = 0;
             v.mesh.position.set(v.x, 0, v.z); v.mesh.rotation.y = s.hh;
           });
         }
@@ -280,10 +324,10 @@
       if (qn('tx', null) !== null) { tx = qn('tx', tx); ty = qn('ty', ty); tz = qn('tz', tz); c.position.set(car.x + qn('px', 0), camh, qn('pz', -8)); }
     }
     c.fov = fov; c.updateProjectionMatrix(); c.lookAt(tx, ty, tz);
-    const near = boom ? 7 : market ? 0 : 25;
+    const near = boom ? 7 : market ? 0 : qn('near', 25);
     CW.traffic.peds.forEach((p) => { if (Math.hypot(p.x - c.position.x, p.z - c.position.z) < near) p.model.visible = false; });   // no bystanders in the evidence frame
     // anything else within 12 m of the lens would hide the subject: hide it (the staged boom cars are exempt)
-    CW.vehicles.list.forEach((v) => { if (v !== car && v !== cop && !(capture.chase && v === CW.police.cops[1]) && !(boom && boom.cars.includes(v)) && Math.hypot(v.x - c.position.x, v.z - c.position.z) < 12) v.mesh.visible = false; });
+    CW.vehicles.list.forEach((v) => { if (v !== car && v !== cop && !(capture.fleet && capture.chase && capture.fleet.includes(v)) && !(boom && boom.cars.includes(v)) && Math.hypot(v.x - c.position.x, v.z - c.position.z) < 12) v.mesh.visible = false; });
   }
 
   // ?stage=garage  puts Ray in a car (&car=sports) at Roxy's yard and opens the car-mod bay straight away (&hr=<hour>, &sp= &ne= &wh= preset mods).

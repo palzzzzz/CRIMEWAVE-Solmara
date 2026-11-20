@@ -144,6 +144,12 @@
   #dlg.phone::before { content: '\260E  PHONE'; position: absolute; top: -13px; left: 18px; background: var(--teal); color: #05222a; font-weight: bold; font-size: 11px; letter-spacing: .2em; padding: 1px 10px; border-radius: 4px; }
   #card { position: absolute; left: 50%; bottom: 16px; width: min(480px, 40vw); zoom: var(--hs); transform: translate(-50%, 24px); opacity: 0; transition: opacity .35s, transform .35s; display: flex; gap: 11px; padding: 8px 14px 8px 8px; border: 2px solid var(--gold); background: rgba(8,22,30,.86); }
   #card.show { opacity: 1; transform: translate(-50%, 0); }
+  /* capture/staging only (the body gets .capture / .frozen from ?capture= sessions): a held phone call sits out of the chase's line of sight, and a frozen frame has no CSS animation left running */
+  body.capture #dlg { left: auto; right: 22px; top: 204px; transform: none; width: 372px; gap: 10px; }
+  body.capture #radiohud { top: 342px; }
+  body.capture #dlg canvas { width: 80px; height: 80px; flex-basis: 80px; }
+  body.capture #dlg-text { font-size: 15px; min-height: 0; }
+  body.frozen *, body.frozen *::before, body.frozen *::after { animation: none !important; }
   #card canvas { width: 72px; height: 72px; flex: 0 0 72px; border-radius: 6px; border: 2px solid rgba(255,241,214,.45); }
   #card .cb { flex: 1; min-width: 0; } #card .ct { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
   #card-tag { font-size: 9px; letter-spacing: .2em; font-weight: bold; background: var(--teal); color: #05222a; padding: 1px 7px; border-radius: 3px; align-self: center; }

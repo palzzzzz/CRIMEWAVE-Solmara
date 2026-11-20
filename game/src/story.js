@@ -63,6 +63,7 @@
     const I = CW.input, k = S.talk, text = k.lines[k.i][1];
     k.t += dt; const n = Math.min(text.length, Math.floor(k.t * 55));
     set('dlg-text', 'dt', text.slice(0, n));
+    if (CW.hud.hold.indexOf('dlg') >= 0) return;   // capture/staging only (?hold=dlg): the line types out and then stays on screen
     if (n >= text.length) k.hold += dt;
     const adv = I.pressed('Enter') || I.pressed('NumpadEnter') || k.hold > 1.6 + text.length * 0.03;
     if (I.pressed('Enter') && n < text.length) { k.t = 999; return; }
@@ -204,7 +205,8 @@
     if (S.state === 'active' && !W.ended) {
       const m = MISSIONS[S.idx];
       if (S.timer > 0) { S.timer -= dt; if (S.timer <= 0) { S.fail('Out of time'); return; } }
-      if (!S.talk && m.tick()) S.complete();
+      const done = !S.talk || CW.hud.hold.indexOf('dlg') >= 0 ? m.tick() : false;   // (?hold=dlg staging keeps the objective ticking under the held call, so the mission panel fills)
+      if (!S.talk && done) S.complete();
     }
     // HUD
     const p = $('mission'), on = S.state === 'active' && !!S.obj;
@@ -224,7 +226,7 @@
     const hold = CW.hud.hold.indexOf('card') >= 0, cd = $('card');
     if (hold && cardT <= 0) { const m = MISSIONS[Math.min(S.idx, MISSIONS.length - 1)], l = m.brief[m.brief.length - 1]; showCard(l[0], l[1], 'UPDATE'); }
     if (cardT > 0) { cardT = hold ? 5 : cardT - dt; }
-    const showC = cardT > 0 && !S.talk && !S.ring; if (cd.classList.contains('show') !== showC) cd.classList.toggle('show', showC);
+    const showC = cardT > 0 && (!S.talk || CW.hud.hold.indexOf('dlg') >= 0) && !S.ring; if (cd.classList.contains('show') !== showC) cd.classList.toggle('show', showC);
     $('obj').style.display = on ? 'none' : 'block';   // the mission panel carries the objective while a job is live
     const idle = S.state === 'idle' && S.idx < MISSIONS.length, done = S.idx >= MISSIONS.length;
     set('obj', 'free', done ? 'STORY COMPLETE. Free roam: sell cars, upgrade at Roxy\'s, hit the shops, chase the stars.' : idle ? 'Waiting for the next call... P opens the phone. Free roam until then.' : S.obj ? S.obj.text : 'Free roam.');

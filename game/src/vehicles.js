@@ -225,7 +225,7 @@
       const pT = CW.clamp(-(car.ax || 0) * 0.0035, -0.06, 0.07), rT = CW.clamp(-car.yaw * car.fs * 0.0045 - car.ls * 0.006, -0.09, 0.09);
       car.pitch += (pT - car.pitch) * Math.min(1, dt * 6); car.roll += (rT - car.roll) * Math.min(1, dt * 6);
       m.rotation.x = car.pitch; m.rotation.z = car.roll;
-      m.position.y = car.bump ? Math.sin(performance.now() * 0.05) * 0.03 * car.bump : 0;
+      m.position.y = (car.liftY || 0) + (car.bump ? Math.sin(performance.now() * 0.05) * 0.03 * car.bump : 0);
       const lit = (car.driven || car.ai) && night > 0.25;
       car.lights.forEach((s) => (s.visible = lit));
       // smoke

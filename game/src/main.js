@@ -278,10 +278,21 @@
     CW.vehicles.list.forEach((v) => { if (v !== car && v !== cop && !(capture.chase && v === CW.police.cops[1]) && !(boom && boom.cars.includes(v)) && Math.hypot(v.x - c.position.x, v.z - c.position.z) < 12) v.mesh.visible = false; });
   }
 
+  // ?stage=garage  puts Ray in a car (&car=sports) at Roxy's yard and opens the car-mod bay straight away (&hr=<hour>, &sp= &ne= &wh= preset mods).
+  function stageGarage() {
+    game.start(false);
+    const P = CW.player, V = CW.vehicles, g = CW.world.landmarks.garage, type = CW.CAR_TYPES[capQ.get('car')] ? capQ.get('car') : 'sports';
+    const car = V.add(type, CW.CAR_TYPES[type].colors[0], g.x, g.z + 2, 0);
+    V.enter(car); P.mode = 'car'; P.car = car; P.crew.ray.model.visible = false; car.mesh.position.set(car.x, 0, car.z);
+    CW.sky.hour = qn('hr', 14.5);
+    car.mods = CW.carmods.blank(); car.mods.sp = qn('sp', 0); car.mods.ne = qn('ne', 0); car.mods.wh = qn('wh', 0); CW.carmods.refresh(car);
+    CW.shops.stageOpen = true;
+  }
   game.state = 'title';
   CW.title.enter();
   requestAnimationFrame(frame);
-  if (capType) captureStart();
+  if (stageQ === 'garage') stageGarage();
+  else if (capType) captureStart();
   else if (stageQ === 'late') { game.start(false); stageLate(); stageMission(); }
   window.addEventListener('beforeunload', () => { if (game.state === 'play') save(); });
 })();

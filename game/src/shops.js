@@ -118,7 +118,64 @@
     }
     // the stored personal vehicle (if any) is recreated in the garage yard
     X.garageSlot = () => { const l = CW.world.landmarks.garage; return { x: l.x - 16, z: l.z + 8 }; };
+    // the mod bay's lift / turntable stands on the garage yard spot the G prompt already uses
+    const gz = gZone(); X.lift = CW.carmods.buildLift(scene, gz.x, gz.z);
   };
+
+  // ---- car-mod bay: the car moves onto the lift while the garage menu is open, then goes back where it was ---------------------
+  const CM = () => CW.carmods;
+  function enterBay(car) {
+    const L = gZone();
+    X.bay = { car, x: car.x, z: car.z, h: car.h, spin: car.h, last: performance.now(), vy: 0 };
+    car.x = L.x; car.z = L.z; car.vx = car.vz = 0; car.speed = 0;
+    if (!car.mods) car.mods = CM().blank();
+    $('modbay').style.display = 'block'; $('shopui').classList.add('bay'); $('hud').style.visibility = 'hidden'; renderMods();
+  }
+  function leaveBay() {
+    const b = X.bay; if (!b) return; X.bay = null;
+    const car = b.car; car.liftY = 0; car.x = b.x; car.z = b.z; car.h = b.h; car.vx = car.vz = 0; car.speed = 0;
+    car.mesh.position.set(car.x, 0, car.z); car.mesh.rotation.y = car.h;
+    $('modbay').style.display = 'none'; $('shopui').classList.remove('bay'); $('hud').style.visibility = '';    CW.cam.cd = undefined; CW.cam.carYaw = car.h;
+  }
+  function modRows(car) {
+    const M = CM(), mods = car.mods, bike = car.type.id === 'bike', pi = M.paintIndex(car);
+    return [
+      { key: 'paint', label: 'PAINT', cur: pi >= 0 ? M.PAINT[pi].n : 'CUSTOM', price: M.PRICE.paint, opts: M.PAINT.map((p, i) => ({ sw: p.c, on: i === pi, t: p.n, f: () => (i === pi ? null : () => M.setPaint(car, p.c)) })) },
+      { key: 'spoiler', label: 'SPOILER', cur: M.SPOILER[mods.sp], price: M.PRICE.spoiler, na: bike, opts: M.SPOILER.map((n, i) => ({ bt: n, on: i === mods.sp, t: n, f: () => (i === mods.sp ? null : () => { mods.sp = i; M.refresh(car); }) })) },
+      { key: 'neon', label: 'NEON UNDERGLOW', cur: M.NEON[mods.ne].n, price: M.PRICE.neon, opts: M.NEON.map((n, i) => ({ sw: n.c, off: !n.c, on: i === mods.ne, t: n.n, f: () => (i === mods.ne ? null : () => { mods.ne = i; M.refresh(car); }) })) },
+      { key: 'wheel', label: 'WHEELS', cur: M.WHEEL[mods.wh], price: M.PRICE.wheel, na: bike, opts: M.WHEEL.map((n, i) => ({ bt: n, on: i === mods.wh, t: n, f: () => (i === mods.wh ? null : () => { mods.wh = i; M.refresh(car); }) })) },
+    ];
+  }
+  const hex = (c) => '#' + ('000000' + c.toString(16)).slice(-6);
+  function renderMods() {
+    const b = X.bay; if (!b) return; const rows = modRows(b.car); X.modRows = rows;
+    $('mb-rows').innerHTML = rows.map((r, ri) => '<div class="mrow' + (r.na ? ' na' : '') + '"><div class="ml"><span>' + r.label + '  <i>' + r.cur + '</i></span><b>' + (r.na ? 'N/A' : '$' + r.price) + '</b></div><div class="opts">' + r.opts.map((o, oi) =>
+      o.sw !== undefined ? '<div class="sw' + (o.off ? ' off' : '') + (o.on ? ' on' : '') + '" title="' + o.t + '" data-r="' + ri + '" data-o="' + oi + '"' + (o.off ? '' : ' style="background:' + hex(o.sw) + (r.key === 'neon' ? ';box-shadow:0 0 10px ' + hex(o.sw) + ',inset 0 -5px 8px rgba(0,0,0,.25)' : '') + '"') + '></div>'
+        : '<div class="bt' + (o.on ? ' on' : '') + '" data-r="' + ri + '" data-o="' + oi + '">' + o.t + '</div>').join('') + '</div></div>').join('');
+    Array.from($('mb-rows').querySelectorAll('[data-r]')).forEach((el) => el.addEventListener('click', () => applyMod(+el.dataset.r, +el.dataset.o)));
+  }
+  function applyMod(ri, oi) {
+    const b = X.bay; if (!b) return; const row = modRows(b.car)[ri], o = row && row.opts[oi]; if (!o || row.na) return;
+    const go = o.f(); if (!go) return;
+    const free = oi === 0 && row.key !== 'paint', st = hs(), price = free ? 0 : row.price;
+    if (st.cash < price) { CW.hud.toast('NOT ENOUGH CASH'); CW.sfx.play('click', 0.5); return; }
+    go(); st.cash -= price; CW.sfx.play('pickup', 0.9); CW.hud.toast(row.label + '  ' + o.t + (price ? '  -$' + price : '')); renderMods(); $('shop-cash').textContent = '$' + st.cash.toLocaleString('en-US');
+  }
+  function cycleMod(ri) {
+    const b = X.bay; if (!b) return; const row = modRows(b.car)[ri]; if (!row || row.na) return;
+    const cur = row.opts.findIndex((o) => o.on); applyMod(ri, (cur + 1) % row.opts.length);
+  }
+  // per-frame: the platform turns on real time (the world is near-frozen while a menu is open), the camera orbits the lift
+  function bayFrame() {
+    const b = X.bay, car = b.car, L = gZone(), M = CM(), now = performance.now(), rdt = Math.min(0.05, (now - b.last) / 1000); b.last = now;
+    b.spin += rdt * 0.5; car.h = b.spin; car.x = L.x; car.z = L.z; car.vx = car.vz = 0; car.speed = 0; car.awake = true;
+    car.liftY = CW.damp(car.liftY || 0, M.LIFT_Y, 6, rdt);
+    car.mesh.position.set(L.x, car.liftY, L.z); car.mesh.rotation.set(0, car.h, 0);
+    X.lift.userData.disc.rotation.y = car.h;
+    const c = CW.camera, R = Math.max(12, car.type.l * 3);
+    c.position.set(L.x + R * 0.42, 3.9, L.z - R * 0.9); c.fov = 40; c.updateProjectionMatrix();
+    c.lookAt(L.x, M.LIFT_Y + 0.75, L.z);
+  }
 
   // ---- UI overlay -------------------------------------------------------------------------------------------------------------------------
   let items = [];
@@ -126,8 +183,9 @@
     X.menu = { kind }; items = list; X.sel = 0; if (document.exitPointerLock) document.exitPointerLock();
     $('shop-foot').textContent = kind === 'garage' ? 'PRESS A NUMBER OR CLICK  ·  G / ESC TO LEAVE' : 'PRESS A NUMBER OR CLICK  ·  E / ESC TO LEAVE';
     $('shop-title').textContent = title; $('shop-sub').textContent = sub; $('shopui').style.display = 'block'; renderMenu();
+    if (kind === 'garage' && CW.player.car) enterBay(CW.player.car);
   }
-  function closeMenu() { X.menu = null; $('shopui').style.display = 'none'; }
+  function closeMenu() { X.menu = null; leaveBay(); $('shopui').style.display = 'none'; }
   X.close = closeMenu;
   function renderMenu() {
     const st = hs(); $('shop-cash').textContent = '$' + st.cash.toLocaleString('en-US');
@@ -155,7 +213,7 @@
     CW.cam.yaw = car.h + Math.PI; CW.cam.cd = undefined; CW.cam.pitch = 0.3; P.mode = 'foot'; P.car = null;
   }
   const PAINT = [0xff5a3c, 0xffc23a, 0x2fd0c4, 0xe0407a, 0x4f6fb5, 0xf2f0e6, 0x5f8f6d, 0x8b3f58, 0x2c2f33];
-  function repaint(car) { let c; do { c = PAINT[Math.floor(Math.random() * PAINT.length)]; } while (c === car.color); car.color = c; car.mesh.userData.body.geometry = CW.carGeometry(car.type.id, c); }
+  function repaint(car) { let c; do { c = PAINT[Math.floor(Math.random() * PAINT.length)]; } while (c === car.color); CW.carmods.setPaint(car, c); renderMods(); }
   function garageItems() {
     const car = CW.player.car, W = CW.police, S = CW.story; if (!car) return [];
     const free = S.free && S.st === 1, price = 200 + W.level * 150;
@@ -169,7 +227,7 @@
   }
   function lv(v, step) { if (!v) return 0; return Math.round(Math.log(v) / Math.log(step)); }
   function storeCar(car) {
-    const V = CW.vehicles; if (X.mine && X.mine !== car) { X.mine.mine = false; X.mine.owned = false; X.mine.hidden = true; }
+    const V = CW.vehicles; leaveBay(); if (X.mine && X.mine !== car) { X.mine.mine = false; X.mine.owned = false; X.mine.hidden = true; }
     ejectPlayer(); const s = X.garageSlot(); car.x = s.x; car.z = s.z; car.h = 0; car.vx = car.vz = 0; car.awake = false; car.owned = true; car.mine = true; car.stolen = false; car.hp = Math.max(car.hp, 60); X.mine = car; void V;
     CW.hud.toast('VEHICLE STORED  ·  IT WAITS IN THE YARD'); CW.sfx.play('pickup', 1);
   }
@@ -196,6 +254,7 @@
     if (X.menu) {
       if (I.pressed('Escape') || I.pressed('KeyG') || (X.menu.kind !== 'garage' && I.pressed('KeyE'))) { closeMenu(); return; }
       if (X.menu.kind === 'garage' && P.mode !== 'car') { closeMenu(); return; }
+      if (X.bay) { ['KeyZ', 'KeyX', 'KeyC', 'KeyV'].forEach((k, i) => { if (I.pressed(k)) cycleMod(i); }); bayFrame(); }
       for (let i = 0; i < 9; i++) if (I.pressed('Digit' + (i + 1))) buy(i);
       if (I.pressed('ArrowDown')) X.sel = Math.min(items.length - 1, X.sel + 1); if (I.pressed('ArrowUp')) X.sel = Math.max(0, X.sel - 1);
       if (I.pressed('Enter')) buy(X.sel);
@@ -209,7 +268,7 @@
       if (sh && !P.prompt) { prompt = 'E  ' + SHOPS[sh.kind].title; if (I.pressed('KeyE')) { openMenu(sh.kind, SHOPS[sh.kind].title, SHOPS[sh.kind].sub, SHOPS[sh.kind].items()); return; } }
     } else if (P.mode === 'car' && P.car) {
       const car = P.car, g = gZone(), fz = fZone();
-      if (Math.hypot(car.x - g.x, car.z - g.z) < 10 && car.speed < 5 && !car.cop) { prompt = "G  ROXY'S GARAGE"; if (I.pressed('KeyG')) { openMenu('garage', "ROXY'S REPAINT", 'REPAINT CLEARS YOUR STARS  ·  UPGRADES  ·  STORE ONE PERSONAL VEHICLE', garageItems()); return; } }
+      if (Math.hypot(car.x - g.x, car.z - g.z) < 10 && car.speed < 5 && !car.cop) { prompt = "G  ROXY'S GARAGE"; if (I.pressed('KeyG') || X.stageOpen) { X.stageOpen = false; openMenu('garage', "ROXY'S REPAINT", 'REPAINT CLEARS YOUR STARS  ·  UPGRADES  ·  STORE ONE PERSONAL VEHICLE', garageItems()); return; } }
       else if (Math.hypot(car.x - fz.x, car.z - fz.z) < 11 && car.speed < 6 && car.stolen && !car.owned && !car.cop) {
         if (CW.police.level > 0) prompt = 'FENCE: TOO HOT, LOSE THE COPS FIRST'; else { prompt = 'G  SELL STOLEN CAR  $' + salePrice(car).toLocaleString('en-US'); if (I.pressed('KeyG')) sell(car); }
       }

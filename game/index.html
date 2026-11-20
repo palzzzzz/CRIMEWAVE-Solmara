@@ -161,6 +161,15 @@
   #shopui { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(620px, 94vw); z-index: 17; display: none; padding: 16px 22px 14px; background: linear-gradient(160deg, #1b3a44, #12262e); border: 3px solid var(--gold); border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.65); pointer-events: auto; }
   #shopui h2 { margin: 0; font-size: 34px; color: var(--gold); } #shop-sub { font-size: 11px; letter-spacing: .22em; opacity: .75; margin-bottom: 8px; } #shop-cash { position: absolute; right: 22px; top: 18px; font-size: 28px; color: #8dff9c; }
   .it { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-bottom: 1px solid rgba(255,255,255,.12); cursor: pointer; } .it:hover { background: rgba(255,200,61,.14); } .it .k { width: 26px; height: 26px; line-height: 26px; text-align: center; background: var(--coral); border-radius: 5px; font-weight: bold; } .it .n { flex: 1; font-size: 16px; } .it .n small { display: block; font-size: 11px; opacity: .7; } .it .p { font-size: 18px; color: #8dff9c; font-weight: bold; } .it.lock { opacity: .4; } .it.lock .p { color: #ff9d7a; font-size: 12px; } .it.own .p { color: var(--gold); }
+  #shopui.bay { left: auto; right: 22px; top: 50%; transform: translateY(-50%); width: min(400px, 36vw); padding: 12px 16px 10px; } #shopui.bay h2 { font-size: 26px; } #shopui.bay #shop-cash { font-size: 22px; right: 16px; top: 14px; } #shopui.bay .it .n { font-size: 14px; } #shopui.bay .it .p { font-size: 15px; } #shopui.bay .it .n small { font-size: 10px; }
+  #modbay { position: fixed; left: 22px; top: 50%; transform: translateY(-50%); width: min(340px, 30vw); z-index: 17; display: none; padding: 12px 16px 12px; background: linear-gradient(160deg, #1b3a44, #12262e); border: 3px solid var(--gold); border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.65); pointer-events: auto; }
+  #modbay h2 { margin: 0; font-size: 26px; color: var(--gold); } #modbay .sub { font-size: 10px; letter-spacing: .22em; opacity: .75; margin-bottom: 8px; }
+  #modbay .mrow { padding: 6px 0 7px; border-bottom: 1px solid rgba(255,255,255,.12); } #modbay .ml { display: flex; justify-content: space-between; font-size: 12px; letter-spacing: .18em; margin-bottom: 5px; } #modbay .ml b { color: #8dff9c; font-weight: normal; } #modbay .ml i { font-style: normal; color: var(--gold); }
+  #modbay .opts { display: flex; flex-wrap: wrap; gap: 6px; }
+  #modbay .sw { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(255,255,255,.35); cursor: pointer; box-shadow: inset 0 -5px 8px rgba(0,0,0,.35), inset 0 4px 6px rgba(255,255,255,.35); } #modbay .sw.off { background: repeating-linear-gradient(45deg, #2a3a42 0 4px, #1b2a31 4px 8px); }
+  #modbay .bt { padding: 5px 9px; font-size: 12px; letter-spacing: .1em; border: 2px solid rgba(255,255,255,.3); border-radius: 6px; cursor: pointer; background: rgba(0,0,0,.25); }
+  #modbay .sw:hover, #modbay .bt:hover { border-color: #fff; } #modbay .sw.on, #modbay .bt.on { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(255,200,61,.35); } #modbay .bt.on { background: rgba(255,200,61,.18); color: var(--gold); } #modbay .na { opacity: .4; pointer-events: none; }
+  #modbay .foot { margin-top: 8px; font-size: 10px; letter-spacing: .16em; opacity: .65; text-align: center; }
   #shop-foot { margin-top: 9px; font-size: 11px; letter-spacing: .2em; opacity: .65; text-align: center; }
   #status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 </style>
@@ -253,6 +262,7 @@
 </div>
 <div id="phone"><div id="ph-top"><span id="ph-clock">17:00</span><span>SOLMARA 5G &#9679;&#9679;&#9679;&#9679;</span></div><div id="ph-app" class="imp">SolFeed</div>
   <div id="ph-tabs"><div data-t="0" class="on">1 FEED</div><div data-t="1">2 MESSAGES</div><div data-t="2">3 MISSION</div></div><div id="ph-body"></div><div id="ph-foot">P OR ESC TO CLOSE</div></div>
+<div id="modbay"><h2 class="imp">CAR MOD BAY</h2><div class="sub">THE LIFT SHOWS YOUR CAR  ·  CHANGES APPLY TO IT IN THE CITY TOO</div><div id="mb-rows"></div><div class="foot">CLICK TO APPLY  ·  Z X C V CYCLE PAINT / SPOILER / NEON / WHEELS</div></div>
 <div id="shopui"><h2 id="shop-title" class="imp"></h2><div id="shop-sub"></div><div id="shop-cash" class="imp"></div><div id="shop-list"></div><div id="shop-foot">PRESS A NUMBER OR CLICK  ·  ESC / E TO LEAVE</div></div>
 <div id="wheel"><canvas id="wheelc" width="600" height="600"></canvas><div id="wheeldot"></div><div id="wheelhint">MOVE THE MOUSE &middot; 1-6 PICKS &middot; RELEASE Q TO EQUIP</div></div>
 <div id="endscreen"><h1 id="end-title" class="imp">BUSTED</h1><div id="end-sub"></div><div id="end-hint" class="imp">PRESS ENTER TO CONTINUE</div></div>
@@ -277,6 +287,7 @@
 <script src="src/hud.js"></script>
 <script src="src/story.js"></script>
 <script src="src/phone.js"></script>
+<script src="src/carmods.js"></script>
 <script src="src/shops.js"></script>
 <script src="src/radio.js"></script>
 <script src="src/gunner.js"></script>

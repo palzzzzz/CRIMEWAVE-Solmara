@@ -136,6 +136,7 @@
     }
     CW.vehicles.update(sdt, playing);
     if (live) CW.explosions.update(sdt, playing);   // after vehicles: layers the tumble over the car pose
+    if (capture && playing) CW.hud.state.cash = 486250;   // staging: every capture frame shows a big haul
     if (capture && playing) { if (capture.rob) robberyStep(dt); else if (capture.heli) heliStep(dt); else captureStep(dt); }
     if (playing) CW.gunner.update(dt);   // after the car has moved, so Luna stays glued to the seat
     if (capture && playing) { const c = CW.camera; c.updateMatrixWorld(true); }
@@ -208,7 +209,11 @@
     const J = capture.rob, shop = capture.shop, W = CW.police, st = CW.hud.state, P = CW.player, c = CW.camera, cx = shop.cx, cz = shop.cz;
     capture.t += dt;
     const lk = (capQ.get('look') || '-1.2,0.9,1.2').split(',').map(Number), FV0 = capture.FV; FV = capture.FV, cu = qn('cu', 8.6), cv = qn('cv', -4.4) * FV, ch = qn('camh', 3.0);
-    const camX = cx + cu, camZ = cz + cv;
+    const IN = qn('in', 1), camX = IN ? cx + qn('iu', -1.9) : cx + cu, camZ = IN ? cz + qn('iv', -1.0) : cz + cv;   // &in=1 (default): the lens stands inside the shop, behind Ray
+    if (IN && !capture.sealed) {   // a closed interior: every wall back on, and a ceiling, so no frame ever shows the void or the sky beyond the dollhouse cut
+      capture.sealed = true; shop.walls.forEach((o) => { if (o) o.visible = true; });
+      const ce = new THREE.Mesh(new THREE.BoxGeometry(14, 0.2, 12), new THREE.MeshLambertMaterial({ color: 0x1c1426 })); ce.position.set(cx, 3.5, cz); CW.scene.add(ce);   // child of the scene, not the shop group: the near-lens clean-up below must not hide it
+    }
     st.hp = 100; P.mode = 'foot'; P.car = null;
     W.heat = capture.wl; W.level = capture.wl; W.lostT = 0; W.bust = 0; W.seen = true; st.wanted = capture.wl;
     // the protagonist: Ray with the pistol out, aimed at the clerk behind the counter
@@ -224,7 +229,7 @@
     const pos = [[qn('pu', -8.8), qn('pv', 0.3) * FV, qn('ph', 1.45)], [-12.6, -3.4 * FV, 1.2]];
     fleet.forEach((q, i) => { q.hidden = false; q.awake = true; q.cs = 'roadblock'; q.rbMin = 1e9; q.hp = 100; q.ai = q.ai || { cruise: 0, off: 0 }; q.x = cx + pos[i][0]; q.z = cz + pos[i][1]; q.h = pos[i][2]; q.vx = q.vz = 0; q.speed = 0; q.mesh.position.set(q.x, 0, q.z); q.mesh.rotation.y = q.h; });
     capture.cash.forEach((p, i) => { p.on = true; p.life = 99; if (p.mesh.children[1]) p.mesh.children[1].visible = false; if (p.mesh.children[2]) p.mesh.children[2].visible = false; if (i && p.mesh.children[3]) p.mesh.children[3].visible = false; p.mesh.position.set(cx + [3.0, 3.2, 2.9][i], 1.55, cz + [-1.4, -0.2, 0.9][i] * 1); });
-    c.position.set(camX, ch, camZ); c.fov = qn('fov', 56); c.updateProjectionMatrix(); c.lookAt(cx + lk[0], lk[2], cz + lk[1] * FV0);
+    if (IN) { c.position.set(camX, qn('ih', 1.7), camZ); c.fov = qn('fov', 68); c.updateProjectionMatrix(); c.lookAt(cx + qn('lu', 4.2), qn('ly', 1.1), cz + qn('lv', 1.4)); } else { c.position.set(camX, ch, camZ); c.fov = qn('fov', 56); c.updateProjectionMatrix(); c.lookAt(cx + lk[0], lk[2], cz + lk[1] * FV0); }
     shop.group.children.forEach((o) => { if (o.isMesh && o.visible && Math.hypot(cx + o.position.x - c.position.x, cz + o.position.z - c.position.z) < 2.6 && Math.abs(o.position.y - c.position.y) < 2.6) o.visible = false; });   // nothing between the lens and the scene
     document.getElementById('prompt').style.visibility = 'hidden';
     CW.traffic.peds.forEach((p) => { if (Math.hypot(p.x - c.position.x, p.z - c.position.z) < 30) p.model.visible = false; });
@@ -254,9 +259,49 @@
     c.position.set(qn('cx', 236), qn('ch', 2.2), qn('cz', -170)); c.fov = qn('fov', 60); c.updateProjectionMatrix(); c.lookAt(qn('tx', 246), qn('ty', 17), qn('tz', -240));
     CW.traffic.peds.forEach((p) => { if (Math.hypot(p.x - c.position.x, p.z - c.position.z) < 25) p.model.visible = false; });
     CW.vehicles.list.forEach((v) => { if (Math.hypot(v.x - c.position.x, v.z - c.position.z) < 10) v.mesh.visible = false; });
+    if (qn('fire', 0)) heliFire(A);
+  }
+  // &fire=1 (staging only): Ray rides in the player helicopter, hanging out of the side door and shooting down at the avenue, which is going up in fireballs
+  // (the real fx.explode); the camera sits off the open door with the make.fun sign behind. All numbers are overridable from the URL.
+  function heliFire(A) {
+    const Wp = CW.weapons, X = CW.explosions, t = capture.t, H = CW.air.heli, c = CW.camera, P = CW.player;
+    let f = capture.fire;
+    const hx = qn('fx', 241), hy = qn('fy', 9), hz = qn('fz', -186), hh = qn('fh', -1.5708);
+    if (!f) {
+      f = capture.fire = { n: 0, boom: [] };
+      const g = H.mk.root.children[0], B = (w, h, d, col, x, y, z) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshLambertMaterial({ color: col })); m.position.set(x, y, z); g.add(m); return m; };
+      B(0.05, 0.95, 1.25, 0x14171b, 0.975, 1.2, 0.55); B(0.18, 0.1, 0.5, 0x2a2f33, 1.0, 0.72, 0.3);   // the open door: dark cavity + the sill
+      const pivot = new THREE.Group(); pivot.position.set(qn('px2', 1.08), qn('py2', 1.02), qn('pz2', 0.6)); g.add(pivot);
+      const m = CW.makePerson(P.crew.ray.def); m.position.y = -0.95; m.rotation.y = Math.PI / 2; pivot.add(m);
+      const u = m.userData; u.setPose('');
+      const lean = qn('lean', -0.85); pivot.rotation.z = lean;
+      u.legL.rotation.x = -lean * 0.0; u.legR.rotation.x = 0;   // legs counter-rotated below (model frame: the lean axis is its -x)
+      u.legL.rotation.x = lean; u.legR.rotation.x = lean;
+      const gun = Wp.attachGun(m, 'pistol');
+      u.armR.sh.rotation.set(qn('ar', -0.55), 0, 0.05); u.armR.el.rotation.x = -0.1;
+      u.armL.sh.rotation.set(qn('al', 0.9), 0, -0.1); u.armL.el.rotation.x = -0.4;   // the other hand holds the door frame
+      u.head.rotation.set(0.45, 0, 0);
+      f.gun = gun; f.fl = gun.userData.flash; f.pivot = pivot; f.m = m;
+    }
+    A.mk.root.visible = false; A.cone.visible = false; A.disc.visible = false; A.hp = 400;
+    H.dead = false; H.hp = 100; H.x = hx; H.y = hy; H.z = hz; H.h = hh; H.vx = H.vy = H.vz = 0; H.rs = 1; H.pitch = 0.05; H.roll = 0;
+    H.mk.root.visible = true; H.mk.root.position.set(hx, hy, hz); H.mk.root.rotation.set(H.pitch, hh, 0);
+    H.mk.rotor.rotation.y += 0.7; H.mk.tail.rotation.x += 1.1; H.mk.blur.material.opacity = 0.17;
+    c.position.set(qn('cx', 245), qn('ch', 6.5), qn('cz', -176)); c.fov = qn('fov', 52); c.updateProjectionMatrix(); c.lookAt(qn('tx', 240), qn('ty', 8.6), qn('tz', -190));
+    const bx = [[hx + 22, hz - 14], [hx - 8, hz - 24], [hx + 8, hz - 12]];   // fireballs on the avenue below the heli and beyond it, toward the neon sign
+    [qn('b1', 0.6), qn('b2', 0.76), qn('b3', 0.9)].forEach((at, i) => { if (t >= at && !f.boom[i]) { f.boom[i] = 1; X.explode(bx[i][0], bx[i][1], i ? 5 : 8, { noHurt: true }); } });
+    f.fl.visible = true; f.fl.rotation.z = f.n * 1.7; f.fl.scale.setScalar(2.4);   // muzzle flash, always lit in the frozen frame
+    H.mk.root.updateMatrixWorld(true);
+    const mp = new THREE.Vector3(); f.fl.getWorldPosition(mp);
+    for (let i = 0; i < 3; i++) {
+      Wp.tracer(mp.x, mp.y, mp.z, bx[i][0] + (f.n % 3 - 1), 0.5, bx[i][1] + 1, 0xffe9a0, 0.09, 2.4);
+      Wp.tracer(hx - 18 + i * 18 + (f.n % 4), 1.0, hz - 10 - i * 4, hx + (i - 1) * 1.8, hy - 0.5, hz, 0xffa56a, 0.09, 1.8);   // patrol fire climbing to the heli
+    }
+    if (f.n % 2 === 0) Wp.spark(hx - 0.6, hy + 0.5, hz + 1.2);
+    f.n++;
   }
   // ?stage=map&idx=<0-7>: pantalla de mapa con el progreso de ese capítulo
-  function stageMap() { game.start(false); CW.story.idx = CW.clamp(Math.round(qn('idx', 5)), 0, CW.story.missions.length); CW.story.state = 'idle'; CW.story.wait = 1e9; CW.sky.hour = qn('hr', 21); CW.mapscreen.toggle(true); }
+  function stageMap() { game.start(false); CW.hud.state.cash = 486250; CW.story.idx = CW.clamp(Math.round(qn('idx', 5)), 0, CW.story.missions.length); CW.story.state = 'idle'; CW.story.wait = 1e9; CW.sky.hour = qn('hr', 21); CW.mapscreen.toggle(true); }
 
   function captureStart() {
     if (capType === 'robbery') return robberyStart();

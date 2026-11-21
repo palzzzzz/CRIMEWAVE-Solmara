@@ -50,6 +50,11 @@
       });
       this.mesh.position.set(x, 0, z); this.mesh.rotation.y = h;
       if (CW.brand) CW.brand.livery(this);   // make.fun livery on every VESPER GT
+      if (typeId === 'bike') {   // a visible rider, hidden while the player is the one on the bike (the player's own model is drawn then)
+        const k = (color >> 3) & 7, SH = [0x2f3b45, 0xc9593f, 0x37c9b8, 0x8f6fd1, 0xf2c94c, 0x6fa3d8, 0xe0407a, 0xf5f1e6];
+        const r = CW.makePerson({ id: 'npc', skin: [0xd9a070, 0xb9805a, 0x8d5a3b, 0xf0c8a0][k & 3], hair: 0x20160f, shirt: SH[k], pants: 0x2f3b45, shoes: 0x15181a, female: !!(k & 1), shades: true });
+        r.userData.setPose('bike'); r.position.set(0, 0.02, -0.12); this.mesh.add(r); this.rider = r;
+      }
     }
     circles() {
       const t = this.type, s = Math.sin(this.h), c = Math.cos(this.h), r = t.w * 0.5, o = t.l * 0.5 - r;
@@ -195,7 +200,7 @@
     V.list.forEach((car) => {
       let ctl = null;
       if (car.hidden) { car.mesh.visible = false; return; }
-      car.mesh.visible = true;
+      car.mesh.visible = true; if (car.rider) car.rider.visible = !car.driven;
       if (car.driven && active) {
         ctl = { throttle: I.axis(['KeyS', 'ArrowDown'], ['KeyW', 'ArrowUp']), steer: I.axis(['KeyD', 'ArrowRight'], ['KeyA', 'ArrowLeft']), brake: I.isDown('Space') };
       } else if (car.ai && car.hp > 0) ctl = car.aiCtl;

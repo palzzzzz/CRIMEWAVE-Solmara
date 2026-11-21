@@ -68,7 +68,7 @@
       return;
     }
     const car = P.car, t = car.type, u = luna.model.userData;
-    if (!G.aboard) { G.aboard = true; G.fireK = 0; G.lean = 0.3; G.twist = 0; u.setPose('none'); luna.model.visible = true; CW.hud.toast('LUNA RIDES SHOTGUN'); }
+    if (!G.aboard) { G.aboard = true; G.fireK = 0; G.lean = 0.3; G.twist = 0; u.setPose('none'); luna.model.visible = true; CW.hud.toast('LUNA VA DE COPILOTO'); }
     G.car = car;
     const hot = W.level >= 2 && !W.ended;
     G.tgtT -= dt; if (G.tgtT <= 0) { G.tgtT = 0.2; G.tgt = hot ? pickTarget(car) : null; }

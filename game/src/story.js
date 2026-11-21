@@ -8,10 +8,10 @@
 
   // ---- cast + portraits ---------------------------------------------------------------------------------
   const CAST = {
-    luna: { name: 'LUNA', role: 'CREW  ·  PLANNER', bg: ['#12a7a0', '#0b4f5c'], shirt: '#37c9b8', skin: '#b9805a' },
-    ray: { name: 'RAY', role: 'CREW  ·  DRIVER', bg: ['#ff8a4a', '#7a2a3a'], shirt: '#ff7b54', skin: '#5a3822' },
-    teo: { name: 'TEO SALVAGE', role: 'THE FENCE  ·  HARBOUR', bg: ['#d9a85a', '#5a3a22'], shirt: '#6e7a4e', skin: '#d9a070' },
-    roxy: { name: 'ROXY', role: 'THE WHEELWOMAN  ·  GARAGE', bg: ['#e8456f', '#4a1a4a'], shirt: '#3f6fb5', skin: '#8d5a3b' },
+    luna: { name: 'LUNA', role: 'EQUIPO  ·  PLANIFICADORA', bg: ['#12a7a0', '#0b4f5c'], shirt: '#37c9b8', skin: '#b9805a' },
+    ray: { name: 'RAY', role: 'EQUIPO  ·  CONDUCTOR', bg: ['#ff8a4a', '#7a2a3a'], shirt: '#ff7b54', skin: '#5a3822' },
+    teo: { name: 'TEO SALVADOR', role: 'EL RECEPTADOR  ·  PUERTO', bg: ['#d9a85a', '#5a3a22'], shirt: '#6e7a4e', skin: '#d9a070' },
+    roxy: { name: 'ROXY', role: 'LA MECÁNICA  ·  GARAJE', bg: ['#e8456f', '#4a1a4a'], shirt: '#3f6fb5', skin: '#8d5a3b' },
   };
   S.cast = CAST;
   function poly(x, pts, col) { x.fillStyle = col; x.beginPath(); pts.forEach((p, i) => (i ? x.lineTo(p[0], p[1]) : x.moveTo(p[0], p[1]))); x.closePath(); x.fill(); }
@@ -79,7 +79,7 @@
   S.repNeed = (lv) => 80 + lv * 60;
   S.addRep = function (n, why) {
     const st = hs(); st.repXp += n;
-    while (st.rep < 10 && st.repXp >= S.repNeed(st.rep)) { st.repXp -= S.repNeed(st.rep); st.rep++; st.cash += 250 * st.rep; CW.hud.toast('REP LEVEL ' + st.rep + '  ·  BONUS $' + 250 * st.rep); CW.sfx.play('pickup', 1); }
+    while (st.rep < 10 && st.repXp >= S.repNeed(st.rep)) { st.repXp -= S.repNeed(st.rep); st.rep++; st.cash += 250 * st.rep; CW.hud.toast('NIVEL DE REP ' + st.rep + '  ·  BONO $' + 250 * st.rep); CW.sfx.play('pickup', 1); }
     if (st.rep >= 10) st.repXp = Math.min(st.repXp, S.repNeed(9) - 1);
     st.repNeed = S.repNeed(st.rep);
     if (why && n) CW.hud.toast('+' + n + ' REP  ·  ' + why);
@@ -103,49 +103,49 @@
   const CPS = [{ x: 160, z: -160 }, { x: 0, z: -80 }, { x: -160, z: 160 }];
 
   const MISSIONS = [
-    { t: 'WELCOME TO SOLMARA', who: 'luna', pay: 500, rep: 25, nx: ['Drive it to the Fence yard at the harbour', 'Meet Teo Salvage'],
-      brief: [['luna', 'Ray, wake up. Solmara will not rob itself.'], ['luna', 'Teo runs Harbour Fence & Salvage, down at the docks. He buys what we steal and pays in cash.'], ['ray', 'Find a car, find Teo. Got it.']],
-      outro: [['teo', 'So you are Luna\'s people. Good. Come back when you have wheels with a story behind them.']],
+    { t: 'BIENVENIDOS A PUERTO MAREA', who: 'luna', pay: 500, rep: 25, nx: ['Llévalo a la chatarrería del puerto', 'Conoce a Teo Salvador'],
+      brief: [['luna', 'Ray, despierta. Puerto Marea no se va a robar solo.'], ['luna', 'Teo lleva la Chatarrería El Puerto, allá en los muelles. Compra lo que robamos y paga en efectivo.'], ['ray', 'Buscar un auto, buscar a Teo. Entendido.']],
+      outro: [['teo', 'Así que eres de la gente de Luna. Bien. Vuelve cuando tengas autos con historia.']],
       begin() { S.st = 0; },
-      tick() { const m = CW.player.mode; if (S.st === 0 && m !== 'foot') S.st = 1; const f = fencePt(); obj(S.st ? 'Drive to Harbour Fence & Salvage (the $ diamond)' : 'Get a car: walk up to one and press E', f, S.st, 2); return near(f, 14); } },
-    { t: 'FENCE WORK', who: 'teo', pay: 700, rep: 30, nx: ['Steal a second car', 'Collect your pay from Teo'],
-      brief: [['teo', 'Two cars. Stolen, not borrowed. Bring them to my yard, stop inside and press G. I do the rest.'], ['teo', 'Hot cars, hot cash. Do not bring cops to my door.']],
-      outro: [['teo', 'Clean work. The wheels will not be missed. Roxy wants a word, she has a favour.']],
+      tick() { const m = CW.player.mode; if (S.st === 0 && m !== 'foot') S.st = 1; const f = fencePt(); obj(S.st ? 'Maneja hasta la Chatarrería El Puerto (el diamante $)' : 'Consigue un auto: acércate a uno y presiona E', f, S.st, 2); return near(f, 14); } },
+    { t: 'ENTREGA DE AUTOS', who: 'teo', pay: 700, rep: 30, nx: ['Roba un segundo auto', 'Cobra tu pago a Teo'],
+      brief: [['teo', 'Dos autos. Robados, no prestados. Tráelos a mi patio, detente adentro y presiona G. Yo hago el resto.'], ['teo', 'Autos calientes, dinero caliente. No traigas policías a mi puerta.']],
+      outro: [['teo', 'Trabajo limpio. Nadie va a extrañar esas ruedas. Roxy quiere hablar contigo, tiene un favor.']],
       begin() { S.count = 0; },
-      tick() { const f = fencePt(); obj('Steal cars and sell them at the Fence yard (' + S.count + '/2). Park inside, press G.', f, S.count, 2); return S.count >= 2; } },
-    { t: 'SPRAY AND PRAY', who: 'roxy', pay: 900, rep: 35, nx: ['Drive it to Roxy\'s garage', 'Press G in the bay for the free respray', 'Roxy pays out'],
-      brief: [['roxy', 'Roxy here. Roxy\'s Repaint. I need a Vesper GT, any colour, so long as it is somebody else\'s.'], ['roxy', 'Bring it in, press G in the bay, and I will respray it free. First one is on the house.']],
-      outro: [['roxy', 'Gorgeous. Come back any time heat gets stupid: a fresh coat clears your stars. For a price.']],
+      tick() { const f = fencePt(); obj('Roba autos y véndelos en el patio del receptador (' + S.count + '/2). Estaciona adentro, presiona G.', f, S.count, 2); return S.count >= 2; } },
+    { t: 'PINTURA Y PLEGARIA', who: 'roxy', pay: 900, rep: 35, nx: ['Llévalo al garaje de Roxy', 'Presiona G en el taller para el repintado gratis', 'Roxy te paga'],
+      brief: [['roxy', 'Habla Roxy. Necesito un Vesper GT, del color que sea, mientras sea de otro.'], ['roxy', 'Tráelo, presiona G en el taller y te lo repinto gratis. El primero va por la casa.']],
+      outro: [['roxy', 'Hermoso. Vuelve cuando la cosa se ponga fea: una mano de pintura te borra las estrellas. Con costo.']],
       begin() { S.st = 0; S.target = null; S.free = true; },
       tick() { const P = CW.player; if (S.st === 0 && P.mode === 'car' && P.car.type.id === 'sports') { S.st = 1; S.target = P.car; } if (S.st === 1 && (P.mode !== 'car' || P.car !== S.target) && !near(garagePt(), 60)) S.st = 0; const g = garagePt();
-        obj(S.st === 0 ? 'Steal a VESPER GT (the low sports coupe)' : S.st === 1 ? 'Drive it into Roxy\'s garage bay (the garage icon), press G' : 'Repaint it', S.st ? g : null, S.st, 3); return S.st === 2; },
+        obj(S.st === 0 ? 'Roba un VESPER GT (el cupé deportivo bajo)' : S.st === 1 ? 'Llévalo al taller de Roxy (el ícono del garaje), presiona G' : 'Repíntalo', S.st ? g : null, S.st, 3); return S.st === 2; },
       end() { S.free = false; } },
-    { t: 'THE COURIER RUN', who: 'luna', pay: 1400, rep: 40, nx: ['Checkpoint 2, then 3. Do not stop', 'Last drop: checkpoint 3', 'Luna pays out'],
-      brief: [['luna', 'Timed job. Three drops across town, one hundred and seventy seconds, no stopping.'], ['luna', 'Beachfront, Downtown, then the harbour. Do not get caught.']],
-      outro: [['luna', 'Under the clock. You are better at this than Ray said.'], ['ray', 'I heard that.']],
+    { t: 'LA CARRERA DEL MENSAJERO', who: 'luna', pay: 1400, rep: 40, nx: ['Punto 2, luego el 3. No te detengas', 'Última entrega: punto 3', 'Luna te paga'],
+      brief: [['luna', 'Trabajo contrarreloj. Tres entregas por la ciudad, ciento setenta segundos, sin parar.'], ['luna', 'La costanera, el centro y luego el puerto. Que no te atrapen.']],
+      outro: [['luna', 'Dentro del tiempo. Eres mejor de lo que dijo Ray.'], ['ray', 'Te oí.']],
       begin() { S.st = 0; S.timer = 170; },
-      tick() { const c = CPS[S.st]; obj('Hit checkpoint ' + (S.st + 1) + ' of 3. Beat the clock!', c, S.st, 3); if (near(c, 11)) { S.st++; CW.sfx.play('pickup', 1); if (S.st >= 3) return true; CW.hud.toast('CHECKPOINT ' + S.st + '/3'); } return false; } },
-    { t: 'CABRAL\'S CORNER', who: 'ray', pay: 2000, rep: 50, nx: ['Find the nearest Cabral gunman', 'Finish the last of the crews, then Luna pays out'],
-      brief: [['ray', 'The Cabral crews run Downtown and the Westside. They have been squeezing Teo for months.'], ['ray', 'Six of them. Pick a gun: the shop on the boardwalk sells the good stuff. Hold Q for the wheel.']],
-      outro: [['luna', 'The Cabrals will not forget this. Neither will Solmara. Check SolFeed.']],
+      tick() { const c = CPS[S.st]; obj('Llega al punto ' + (S.st + 1) + ' de 3. ¡Gana al reloj!', c, S.st, 3); if (near(c, 11)) { S.st++; CW.sfx.play('pickup', 1); if (S.st >= 3) return true; CW.hud.toast('PUNTO ' + S.st + '/3'); } return false; } },
+    { t: 'LA ESQUINA DE LOS CABRAL', who: 'ray', pay: 2000, rep: 50, nx: ['Busca al pistolero Cabral más cercano', 'Acaba con las últimas bandas y Luna te paga'],
+      brief: [['ray', 'Las bandas Cabral controlan el centro y el oeste. Llevan meses apretando a Teo.'], ['ray', 'Son seis. Elige un arma: la tienda del malecón vende lo bueno. Mantén Q para la rueda.']],
+      outro: [['luna', 'Los Cabral no lo van a olvidar. Puerto Marea tampoco. Mira SolFeed.']],
       begin() { reviveGang([1, 2]); },
       tick() { const d = gangDead([1, 2]); const alive = CW.enemies.gang.filter((g) => [1, 2].indexOf(g.grp) >= 0 && g.state !== 'dead'); const f = foc(); let b = null, bd = 1e9; alive.forEach((g) => { const q = Math.hypot(g.x - f.x, g.z - f.z); if (q < bd) { bd = q; b = g; } });
-        obj('Take out the Cabral crews, Downtown and Westside (' + d + '/6)', b ? { x: b.x, z: b.z } : null, d, 6); return d >= 6; } },
-    { t: 'HOT BAG', who: 'teo', pay: 2500, rep: 60, nx: ['Shake the cops once you have the bag', 'Take the bag to Roxy\'s garage', 'Roxy pays out'],
-      brief: [['teo', 'A courier left a bag at the beachfront hotel. Pick it up on foot. Cops will notice, they always do.'], ['teo', 'Shake them, then bring the bag to Roxy\'s garage. Fresh paint, fresh start.']],
-      outro: [['roxy', 'Bag, car and a smile. I love my job.']],
+        obj('Elimina a las bandas Cabral, centro y oeste (' + d + '/6)', b ? { x: b.x, z: b.z } : null, d, 6); return d >= 6; } },
+    { t: 'BOLSA CALIENTE', who: 'teo', pay: 2500, rep: 60, nx: ['Despista a la policía cuando tengas la bolsa', 'Lleva la bolsa al garaje de Roxy', 'Roxy te paga'],
+      brief: [['teo', 'Un mensajero dejó una bolsa en el hotel de la costanera. Recógela a pie. La policía se dará cuenta, siempre lo hace.'], ['teo', 'Despístalos y lleva la bolsa al garaje de Roxy. Pintura nueva, vida nueva.']],
+      outro: [['roxy', 'Bolsa, auto y una sonrisa. Amo mi trabajo.']],
       begin() { S.st = 0; S.bag = { x: 180, z: -164 }; },
       tick() { const g = garagePt(); const P = CW.player;
-        if (S.st === 0) { obj('Grab the bag at the beachfront hotel (on foot)', S.bag, 0, 3); if (near(S.bag, 4) && P.mode === 'foot') { S.st = 1; CW.police.raise(2.6, 'crime', true); CW.hud.toast('THE BAG IS HOT'); CW.sfx.play('pickup', 1); } }
-        else if (S.st === 1) { obj('LOSE THE COPS (break line of sight, hide)', null, 1, 3); if (wantedZero()) S.st = 2; }
-        else { obj('Deliver the bag to Roxy\'s garage', g, 2, 3); if (near(g, 12)) return true; } return false; } },
-    { t: 'SUNSTONE', who: 'luna', pay: 6000, rep: 100, nx: ['Land on the roof to take the stone', 'Fly back to the pad with the air unit on you', 'Teo pays out'],
-      brief: [['luna', 'This is it. The Sunstone, a diamond the size of a fist, in a Downtown penthouse safe.'], ['luna', 'No lobby. We go in through the roof: fly the helicopter off the harbour pad and land on the marked tower.'], ['luna', 'When you have it, the air unit will be on you. Land back on the pad at the harbour. Teo is waiting. Do not crash.'], ['ray', 'I always wanted to fly this thing.']],
-      outro: [['teo', 'The Sunstone. In my yard. Solmara will never be the same.'], ['luna', 'Ray, Luna, Solmara. Not bad for a first week. The city is yours: keep the crimewave rolling.']],
+        if (S.st === 0) { obj('Toma la bolsa en el hotel de la costanera (a pie)', S.bag, 0, 3); if (near(S.bag, 4) && P.mode === 'foot') { S.st = 1; CW.police.raise(2.6, 'crime', true); CW.hud.toast('LA BOLSA ESTÁ CALIENTE'); CW.sfx.play('pickup', 1); } }
+        else if (S.st === 1) { obj('DESPISTA A LA POLICÍA (rompe la línea de visión, escóndete)', null, 1, 3); if (wantedZero()) S.st = 2; }
+        else { obj('Entrega la bolsa en el garaje de Roxy', g, 2, 3); if (near(g, 12)) return true; } return false; } },
+    { t: 'PIEDRA DEL SOL', who: 'luna', pay: 6000, rep: 100, nx: ['Aterriza en la azotea para tomar la piedra', 'Vuela de regreso a la plataforma con la unidad aérea encima', 'Teo te paga'],
+      brief: [['luna', 'Este es el golpe. La Piedra del Sol, un diamante del tamaño de un puño, en la caja fuerte de un penthouse del centro.'], ['luna', 'Sin vestíbulo. Entramos por el techo: vuela el helicóptero desde la plataforma del puerto y aterriza en la torre marcada.'], ['luna', 'Cuando la tengas, la unidad aérea te va a seguir. Aterriza de nuevo en la plataforma del puerto. Teo te espera. No te estrelles.'], ['ray', 'Siempre quise pilotar esta cosa.']],
+      outro: [['teo', 'La Piedra del Sol. En mi patio. Puerto Marea nunca volverá a ser igual.'], ['luna', 'Ray, Luna, Puerto Marea. Nada mal para una primera semana. La ciudad es tuya: que siga la marea criminal.']],
       begin() { S.st = 0; S.roof = roofTarget(); S.timer = 0; },
       tick() { const P = CW.player, A = CW.air, pad = { x: A.heli.x, z: A.heli.z };
-        if (S.st === 0) { obj(P.mode === 'heli' ? 'Fly to the marked tower and LAND on the roof (SHIFT to descend)' : 'Take the helicopter at the harbour pad (white H)', P.mode === 'heli' ? { x: S.roof.x, z: S.roof.z, y: S.roof.h } : { x: 60, z: 274 }, 0, 3); if (P.mode === 'heli' && Math.hypot(A.heli.x - S.roof.x, A.heli.z - S.roof.z) < 14 && A.heli.y - A.heli.floor < 1.2 && A.heli.floor > 6) { S.st = 1; S.timer = 170; CW.police.raise(3.7, 'crime', true); CW.hud.toast('SUNSTONE SECURED  ·  AIR UNIT INBOUND'); CW.sfx.play('pickup', 1); } if (!S.roofSeen) { S.roofSeen = 1; } }
-        else { obj('Fly back and land on the harbour pad, Teo is waiting', { x: 60, z: 274, y: 0 }, 1, 3); const h = A.heli; if (P.mode === 'heli' && Math.hypot(h.x - 60, h.z - 274) < 9 && h.y - h.floor < 1.2) return true; if (P.mode !== 'heli' && near({ x: 60, z: 274 }, 14)) return true; } return false; },
+        if (S.st === 0) { obj(P.mode === 'heli' ? 'Vuela hasta la torre marcada y ATERRIZA en la azotea (SHIFT para descender)' : 'Toma el helicóptero en la plataforma del puerto (la H blanca)', P.mode === 'heli' ? { x: S.roof.x, z: S.roof.z, y: S.roof.h } : { x: 60, z: 274 }, 0, 3); if (P.mode === 'heli' && Math.hypot(A.heli.x - S.roof.x, A.heli.z - S.roof.z) < 14 && A.heli.y - A.heli.floor < 1.2 && A.heli.floor > 6) { S.st = 1; S.timer = 170; CW.police.raise(3.7, 'crime', true); CW.hud.toast('PIEDRA DEL SOL ASEGURADA  ·  UNIDAD AÉREA EN CAMINO'); CW.sfx.play('pickup', 1); } if (!S.roofSeen) { S.roofSeen = 1; } }
+        else { obj('Vuela de regreso y aterriza en la plataforma del puerto, Teo te espera', { x: 60, z: 274, y: 0 }, 1, 3); const h = A.heli; if (P.mode === 'heli' && Math.hypot(h.x - 60, h.z - 274) < 9 && h.y - h.floor < 1.2) return true; if (P.mode !== 'heli' && near({ x: 60, z: 274 }, 14)) return true; } return false; },
       end() { S.finished = true; } },
   ];
   S.missions = MISSIONS;
@@ -154,21 +154,21 @@
     const m = MISSIONS[S.idx]; S.state = 'active'; S.st = 0; S.timer = 0; S.count = 0; S.obj = null;
     if (m.begin) m.begin();
     S.cn = -1;
-    const first = m.brief.find((l) => l[0] === m.who) || m.brief[0]; showCard(first[0], first[1], 'NEW JOB');
-    CW.hud.banner('CHAPTER ' + (S.idx + 1) + '  ·  ' + m.t, 'MISSION STARTED');
+    const first = m.brief.find((l) => l[0] === m.who) || m.brief[0]; showCard(first[0], first[1], 'NUEVO TRABAJO');
+    CW.hud.banner('CAPÍTULO ' + (S.idx + 1) + '  ·  ' + m.t, 'MISIÓN INICIADA');
   };
   S.complete = function () {
     const m = MISSIONS[S.idx], st = hs(); st.cash += m.pay; S.addRep(m.rep);
     if (m.end) m.end();
-    CW.hud.banner('MISSION PASSED', m.t + '   +$' + m.pay.toLocaleString('en-US') + '   +' + m.rep + ' REP'); CW.sfx.play('mission', 1);
-    if (CW.solfeed) CW.solfeed.news('Word is the crew pulled off "' + m.t.toLowerCase() + '". Respect.');
+    CW.hud.banner('¡MISIÓN CUMPLIDA!', m.t + '   +$' + m.pay.toLocaleString('en-US') + '   +' + m.rep + ' REP'); CW.sfx.play('mission', 1);
+    if (CW.solfeed) CW.solfeed.news('Dicen que el equipo sacó adelante "' + m.t.toLowerCase() + '". Respeto.');
     S.idx++; S.state = 'idle'; S.wait = 12; S.obj = null; S.timer = 0; S.retry = false;
     const lastLine = m.outro[m.outro.length - 1];
-    S.say(m.outro, false, () => showCard(lastLine[0], lastLine[1], 'JOB DONE'));
+    S.say(m.outro, false, () => showCard(lastLine[0], lastLine[1], 'TRABAJO HECHO'));
   };
   S.fail = function (why) {
     const m = MISSIONS[S.idx]; if (m.end) m.end();
-    CW.sfx.play('fail', 1); CW.hud.banner('MISSION FAILED', why); S.state = 'idle'; S.wait = 10; S.retry = true; S.obj = null; S.timer = 0; S.st = 0;
+    CW.sfx.play('fail', 1); CW.hud.banner('MISIÓN FALLIDA', why); S.state = 'idle'; S.wait = 10; S.retry = true; S.obj = null; S.timer = 0; S.st = 0;
   };
 
   // ---- world marker (light beam + ring) and minimap ----------------------------------------------------------------------------------------------------
@@ -192,19 +192,19 @@
     const W = CW.police;
     if (S.talk) updateTalk(dt); else if (S.ring) updateRing(dt);
     S.timeScale = S.talk && !S.talk.phone ? 0.45 : 1;
-    if (S.state === 'active' && W.ended) S.fail('You went down. Try again');
+    if (S.state === 'active' && W.ended) S.fail('Caíste. Inténtalo de nuevo');
     if (S.state === 'idle' && !W.ended && S.idx < MISSIONS.length && !S.talk && !S.ring) {
       S.wait -= dt;
       if (S.wait <= 0) {
         const m = MISSIONS[S.idx];
-        if (S.retry) { S.call(m.who, [[m.who, 'Let\'s try "' + m.t.toLowerCase() + '" again. Same plan.']], () => S.start()); }
+        if (S.retry) { S.call(m.who, [[m.who, 'Probemos "' + m.t.toLowerCase() + '" otra vez. Mismo plan.']], () => S.start()); }
         else S.call(m.who, m.brief, () => S.start());
         S.wait = 99;
       }
     }
     if (S.state === 'active' && !W.ended) {
       const m = MISSIONS[S.idx];
-      if (S.timer > 0) { S.timer -= dt; if (S.timer <= 0) { S.fail('Out of time'); return; } }
+      if (S.timer > 0) { S.timer -= dt; if (S.timer <= 0) { S.fail('Se acabó el tiempo'); return; } }
       const done = !S.talk || CW.hud.hold.indexOf('dlg') >= 0 ? m.tick() : false;   // (?hold=dlg staging keeps the objective ticking under the held call, so the mission panel fills)
       if (!S.talk && done) S.complete();
     }
@@ -213,23 +213,23 @@
     if (p.style.display !== (on ? 'block' : 'none')) p.style.display = on ? 'block' : 'none';
     if (on) {
       const m = MISSIONS[S.idx], o = S.obj;
-      set('m-chapter', 'ch', 'CHAPTER ' + (S.idx + 1) + '/' + MISSIONS.length + '  ·  ' + CAST[m.who].name);
+      set('m-chapter', 'ch', 'CAPÍTULO ' + (S.idx + 1) + '/' + MISSIONS.length + '  ·  ' + CAST[m.who].name);
       set('m-title', 'mt', m.t); set('m-obj', 'mo', o.text);
       set('m-pt', 'pt', o.of ? o.n + '/' + o.of : '');
       $('m-barfill').style.width = (o.of ? Math.round(Math.min(1, o.n / o.of) * 100) : 0) + '%';
-      set('m-next', 'nx', m.nx && o.of ? '<b>NEXT</b>' + m.nx[Math.min(m.nx.length - 1, Math.floor(o.n / o.of * m.nx.length))] : '', 'innerHTML');
+      set('m-next', 'nx', m.nx && o.of ? '<b>SIGUIENTE</b>' + m.nx[Math.min(m.nx.length - 1, Math.floor(o.n / o.of * m.nx.length))] : '', 'innerHTML');
       const tm = $('m-timer'); tm.style.display = S.timer > 0 ? 'block' : 'none'; if (S.timer > 0) { set('m-timer', 'tx', Math.floor(S.timer / 60) + ':' + ('0' + Math.floor(S.timer % 60)).slice(-2)); tm.classList.toggle('low', S.timer < 20); }
     }
     if (on) {   // progress card: the next scripted line of this mission's giver, whenever the stage counter moves
-      const m = MISSIONS[S.idx], n = S.obj.n; if (S.cn === -1) S.cn = n; else if (n !== S.cn && n > S.cn) { S.cn = n; const l = m.brief[Math.min(n, m.brief.length - 1)]; showCard(l[0], l[1], 'UPDATE'); } else S.cn = n;
+      const m = MISSIONS[S.idx], n = S.obj.n; if (S.cn === -1) S.cn = n; else if (n !== S.cn && n > S.cn) { S.cn = n; const l = m.brief[Math.min(n, m.brief.length - 1)]; showCard(l[0], l[1], 'NOVEDAD'); } else S.cn = n;
     }
     const hold = CW.hud.hold.indexOf('card') >= 0, cd = $('card');
-    if (hold && cardT <= 0) { const m = MISSIONS[Math.min(S.idx, MISSIONS.length - 1)], l = m.brief[m.brief.length - 1]; showCard(l[0], l[1], 'UPDATE'); }
+    if (hold && cardT <= 0) { const m = MISSIONS[Math.min(S.idx, MISSIONS.length - 1)], l = m.brief[m.brief.length - 1]; showCard(l[0], l[1], 'NOVEDAD'); }
     if (cardT > 0) { cardT = hold ? 5 : cardT - dt; }
     const showC = cardT > 0 && (!S.talk || CW.hud.hold.indexOf('dlg') >= 0) && !S.ring; if (cd.classList.contains('show') !== showC) cd.classList.toggle('show', showC);
     $('obj').style.display = on ? 'none' : 'block';   // the mission panel carries the objective while a job is live
     const idle = S.state === 'idle' && S.idx < MISSIONS.length, done = S.idx >= MISSIONS.length;
-    set('obj', 'free', done ? 'STORY COMPLETE. Free roam: sell cars, upgrade at Roxy\'s, hit the shops, chase the stars.' : idle ? 'Waiting for the next call... P opens the phone. Free roam until then.' : S.obj ? S.obj.text : 'Free roam.');
+    set('obj', 'free', done ? 'HISTORIA COMPLETA. Modo libre: vende autos, mejora en lo de Roxy, visita las tiendas, persigue las estrellas.' : idle ? 'Esperando la próxima llamada... P abre el teléfono. Modo libre mientras tanto.' : S.obj ? S.obj.text : 'Modo libre.');
     // beam
     const mk = S.state === 'active' && S.obj && S.obj.mk;
     if (beam) { beam.visible = !!mk; if (mk) { beam.position.set(mk.x, mk.y || 0, mk.z); beam.userData.ring.scale.setScalar(1 + Math.sin(performance.now() / 260) * 0.12); } }

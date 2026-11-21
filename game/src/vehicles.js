@@ -49,6 +49,7 @@
         s.position.set(x1 * t.w * 0.8, y1, z1); s.scale.setScalar(c === 0xfff0c0 ? 2.2 : 1.2); s.visible = false; this.mesh.add(s); this.lights.push(s);
       });
       this.mesh.position.set(x, 0, z); this.mesh.rotation.y = h;
+      if (CW.brand) CW.brand.livery(this);   // make.fun livery on every VESPER GT
     }
     circles() {
       const t = this.type, s = Math.sin(this.h), c = Math.cos(this.h), r = t.w * 0.5, o = t.l * 0.5 - r;

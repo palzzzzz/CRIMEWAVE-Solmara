@@ -80,7 +80,7 @@
       W.officers.forEach((o) => { if (!o.on) return; const dx = o.x - x, dz = o.z - z, d = Math.hypot(dx, dz); if (d < r) E.hurtOfficer(o, 110 * (1 - d / r), dx / (d || 1), dz / (d || 1)); });
     }
     const pcar = P && P.mode === 'car' ? P.car : null, lcar = CW.gunner && CW.gunner.aboard ? CW.gunner.car : null;
-    if (P && P.mode !== 'heli' && P.mode !== 'car' && !opt.noHurt) { const pf = P.focus(), d = Math.hypot(pf.x - x, pf.z - z); if (d < r) W.hurt(55 * (1 - d / r) + 5, 'BLOWN UP'); }
+    if (P && P.mode !== 'heli' && P.mode !== 'car' && !opt.noHurt) { const pf = P.focus(), d = Math.hypot(pf.x - x, pf.z - z); if (d < r) W.hurt(55 * (1 - d / r) + 5, 'Volado por los aires'); }
     V.list.forEach((c) => {
       if (c.hidden || c === src) return; const dx = c.x - x, dz = c.z - z, d = Math.hypot(dx, dz); if (d > r * 1.15) return;
       if (c === pcar || c === lcar || c.driven) { if (c !== src) c.hp = Math.max(1, c.hp - 22 * (1 - d / (r * 1.15))); return; }   // the player's ride is shaken, never thrown

@@ -9,12 +9,12 @@
 
   // dmg per hit, rate shots/s, mag, spread (radians), range m, reload s, draw s, recoil, stats [damage, rate, range, accuracy] 0..1
   const DEFS = {
-    fists: { id: 'fists', key: 1, name: 'FISTS', melee: true, dmg: 14, rate: 2.6, range: 1.9, draw: 0.2, stats: [0.2, 0.55, 0.05, 1], blurb: 'Bare knuckles' },
-    knife: { id: 'knife', key: 2, name: 'KNIFE', melee: true, dmg: 32, rate: 2.0, range: 2.2, draw: 0.3, stats: [0.4, 0.5, 0.06, 1], blurb: 'Quiet and sharp' },
-    pistol: { id: 'pistol', key: 3, name: 'PISTOL', dmg: 24, rate: 3.6, auto: false, mag: 12, spread: 0.012, range: 80, reload: 1.3, draw: 0.35, recoil: 0.6, pellets: 1, resMax: 96, startRes: 48, stats: [0.4, 0.42, 0.62, 0.82], blurb: '12 round semi-auto' },
-    smg: { id: 'smg', key: 4, name: 'SMG', dmg: 13, rate: 12, auto: true, mag: 30, spread: 0.032, range: 60, reload: 1.7, draw: 0.4, recoil: 0.34, pellets: 1, resMax: 240, startRes: 90, stats: [0.3, 0.95, 0.5, 0.48], blurb: '30 round full-auto' },
-    shotgun: { id: 'shotgun', key: 5, name: 'SHOTGUN', dmg: 12, rate: 1.1, auto: false, mag: 6, spread: 0.08, range: 30, reload: 2.2, draw: 0.55, recoil: 1.4, pellets: 9, resMax: 48, startRes: 18, stats: [0.95, 0.2, 0.25, 0.3], blurb: 'Pump action, 9 pellets' },
-    molotov: { id: 'molotov', key: 6, name: 'MOLOTOV', throw: true, rate: 0.8, mag: 1, range: 34, draw: 0.55, resMax: 9, startRes: 3, stats: [0.85, 0.1, 0.55, 0.6], blurb: 'Petrol bomb, burns 9 s' },
+    fists: { id: 'fists', key: 1, name: 'PUÑOS', melee: true, dmg: 14, rate: 2.6, range: 1.9, draw: 0.2, stats: [0.2, 0.55, 0.05, 1], blurb: 'A puño limpio' },
+    knife: { id: 'knife', key: 2, name: 'CUCHILLO', melee: true, dmg: 32, rate: 2.0, range: 2.2, draw: 0.3, stats: [0.4, 0.5, 0.06, 1], blurb: 'Silencioso y afilado' },
+    pistol: { id: 'pistol', key: 3, name: 'PISTOLA', dmg: 24, rate: 3.6, auto: false, mag: 12, spread: 0.012, range: 80, reload: 1.3, draw: 0.35, recoil: 0.6, pellets: 1, resMax: 96, startRes: 48, stats: [0.4, 0.42, 0.62, 0.82], blurb: 'Semiautomática de 12 tiros' },
+    smg: { id: 'smg', key: 4, name: 'SUBFUSIL', dmg: 13, rate: 12, auto: true, mag: 30, spread: 0.032, range: 60, reload: 1.7, draw: 0.4, recoil: 0.34, pellets: 1, resMax: 240, startRes: 90, stats: [0.3, 0.95, 0.5, 0.48], blurb: 'Automática de 30 tiros' },
+    shotgun: { id: 'shotgun', key: 5, name: 'ESCOPETA', dmg: 12, rate: 1.1, auto: false, mag: 6, spread: 0.08, range: 30, reload: 2.2, draw: 0.55, recoil: 1.4, pellets: 9, resMax: 48, startRes: 18, stats: [0.95, 0.2, 0.25, 0.3], blurb: 'De corredera, 9 perdigones' },
+    molotov: { id: 'molotov', key: 6, name: 'MOLOTOV', throw: true, rate: 0.8, mag: 1, range: 34, draw: 0.55, resMax: 9, startRes: 3, stats: [0.85, 0.1, 0.55, 0.6], blurb: 'Bomba de gasolina, arde 9 s' },
   };
   const ORDER = ['fists', 'knife', 'pistol', 'smg', 'shotgun', 'molotov'];
   Wp.defs = DEFS; Wp.order = ORDER;
@@ -273,7 +273,7 @@
 
   // ---- equip / reload -------------------------------------------------------------------------------------------------
   Wp.equip = function (id, quiet) {
-    if (!DEFS[id]) return false; if (!Wp.own[id]) { if (!quiet) CW.hud.toast(DEFS[id].name + ' NOT OWNED — FIND ONE'); return false; }
+    if (!DEFS[id]) return false; if (!Wp.own[id]) { if (!quiet) CW.hud.toast(DEFS[id].name + ' NO LA TIENES — BUSCA UNA'); return false; }
     if (Wp.cur === id) return true;
     Wp.prev = Wp.cur; Wp.cur = id; Wp.drawT = 0; Wp.reloadT = 0; swing = 0; Wp.kick = 0;
     if (!quiet) CW.sfx.play('draw', 0.7);
@@ -317,17 +317,17 @@
       if (sel) { const g = c.createLinearGradient(0, -rs, 0, rs); g.addColorStop(0, 'rgba(255,120,70,.95)'); g.addColorStop(1, 'rgba(232,69,111,.9)'); c.fillStyle = g; } else c.fillStyle = own ? 'rgba(10,34,42,.82)' : 'rgba(10,22,28,.5)';
       c.fill(); c.lineWidth = sel ? 4 : 2; c.strokeStyle = sel ? '#ffc83d' : 'rgba(255,241,214,.28)'; c.stroke();
       const mr = (R0 + R1) / 2 + (sel ? 6 : 0), px = Math.cos(ang) * mr, py = Math.sin(ang) * mr;
-      c.save(); c.translate(px, py - 10); icon(c, id, 36, own ? (sel ? '#fff' : '#ffe9c4') : 'rgba(255,255,255,.22)'); c.restore();
+      c.save(); c.translate(px, py - 12); CW.brand.weaponIcon(c, id, 44, own ? (sel ? '#ffffff' : '#ffe9a8') : 'rgba(255,255,255,.25)', own ? undefined : 'rgba(8,12,24,.4)'); c.restore();
       c.textAlign = 'center'; c.font = '900 15px Impact, sans-serif'; c.fillStyle = own ? '#fff' : 'rgba(255,255,255,.35)'; c.fillText(d.key + '  ' + d.name, px, py + 36);
       const a = Wp.ammo[id]; c.font = 'bold 13px Trebuchet MS, sans-serif'; c.fillStyle = sel ? '#fff7d6' : '#ffc83d';
-      c.fillText(!own ? 'NOT FOUND' : d.melee ? 'MELEE' : d.throw ? 'x ' + (a.mag + a.res) : a.mag + ' | ' + a.res, px, py + 53);
+      c.fillText(!own ? 'NO TIENES' : d.melee ? 'MELÉ' : d.throw ? 'x ' + (a.mag + a.res) : a.mag + ' | ' + a.res, px, py + 53);
     }
     // centre card: name, blurb, stat bars
     const id = ORDER[wsel], d = DEFS[id], own = Wp.own[id];
     c.beginPath(); c.arc(0, 0, R0 - 8, 0, 7); c.fillStyle = 'rgba(8,24,30,.9)'; c.fill(); c.lineWidth = 3; c.strokeStyle = '#ffc83d'; c.stroke();
     c.textAlign = 'center'; c.fillStyle = '#ffc83d'; c.font = '900 26px Impact, sans-serif'; c.fillText(d.name, 0, -62);
-    c.fillStyle = 'rgba(255,241,214,.8)'; c.font = '12px Trebuchet MS, sans-serif'; c.fillText(own ? d.blurb : 'Not found yet', 0, -44);
-    const labs = ['DAMAGE', 'FIRE RATE', 'RANGE', 'ACCURACY'];
+    c.fillStyle = 'rgba(255,241,214,.8)'; c.font = '12px Trebuchet MS, sans-serif'; c.fillText(own ? d.blurb : 'Aún no la encuentras', 0, -44);
+    const labs = ['DAÑO', 'CADENCIA', 'ALCANCE', 'PRECISIÓN'];
     labs.forEach((l, k) => {
       const y = -24 + k * 24; c.textAlign = 'left'; c.fillStyle = '#d8f6f0'; c.font = 'bold 11px Trebuchet MS, sans-serif'; c.fillText(l, -78, y + 9);
       c.fillStyle = 'rgba(255,255,255,.14)'; c.fillRect(-6, y, 84, 11); const v = own ? d.stats[k] : 0; const g = c.createLinearGradient(-6, 0, 78, 0); g.addColorStop(0, '#ffc83d'); g.addColorStop(1, '#ff6b4a'); c.fillStyle = g; c.fillRect(-6, y, 84 * v, 11);
@@ -426,10 +426,10 @@
     const fire = !Wp.wheelOpen && !uiOpen() && (d.auto ? I.isDown('Mouse0') : I.pressed('Mouse0'));
     if (fire && Wp.cd <= 0 && canAct) {
       if (d.melee) { if (swing <= 0) startMelee(e, d); }
-      else if (d.throw) { if (a.mag > 0) throwMolotov(e); else if (a.res > 0) { a.mag = 1; a.res--; } else if (I.pressed('Mouse0')) { CW.sfx.play('click', 0.5); CW.hud.toast('NO MOLOTOVS'); Wp.cd = 0.3; } }
+      else if (d.throw) { if (a.mag > 0) throwMolotov(e); else if (a.res > 0) { a.mag = 1; a.res--; } else if (I.pressed('Mouse0')) { CW.sfx.play('click', 0.5); CW.hud.toast('SIN MOLOTOVS'); Wp.cd = 0.3; } }
       else if (a.mag > 0) shoot(e, d);
       else if (a.res > 0) startReload(d);
-      else if (I.pressed('Mouse0') || Wp.cd <= 0) { CW.sfx.play('click', 0.6); CW.hud.toast('OUT OF AMMO'); Wp.cd = 0.35; }
+      else if (I.pressed('Mouse0') || Wp.cd <= 0) { CW.sfx.play('click', 0.6); CW.hud.toast('SIN MUNICIÓN'); Wp.cd = 0.35; }
     }
     if (swing > 0) { swing -= dt; if (!swingDid && d.melee && 1 - swing / 0.32 > 0.38) { swingDid = true; meleeHit(e, d); } }
     // facing + camera shoulder
@@ -457,7 +457,8 @@
   Wp.init = function (scene) {
     initFx(scene);
     ['ray', 'luna'].forEach((id) => dressCrew(CW.player.crew[id]));
-    const w = $('weap'); w.innerHTML = ORDER.map((id) => '<div class="slot"><b>' + DEFS[id].key + '</b>' + DEFS[id].name + '<span class="am"></span></div>').join('');
+    const w = $('weap'); w.innerHTML = ORDER.map((id) => '<div class="slot"><canvas class="wic" width="160" height="80"></canvas><b>' + DEFS[id].key + '</b>' + DEFS[id].name + '<span class="am"></span></div>').join('');
+    Array.from(w.querySelectorAll('canvas.wic')).forEach((cv, i) => { const x = cv.getContext('2d'); x.translate(80, 44); CW.brand.weaponIcon(x, ORDER[i], 62, '#fff1c8'); });
     wctx = $('wheelc').getContext('2d');
   };
   Wp.reset = function () { Wp.closeWheel(false); flying.length = 0; Wp.fires.forEach(endFire); Wp.fires.length = 0; Wp.reloadT = 0; Wp.cd = 0; swing = 0; Wp.throwT = 0; };

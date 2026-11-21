@@ -4,10 +4,10 @@
   const CW = window.CW, $ = (id) => document.getElementById(id);
   const R = (CW.radio = { st: 0, track: 0, out: null, next: 0, step: 0, bar: 0, on: false });
   const STATIONS = [
-    { name: 'SOL FM', freq: '88.4', genre: 'TROPICAL HOUSE', bpm: 122, root: 57, style: 'house', tracks: ['Midnight Boulevard', 'Palm Tree Alibi', 'Coral Heist', 'Sunset Fadeout'] },
-    { name: 'CRIMEWAVE FM', freq: '101.1', genre: 'NEON SYNTHWAVE', bpm: 98, root: 52, style: 'synth', tracks: ['Neon Tide', 'Getaway Lights', 'Chrome Horizon', 'Zero Stars'] },
-    { name: 'MAR AZUL JAZZ', freq: '94.7', genre: 'COASTAL JAZZ', bpm: 88, root: 53, style: 'jazz', tracks: ['Blue Hour in Solmara', 'Salt on the Piano', 'Late Ferry', 'Cigarette Smoke Waltz'] },
-    { name: 'HARBOUR HEAVY', freq: '107.9', genre: 'DOCKSIDE DRUM & BASS', bpm: 170, root: 45, style: 'dnb', tracks: ['Crane Operator', 'Container Rave', 'Rust Belt Runner', 'Foghorn'] },
+    { name: 'SOL FM', freq: '88.4', genre: 'HOUSE TROPICAL', bpm: 122, root: 57, style: 'house', tracks: ['Bulevar de Medianoche', 'Coartada de Palmera', 'Atraco de Coral', 'Ocaso Final'] },
+    { name: 'MAREA FM', freq: '101.1', genre: 'SYNTHWAVE NEÓN', bpm: 98, root: 52, style: 'synth', tracks: ['Marea de Neón', 'Luces de Fuga', 'Horizonte Cromado', 'Cero Estrellas'] },
+    { name: 'MAR AZUL JAZZ', freq: '94.7', genre: 'JAZZ COSTERO', bpm: 88, root: 53, style: 'jazz', tracks: ['Hora Azul en Puerto Marea', 'Sal sobre el Piano', 'Último Ferry', 'Vals del Humo'] },
+    { name: 'PUERTO PESADO', freq: '107.9', genre: 'DRUM & BASS PORTUARIO', bpm: 170, root: 45, style: 'dnb', tracks: ['Operador de Grúa', 'Rave de Contenedores', 'Corredor Oxidado', 'Sirena de Niebla'] },
   ];
   R.stations = STATIONS;
   const PROGS = [[0, 0, -2, -4], [0, -4, -2, -5], [0, 3, -2, -5], [0, -2, 3, 5]];
@@ -65,7 +65,7 @@
   R.update = function (dt) {
     const P = CW.player, I = CW.input, a = A(), car = P.mode === 'car' && P.car && CW.game.state === 'play';
     const off = R.st >= STATIONS.length;
-    if (car && I.pressed('KeyR')) { R.st = (R.st + 1) % (STATIONS.length + 1); R.track = 0; R.bar = 0; R.step = 0; R.next = 0; const s = STATIONS[R.st]; CW.hud.toast(s ? 'RADIO  ·  ' + s.freq + ' ' + s.name : 'RADIO OFF'); CW.sfx.play('click', 0.6); }
+    if (car && I.pressed('KeyR')) { R.st = (R.st + 1) % (STATIONS.length + 1); R.track = 0; R.bar = 0; R.step = 0; R.next = 0; const s = STATIONS[R.st]; CW.hud.toast(s ? 'RADIO  ·  ' + s.freq + ' ' + s.name : 'RADIO APAGADA'); CW.sfx.play('click', 0.6); }
     // pop-up (right edge, 3 s): on getting into a car, on a station change, on a new track and on entering another district. Cosmetic only.
     if (car && I.pressed('KeyR')) popT = 3;
     if (car && !wasCar) popT = 3; wasCar = !!car;
@@ -73,7 +73,7 @@
     if (popT > 0) popT -= dt;
     const el = $('radiohud'), hold = CW.hud.hold.indexOf('radio') >= 0, on = car && CW.hud.shown, show = on && (popT > 0 || hold);
     const key = on ? R.st + ':' + R.track : '';
-    if (el.dataset.k !== key) { el.dataset.k = key; if (on) { const s = STATIONS[R.st]; el.innerHTML = s ? '<small class="rl">NOW PLAYING</small><b>' + s.freq + '  ' + s.name + '</b><span>&#9835; ' + s.tracks[R.track % 4] + '</span><small>' + s.genre + '</small>' : '<small class="rl">CAR RADIO</small><b>RADIO OFF</b><small>R TURNS IT ON</small>'; } }
+    if (el.dataset.k !== key) { el.dataset.k = key; if (on) { const s = STATIONS[R.st]; el.innerHTML = s ? '<small class="rl">SUENA AHORA</small><b>' + s.freq + '  ' + s.name + '</b><span>&#9835; ' + s.tracks[R.track % 4] + '</span><small>' + s.genre + '</small>' : '<small class="rl">RADIO DEL AUTO</small><b>RADIO APAGADA</b><small>R PARA ENCENDERLA</small>'; } }
     if (el.classList.contains('show') !== show) el.classList.toggle('show', show);
     if (!a) return;
     if (!R.out) { R.out = a.ctx.createGain(); R.out.gain.value = 0; R.out.connect(a.master); }

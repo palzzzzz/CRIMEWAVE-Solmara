@@ -10,7 +10,7 @@
   const $ = (id) => document.getElementById(id);
   let mm = null, mctx = null, lastDistrict = -1, bannerT = 0, toastT = 0;
   const cache = {};
-  const COMPASS8 = ['NORTH', 'NORTH-EAST', 'EAST', 'SOUTH-EAST', 'SOUTH', 'SOUTH-WEST', 'WEST', 'NORTH-WEST'];   // north = -z, as on the minimap
+  const COMPASS8 = ['NORTE', 'NORESTE', 'ESTE', 'SURESTE', 'SUR', 'SUROESTE', 'OESTE', 'NOROESTE'];   // north = -z, as on the minimap
   const setText = (id, v) => { if (cache[id] !== v) { cache[id] = v; $(id).textContent = v; } };
   const setW = (id, pct) => { const k = id + '%'; const v = Math.round(pct); if (cache[k] !== v) { cache[k] = v; $(id).style.width = v + '%'; } };
 
@@ -71,7 +71,7 @@
 
   H.show = function (v) { H.shown = v; $('hud').style.display = v ? 'block' : 'none'; };
   H.banner = function (t, s) { $('banner').textContent = t; $('bannersub').textContent = s || ''; bannerT = 3.6; };
-  H.toast = function (t) { $('toast').textContent = t; $('toast').style.opacity = 1; toastT = 2.6; };
+  H.toast = function (t) { t = CW.es.tr(t); $('toast').textContent = t; $('toast').style.opacity = 1; toastT = 2.6; };
 
   // ---- GPS: route along the real street graph (CW.roads, a 7x7 junction grid) --------------------------------------------
   const fields = new Map();        // BFS step-count field per goal junction, cached
@@ -252,25 +252,25 @@
   H.update = function (dt) {
     if (!H.shown) return;
     const P = CW.player, st = H.state, e = P.active;
-    if (H.wp) { const pf = P.focus(); if (Math.hypot(H.wp.x - pf.x, H.wp.z - pf.z) < 12) { H.wp = null; H.toast('CHECKPOINT REACHED'); mmT = 0; } }
+    if (H.wp) { const pf = P.focus(); if (Math.hypot(H.wp.x - pf.x, H.wp.z - pf.z) < 12) { H.wp = null; H.toast('DESTINO ALCANZADO'); mmT = 0; } }
     const t = performance.now(); if (t - mmT >= STEP_MS) { mmT = t; drawMinimap(P, CW.cam); }
     setText('cash', '$' + st.cash.toLocaleString('en-US'));
-    setText('clock', CW.sky.clock() + (CW.weather && CW.weather.wet > 0.3 ? '  ·  RAIN' : ''));
+    setText('clock', CW.sky.clock() + (CW.weather && CW.weather.wet > 0.3 ? '  ·  LLUVIA' : ''));
     setW('stbar', P.stamina); $('stbar').style.opacity = P.winded ? 0.55 : 1;
     setText('who', e.def.name);
     setW('hpbar', st.hp); setW('arbar', st.armour); setW('repbar', (st.repXp / st.repNeed) * 100);
-    setText('replv', 'REP LV ' + st.rep + '   ' + st.repXp + '/' + st.repNeed);
+    setText('replv', 'NIVEL DE REP ' + st.rep + '   ' + st.repXp + '/' + st.repNeed);
     const stars = $('stars').children;
     for (let i = 0; i < 5; i++) { const on = i < st.wanted; if (stars[i].dataset.on !== String(on)) { stars[i].dataset.on = String(on); stars[i].classList.toggle('on', on); } }
     // wanted status: big stars + whether the police can see you; when they cannot, where the search zone is (same circle the minimap draws)
     const Wp = CW.police, wb = $('wanted'), wOn = st.wanted > 0;
     if (cache.wOn !== wOn) { cache.wOn = wOn; wb.style.display = wOn ? 'block' : 'none'; }
     if (wOn) {
-      const seen = Wp.seen; setText('wstat', seen ? 'IN SIGHT' : 'SEARCHING'); if (cache.wcls !== seen) { cache.wcls = seen; $('wstat').className = seen ? 'seen' : 'lost'; }
+      const seen = Wp.seen; setText('wstat', seen ? 'A LA VISTA' : 'TE BUSCAN'); if (cache.wcls !== seen) { cache.wcls = seen; $('wstat').className = seen ? 'seen' : 'lost'; }
       let sub = '';
       if (!seen) {
         const pf = P.focus(), dx = Wp.last.x - pf.x, dz = Wp.last.z - pf.z, dist = Math.hypot(dx, dz), inside = dist < 52 + Wp.level * 11;
-        sub = inside ? 'INSIDE THE SEARCH ZONE  ·  STAY HIDDEN' : 'SEARCH ZONE ' + COMPASS8[(Math.round(Math.atan2(dx, -dz) / (Math.PI / 4)) + 8) % 8] + '  ·  ' + Math.round(dist / 5) * 5 + ' M';
+        sub = inside ? 'DENTRO DE LA ZONA DE BÚSQUEDA  ·  QUÉDATE ESCONDIDO' : 'ZONA DE BÚSQUEDA  ' + COMPASS8[(Math.round(Math.atan2(dx, -dz) / (Math.PI / 4)) + 8) % 8] + '  ·  ' + Math.round(dist / 5) * 5 + ' M';
       }
       setText('wsub', sub);
     }
@@ -283,10 +283,10 @@
       const hc = car.hp > 66 ? '' : car.hp > 33 ? 'mid' : 'low'; if (cache.hpc !== hc) { cache.hpc = hc; $('carhp').className = hc; }
       // gear is cosmetic: five even slices of the top speed, N when rolling, R when the forward speed is negative
       setText('gear', car.fs < -0.6 ? 'R' : car.speed < 0.8 ? 'N' : String(CW.clamp(Math.ceil(car.speed / (car.type.max / 5)), 1, 5)));
-      setText('carcond', car.hp > 66 ? 'CONDITION  GOOD' : car.hp > 33 ? 'CONDITION  DAMAGED' : car.hp > 0 ? 'CONDITION  CRITICAL' : 'CONDITION  WRECKED');
+      setText('carcond', car.hp > 66 ? 'ESTADO  BUENO' : car.hp > 33 ? 'ESTADO  DAÑADO' : car.hp > 0 ? 'ESTADO  CRÍTICO' : 'ESTADO  DESTRUIDO');
       $('drift').style.opacity = car.drift > 0.3 ? 1 : 0;
     }
-    const pr = $('prompt'); const text = P.prompt || ''; if (cache.prompt !== text) { cache.prompt = text; pr.textContent = text; pr.style.opacity = text ? 1 : 0; }
+    const pr = $('prompt'); const text = CW.es.tr(P.prompt || ''); if (cache.prompt !== text) { cache.prompt = text; pr.textContent = text; pr.style.opacity = text ? 1 : 0; }
     // district banner
     const fx = car ? car.x : e.x, fz = car ? car.z : e.z, d = CW.districtAt(fx, fz);
     setText('dname', CW.DISTRICTS[d].name);

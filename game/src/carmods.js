@@ -5,12 +5,12 @@
   const CW = window.CW, M = (CW.carmods = {});
 
   M.PAINT = [
-    { n: 'FLAME', c: 0xff5a3c }, { n: 'SUNRISE', c: 0xffc23a }, { n: 'LAGOON', c: 0x2fd0c4 }, { n: 'ROSE', c: 0xe0407a }, { n: 'COBALT', c: 0x2f56c8 },
-    { n: 'PEARL', c: 0xf2f0e6 }, { n: 'LIME', c: 0x8fd23a }, { n: 'GRAPE', c: 0x7a3fb0 }, { n: 'WINE', c: 0x8b1f3f }, { n: 'ONYX', c: 0x1b1d21 },
+    { n: 'LLAMA', c: 0xff5a3c }, { n: 'AMANECER', c: 0xffc23a }, { n: 'LAGUNA', c: 0x2fd0c4 }, { n: 'ROSA', c: 0xe0407a }, { n: 'COBALTO', c: 0x2f56c8 },
+    { n: 'PERLA', c: 0xf2f0e6 }, { n: 'LIMA', c: 0x8fd23a }, { n: 'UVA', c: 0x7a3fb0 }, { n: 'VINO', c: 0x8b1f3f }, { n: 'ÓNIX', c: 0x1b1d21 },
   ];
-  M.SPOILER = ['STOCK', 'DUCKTAIL', 'GT WING', 'RACE WING'];
-  M.NEON = [{ n: 'OFF', c: 0 }, { n: 'CYAN', c: 0x19e6ff }, { n: 'MAGENTA', c: 0xff2bd6 }, { n: 'LIME', c: 0x9dff2b }, { n: 'AMBER', c: 0xffa51f }, { n: 'ICE', c: 0xcfe8ff }];
-  M.WHEEL = ['STOCK', 'CHROME SPOKE', 'GOLD SPOKE', 'BLACKOUT'];
+  M.SPOILER = ['ORIGINAL', 'COLA DE PATO', 'ALERÓN GT', 'ALERÓN DE CARRERA'];
+  M.NEON = [{ n: 'APAGADO', c: 0 }, { n: 'CIAN', c: 0x19e6ff }, { n: 'MAGENTA', c: 0xff2bd6 }, { n: 'LIMA', c: 0x9dff2b }, { n: 'ÁMBAR', c: 0xffa51f }, { n: 'HIELO', c: 0xcfe8ff }];
+  M.WHEEL = ['ORIGINALES', 'RAYOS CROMADOS', 'RAYOS DORADOS', 'NEGRO TOTAL'];
   M.PRICE = { paint: 150, spoiler: 300, neon: 250, wheel: 200 };
   M.blank = () => ({ sp: 0, ne: 0, wh: 0 });
 

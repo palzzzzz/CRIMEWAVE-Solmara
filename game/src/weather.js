@@ -25,7 +25,7 @@
 
   Wx.set = function (mode) {
     Wx.mode = mode; Wx.target = mode === 'rain' ? 1 : 0; Wx.next = 120 + Math.random() * 160;
-    if (CW.hud.shown) CW.hud.toast(mode === 'rain' ? 'RAIN  —  ROADS ARE SLIPPERY' : 'THE RAIN EASES OFF');
+    if (CW.hud.shown) CW.hud.toast(mode === 'rain' ? 'LLUVIA  —  LAS CALLES RESBALAN' : 'LA LLUVIA CEDE');
   };
 
   // Called by sky.apply after the time-of-day colours are set: grey everything out in proportion to Wx.wet.

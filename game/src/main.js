@@ -1,4 +1,4 @@
-// Bootstrap, game states (title / play), main loop and autosave.
+// Arranque, estados del juego (título / juego / pausa), bucle principal y autoguardado.
 (function () {
   const CW = window.CW;
   const canvas = document.getElementById('game');
@@ -27,6 +27,7 @@
 
   CW.initMaterials();
   CW.world.build(scene);
+  CW.brand.buildWall(scene, 252, -266, 0, 40, 21);   // el gran letrero de make.fun al final de la avenida principal (costanera)
   CW.sky.init(scene);
   CW.fx.init(scene);
   CW.explosions.init(scene);   // the one permanent blast PointLight is created here, before the first render
@@ -42,6 +43,7 @@
   CW.story.initMarker(scene);
   CW.solfeed.init();
   CW.shops.init(scene);
+  document.getElementById('howto').style.zIndex = 30;   // la ayuda también se abre desde la pausa
   CW.title.bind();
   scene.traverse((o) => { const ms = Array.isArray(o.material) ? o.material : o.material ? [o.material] : []; ms.forEach((m) => { ['map', 'emissiveMap'].forEach((k) => { if (m[k] && m[k].anisotropy !== undefined) m[k].anisotropy = CW.aniso; }); }); });
 
@@ -81,7 +83,7 @@
     CW.traffic.activate(F.x, F.z);
     CW.police.start(F);
     game.state = 'play';
-    CW.hud.toast('WELCOME TO SOLMARA');
+    CW.hud.toast('BIENVENIDOS A PUERTO MAREA');
     canvas.addEventListener('click', lock);
   };
 
@@ -105,10 +107,16 @@
   function frameStep(now) {
     if (frozen) { renderer.render(scene, CW.camera); return; }   // capture only: &freeze reached, the frame stays put
     let dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (CW.mapscreen.update()) { renderer.render(scene, CW.camera); CW.input.endFrame(); return; }   // M: pantalla de mapa (lee el estado, el mundo se detiene)
+    if (game.state === 'play' && !capType && !stageQ) {
+      if (PZ.open) { if (CW.input.pressed('Escape')) setPause(false); renderer.render(scene, CW.camera); CW.input.endFrame(); return; }
+      const busy = CW.solfeed.open || CW.shops.menu || CW.bigmap.open || CW.weapons.wheelOpen;
+      if (CW.input.pressed('Escape') && !busy) { setPause(true); renderer.render(scene, CW.camera); CW.input.endFrame(); return; }
+    }
     if (capType && FIXED) { dt = FIXED; simNow += FIXED * 1000; if (window.__reseed) window.__reseed(stepNo++); }   // capture only: &fixed=<dt> makes every frame the same length, wall clock out of the loop
     if (capture) dt *= qn('ts', 1);   // capture only: &ts=<scale> slows the simulation so a burst of screenshots can resolve a fast event
     if (CW.weapons.wheelOpen) dt *= 0.22;   // the weapon wheel slows the world right down
-    if (CW.solfeed.open || CW.shops.menu || CW.bigmap.open) dt *= 0.05;   // phone + shop menus + the full map nearly freeze it
+    if (CW.solfeed.open || CW.shops.menu || CW.bigmap.open || CW.mapscreen.open) dt *= 0.05;   // phone + shop menus + the full map nearly freeze it
     dt *= CW.story.timeScale;
     simT += dt;
     fpsAcc += dt; fpsN++; if (fpsAcc > 1) { CW.fps = Math.round(fpsN / fpsAcc); fpsAcc = 0; fpsN = 0; }
@@ -128,7 +136,7 @@
     }
     CW.vehicles.update(sdt, playing);
     if (live) CW.explosions.update(sdt, playing);   // after vehicles: layers the tumble over the car pose
-    if (capture && playing) captureStep(dt);
+    if (capture && playing) { if (capture.rob) robberyStep(dt); else if (capture.heli) heliStep(dt); else captureStep(dt); }
     if (playing) CW.gunner.update(dt);   // after the car has moved, so Luna stays glued to the seat
     if (capture && playing) { const c = CW.camera; c.updateMatrixWorld(true); }
     CW.world.update(dt, simT);
@@ -178,13 +186,87 @@
     const m = capQ.get('mission'); if (m === null) return;
     CW.story.idx = CW.clamp(parseInt(m, 10) || 0, 0, CW.story.missions.length - 1); CW.story.start();
   }
+  // ?capture=robbery: asalto a la joyería (staging con lo que ya existe: tienda, cliente/cajero, pickups de efectivo, W.raise, patrulla).
+  //   &wl=<1-5> &hr=<hora> &cam=<lado> &camh &camf &fov &look=<u>,<v>,<y> &say=<texto del subtítulo>
+  function robberyStart() {
+    stageDeterminism();
+    game.start(false);
+    const P = CW.player, W = CW.police, shop = CW.shops.list.find((s) => s.kind === 'boutique') || CW.shops.list[0];
+    const FV = qn('flip', 1) ? -1 : 1, J = CW.stage.jewelry(shop, CW.scene, FV < 0);
+    CW.sky.hour = qn('hr', 21.6); CW.weather.set('clear');
+    W.dispT = 1e9; W.rbT = 1e9; W.busted = function () {};
+    CW.story.wait = 1e9;   // sin llamada de misión durante la toma
+    W.raise(qn('sev', 4.8), 'shots', true);   // sistema real: sube el nivel, avisa por radio, genera la respuesta
+    CW.story.say([['ray', capQ.get('say') || '¡Todos quietos! ¡Las manos donde pueda verlas!']], false);
+    // cash on the counter: the existing 'cash' pickups, lifted to counter height every frame
+    const cash = []; [[3.0, -1.4], [3.2, -0.2], [2.9, 0.9]].forEach(([u, v]) => { CW.enemies.drop(shop.cx + u, shop.cz + v, 'cash'); cash.push(CW.enemies.pickups[CW.enemies.pickups.length - 1]); });
+    capture = { rob: J, FV, t: 0, shop, cash, wl: CW.clamp(Math.round(qn('wl', 5)), 1, 5) };
+    document.body.classList.add('capture');
+    ['bannerwrap'].forEach((id) => { document.getElementById(id).style.visibility = 'hidden'; });
+  }
+  function robberyStep(dt) {
+    const J = capture.rob, shop = capture.shop, W = CW.police, st = CW.hud.state, P = CW.player, c = CW.camera, cx = shop.cx, cz = shop.cz;
+    capture.t += dt;
+    const lk = (capQ.get('look') || '-1.2,0.9,1.2').split(',').map(Number), FV0 = capture.FV; FV = capture.FV, cu = qn('cu', 8.6), cv = qn('cv', -4.4) * FV, ch = qn('camh', 3.0);
+    const camX = cx + cu, camZ = cz + cv;
+    st.hp = 100; P.mode = 'foot'; P.car = null;
+    W.heat = capture.wl; W.level = capture.wl; W.lostT = 0; W.bust = 0; W.seen = true; st.wanted = capture.wl;
+    // the protagonist: Ray with the pistol out, aimed at the clerk behind the counter
+    const ray = P.crew.ray, ru = ray.model.userData, rx = cx + qn('ru', 0.3), rz = cz + qn('rv', 0.2) * FV;
+    P.active = ray; ray.model.visible = true; P.crew.luna.model.visible = false;
+    ray.x = rx; ray.z = rz; ray.vx = ray.vz = 0; ray.h = Math.atan2(cx + 4.4 - rx, cz + 0.2 * FV - rz); ray.model.position.set(rx, 0, rz); ray.model.rotation.y = ray.h;
+    ru.setPose('ray-pistol'); if (ru.guns) { ru.guns.pistol.visible = true; if (ru.guns.pistol.userData.flash) ru.guns.pistol.userData.flash.visible = false; }
+    ray.cig.visible = false;
+    CW.stage.pose(J, camX, camZ);
+    // the cruiser pulls up outside the door (existing cop car, flashing)
+    const fleet = W.cops.slice(0, qn('cops', 2)); capture.fleet = fleet;
+    W.cops.forEach((q) => { if (!fleet.includes(q) && !q.hidden) { q.hidden = true; q.cs = 'idle'; } });
+    const pos = [[qn('pu', -8.8), qn('pv', 0.3) * FV, qn('ph', 1.45)], [-12.6, -3.4 * FV, 1.2]];
+    fleet.forEach((q, i) => { q.hidden = false; q.awake = true; q.cs = 'roadblock'; q.rbMin = 1e9; q.hp = 100; q.ai = q.ai || { cruise: 0, off: 0 }; q.x = cx + pos[i][0]; q.z = cz + pos[i][1]; q.h = pos[i][2]; q.vx = q.vz = 0; q.speed = 0; q.mesh.position.set(q.x, 0, q.z); q.mesh.rotation.y = q.h; });
+    capture.cash.forEach((p, i) => { p.on = true; p.life = 99; if (p.mesh.children[1]) p.mesh.children[1].visible = false; if (p.mesh.children[2]) p.mesh.children[2].visible = false; if (i && p.mesh.children[3]) p.mesh.children[3].visible = false; p.mesh.position.set(cx + [3.0, 3.2, 2.9][i], 1.55, cz + [-1.4, -0.2, 0.9][i] * 1); });
+    c.position.set(camX, ch, camZ); c.fov = qn('fov', 56); c.updateProjectionMatrix(); c.lookAt(cx + lk[0], lk[2], cz + lk[1] * FV0);
+    shop.group.children.forEach((o) => { if (o.isMesh && o.visible && Math.hypot(cx + o.position.x - c.position.x, cz + o.position.z - c.position.z) < 2.6 && Math.abs(o.position.y - c.position.y) < 2.6) o.visible = false; });   // nothing between the lens and the scene
+    document.getElementById('prompt').style.visibility = 'hidden';
+    CW.traffic.peds.forEach((p) => { if (Math.hypot(p.x - c.position.x, p.z - c.position.z) < 30) p.model.visible = false; });
+    CW.vehicles.list.forEach((v) => { if (!fleet.includes(v) && Math.hypot(v.x - c.position.x, v.z - c.position.z) < 9) v.mesh.visible = false; });
+  }
+  // ?capture=heli: el helicóptero policial sobre la costanera de noche, con el reflector, mirando al letrero de make.fun
+  function heliStart() {
+    stageDeterminism();
+    game.start(false);
+    const W = CW.police, A = CW.air.policeHeli;
+    CW.sky.hour = qn('hr', 22.4); CW.weather.set('clear'); CW.story.wait = 1e9;
+    W.dispT = 1e9; W.rbT = 1e9; W.busted = function () {};
+    W.raise(qn('sev', 4.5), 'shots', true);
+    A.active = true; A.state = 'orbit'; A.hp = 400; A.leaveT = 0; A.vx = A.vz = A.vy = 0; A.mk.root.visible = true; A.cone.visible = true; A.disc.visible = true;
+    capture = { heli: true, t: 0 };
+    document.body.classList.add('capture');
+    if (capQ.get('hud') === '0') document.getElementById('hud').style.visibility = 'hidden';
+    ['bannerwrap', 'toast'].forEach((id) => { document.getElementById(id).style.visibility = 'hidden'; });
+  }
+  function heliStep(dt) {
+    const A = CW.air.policeHeli, W = CW.police, st = CW.hud.state, P = CW.player, c = CW.camera, e = P.active;
+    capture.t += dt; st.hp = 100; W.heat = 5; W.level = 5; W.seen = true; W.lostT = 0; st.wanted = 5; W.bust = 0;
+    const px = qn('px', 240), pz = qn('pz', -196);
+    P.mode = 'foot'; e.x = px; e.z = pz; e.vx = e.vz = 0; e.model.position.set(px, 0, pz); e.model.visible = false; P.crew.luna.model.visible = false;
+    A.hp = 400; A.state = 'orbit'; A.x = qn('hx', 229); A.z = qn('hz', -212); A.y = qn('hy', 25); A.vx = A.vz = A.vy = 0; A.h = qn('hh', 0.5); A.spot.x = A.x + 1; A.spot.z = A.z + 8; A.sees = true;
+    A.mk.root.position.set(A.x, A.y, A.z); A.mk.root.rotation.set(0, A.h, 0);
+    c.position.set(qn('cx', 236), qn('ch', 2.2), qn('cz', -170)); c.fov = qn('fov', 60); c.updateProjectionMatrix(); c.lookAt(qn('tx', 246), qn('ty', 17), qn('tz', -240));
+    CW.traffic.peds.forEach((p) => { if (Math.hypot(p.x - c.position.x, p.z - c.position.z) < 25) p.model.visible = false; });
+    CW.vehicles.list.forEach((v) => { if (Math.hypot(v.x - c.position.x, v.z - c.position.z) < 10) v.mesh.visible = false; });
+  }
+  // ?stage=map&idx=<0-7>: pantalla de mapa con el progreso de ese capítulo
+  function stageMap() { game.start(false); CW.story.idx = CW.clamp(Math.round(qn('idx', 5)), 0, CW.story.missions.length); CW.story.state = 'idle'; CW.story.wait = 1e9; CW.sky.hour = qn('hr', 21); CW.mapscreen.toggle(true); }
+
   function captureStart() {
+    if (capType === 'robbery') return robberyStart();
+    if (capType === 'heli') return heliStart();
     stageDeterminism();
     const type = capType === 'sports' || !CW.CAR_TYPES[capType] ? (capType === 'sedan' ? 'sedan' : 'sports') : capType;
     game.start(false);
     if (stageQ === 'late') stageLate();
     stageMission();
-    if (CW.hud.hold.indexOf('dlg') >= 0) CW.story.say([['luna', capQ.get('say') || 'Five stars and a chopper, Ray. Keep it above a hundred.']], true);   // staging: a phone call held open over the chase
+    if (CW.hud.hold.indexOf('dlg') >= 0) CW.story.say([['luna', capQ.get('say') || 'Cinco estrellas y un helicóptero, Ray. No bajes de cien.']], true);   // staging: a phone call held open over the chase
     const P = CW.player, W = CW.police, beach = capQ.get('loc') === 'beach', strip = capQ.get('loc') === 'strip';
     const S = strip ? { x: 240 - CW.C.LANE * Math.cos(qn('sh', 0)), z: 0, h: qn('sh', 0) } : beach ? CW.world.spawn : { x: stageQ === 'boom' ? -64 : stageQ === 'market' ? 258 : -6, z: stageQ === 'market' ? 6.5 : 2.7, h: Math.PI / 2 };   // DOWNTOWN: east-bound lane of the z=0 avenue, just short of the x=0 junction (clear sight line down the cross street)
     const h = S.h, sn = Math.sin(h), cs = Math.cos(h);
@@ -341,10 +423,22 @@
     car.mods = CW.carmods.blank(); car.mods.sp = qn('sp', 0); car.mods.ne = qn('ne', 0); car.mods.wh = qn('wh', 0); CW.carmods.refresh(car);
     CW.shops.stageOpen = true;
   }
+  // ---- pausa (ESC en juego): REANUDAR, MAPA Y MISIONES, CÓMO JUGAR, SONIDO, SALIR AL MENÚ -----------------------------------
+  const PZ = (CW.pause = { open: false });
+  const $p = (id) => document.getElementById(id);
+  function setPause(v) { PZ.open = v; $p('pause').style.display = v ? 'flex' : 'none'; if (v) { if (document.exitPointerLock) document.exitPointerLock(); CW.title.refreshOptions(); } }
+  $p('p-resume').addEventListener('click', () => setPause(false));
+  $p('p-map').addEventListener('click', () => CW.mapscreen.toggle(true));
+  $p('p-how').addEventListener('click', () => { $p('howto').style.display = 'flex'; });
+  $p('p-sound').addEventListener('click', () => CW.title.toggleSound());
+  $p('p-menu').addEventListener('click', () => { save(); location.reload(); });
+  $p('howto-close').addEventListener('click', () => { $p('howto').style.display = 'none'; });
+
   game.state = 'title';
   CW.title.enter();
   requestAnimationFrame(frame);
   if (stageQ === 'garage') stageGarage();
+  else if (stageQ === 'map') stageMap();
   else if (capType) captureStart();
   else if (stageQ === 'late') { game.start(false); stageLate(); stageMission(); }
   window.addEventListener('beforeunload', () => { if (game.state === 'play') save(); });

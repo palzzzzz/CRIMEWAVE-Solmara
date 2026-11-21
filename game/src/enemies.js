@@ -33,9 +33,9 @@
 
   // ---- gang crews ---------------------------------------------------------------------------------------------
   const HIDEOUTS = [
-    { i: 4, j: 5, sx: 1, sz: 1, name: 'HARBOUR CREW', n: 4 },
-    { i: 2, j: 2, sx: -1, sz: 1, name: 'DOWNTOWN CREW', n: 3 },
-    { i: 1, j: 4, sx: -1, sz: 1, name: 'WESTSIDE CREW', n: 3 },
+    { i: 4, j: 5, sx: 1, sz: 1, name: 'BANDA DEL PUERTO', n: 4 },
+    { i: 2, j: 2, sx: -1, sz: 1, name: 'BANDA DEL CENTRO', n: 3 },
+    { i: 1, j: 4, sx: -1, sz: 1, name: 'BANDA DEL OESTE', n: 3 },
   ];
   function freeSpot(x, z) { for (let k = 0; k < 12; k++) { const a = k * 2.4, r = k * 0.7, px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r, q = CW.world.resolve(px, pz, 0.6); if (!q.hit) return { x: px, z: pz }; } return { x, z }; }
   const SKINS = [0xd9a070, 0xb9805a, 0x8d5a3b, 0xe2b48a];
@@ -101,8 +101,8 @@
       g.fireT -= dt;
       const tooHigh = p.heli && p.y > 9;
       if (g.fireT <= 0 && g.vis && d < 58 && !tooHigh) {
-        if (g.weap === 'smg') { shootAt(g.x, 1.3, g.z, p, 0.6, 4, 2.2, 'SHOT BY THE GANG', 0xffa56a, 'smg'); g.burst++; g.fireT = g.burst >= 4 ? 1.05 : 0.1; if (g.burst >= 4) g.burst = 0; }
-        else { shootAt(g.x, 1.3, g.z, p, 0.62, 7, 4, 'SHOT BY THE GANG'); g.fireT = 0.7 + rnd() * 0.5; }
+        if (g.weap === 'smg') { shootAt(g.x, 1.3, g.z, p, 0.6, 4, 2.2, 'Baleado por la banda', 0xffa56a, 'smg'); g.burst++; g.fireT = g.burst >= 4 ? 1.05 : 0.1; if (g.burst >= 4) g.burst = 0; }
+        else { shootAt(g.x, 1.3, g.z, p, 0.62, 7, 4, 'Baleado por la banda'); g.fireT = 0.7 + rnd() * 0.5; }
         g.flashT = 0.06;
       }
     }
@@ -127,7 +127,7 @@
     if (o.hp <= 0 && o.on) {
       o.on = false; o.alive = false; o.model.visible = false; if (o.gun) o.gun.visible = false;
       if (o.car) { o.car.officer = null; if (o.car.cs === 'foot') o.car.cs = 'pursuit'; o.car = null; }
-      Wp.kills++; W.raise(1.4, 'assault', null); E.drop(o.x, o.z, 'ammo'); W.say('DISPATCH', 'OFFICER DOWN! Officer down! All units to my location!', 'down', 6);
+      Wp.kills++; W.raise(1.4, 'assault', null); E.drop(o.x, o.z, 'ammo'); W.say('DISPATCH', '¡OFICIAL CAÍDO! ¡Oficial caído! ¡Todas las unidades a mi posición!', 'down', 6);
       Wp.blood(o.x, 1, o.z);
     }
   };
@@ -159,7 +159,7 @@
   }
 
   // ---- pickups ---------------------------------------------------------------------------------------------------
-  const LABEL = { health: 'HEALTH', armour: 'ARMOUR', ammo: 'AMMO', cash: 'CASH', pistol: 'PISTOL', smg: 'SMG', shotgun: 'SHOTGUN', molotov: 'MOLOTOV x3' };
+  const LABEL = { health: 'SALUD', armour: 'ARMADURA', ammo: 'MUNICIÓN', cash: 'EFECTIVO', pistol: 'PISTOLA', smg: 'SUBFUSIL', shotgun: 'ESCOPETA', molotov: 'MOLOTOV x3' };
   const COL = { health: 0xff4a5a, armour: 0x4aa8ff, ammo: 0xffc83d, cash: 0x6dff8a, pistol: 0xff9a3d, smg: 0xff9a3d, shotgun: 0xff9a3d, molotov: 0xff9a3d };
   const labelTex = {};
   function label(type) {
@@ -192,11 +192,11 @@
   function collect(p, pl2) {
     const st = CW.hud.state; let msg = null;
     switch (p.type) {
-      case 'health': if (st.hp >= 100) return false; st.hp = Math.min(100, st.hp + 50); msg = 'HEALTH +50'; break;
-      case 'armour': if (st.armour >= 100) return false; st.armour = Math.min(100, st.armour + 50); msg = 'BODY ARMOUR +50'; break;
-      case 'ammo': Wp.refill(); msg = 'AMMO RESTOCKED'; break;
-      case 'cash': st.cash += p.amt || 80; msg = 'CASH +$' + (p.amt || 80); break;
-      default: { const had = Wp.own[p.type]; Wp.give(p.type); msg = (had ? 'AMMO  ' : 'ACQUIRED  ') + Wp.defs[p.type].name; if (!had) Wp.equip(p.type, true); }
+      case 'health': if (st.hp >= 100) return false; st.hp = Math.min(100, st.hp + 50); msg = 'SALUD +50'; break;
+      case 'armour': if (st.armour >= 100) return false; st.armour = Math.min(100, st.armour + 50); msg = 'ARMADURA +50'; break;
+      case 'ammo': Wp.refill(); msg = 'MUNICIÓN REPUESTA'; break;
+      case 'cash': st.cash += p.amt || 80; msg = 'EFECTIVO +$' + (p.amt || 80); break;
+      default: { const had = Wp.own[p.type]; Wp.give(p.type); msg = (had ? 'MUNICIÓN  ' : 'CONSEGUIDA  ') + Wp.defs[p.type].name; if (!had) Wp.equip(p.type, true); }
     }
     CW.hud.toast(msg); CW.sfx.play('pickup', 0.8); return true;
   }

@@ -7,10 +7,11 @@
   const NUMS = ['12', '07', '31', '04', '19', '22', '15', '09', '28', '16'], DCODE = ['BF', 'DT', 'HB'];
   const NEED = [0, 2, 3, 4, 5, 6];            // pursuit cars wanted per star level
   const VMAX = [0, 30, 34, 38, 42, 46];
-  const STATE_LABEL = { pursuit: 'PURSUING', ram: 'RAMMING', roadblock: 'ROADBLOCK', search: 'SEARCHING', foot: 'ON FOOT' };
+  const STATE_LABEL = { pursuit: 'PURSUING', ram: 'RAMMING', roadblock: 'ROADBLOCK', search: 'SEARCHING', foot: 'ON FOOT' };   // internal keys (CSS classes); shown through ES_STATE
+  const ES_STATE = { PURSUING: 'PERSIGUIENDO', RAMMING: 'EMBISTIENDO', ROADBLOCK: 'BARRICADA', SEARCHING: 'BUSCANDO', 'ON FOOT': 'A PIE', SHOOTING: 'DISPARANDO', SPOTLIGHT: 'REFLECTOR' };
   const W = (CW.police = { level: 0, heat: 0, cops: [], officers: [], seen: false, lostT: 0, seenT: 0, last: { x: 0, z: 0 }, bust: 0, ended: null, active: false, time: 0 });
   const rnd = CW.makeRng(99);
-  const COMPASS = ['SOUTH', 'EAST', 'NORTH', 'WEST'];   // +z is south on the minimap (north = -z)
+  const COMPASS = ['SUR', 'ESTE', 'NORTE', 'OESTE'];   // +z is south on the minimap (north = -z)
   const head = (vx, vz) => (Math.hypot(vx, vz) < 1 ? '' : COMPASS[(Math.round(Math.atan2(vx, vz) / (Math.PI / 2)) + 4) % 4]);
 
   // ---- line of sight through static obstacles --------------------------------------------------------
@@ -50,7 +51,7 @@
       audio.siren = g;
     } catch (e) { audio.ctx = null; }
   }
-  window.addEventListener('keydown', (e) => { if (e.code === 'KeyM' && !e.repeat) { audio.muted = !audio.muted; if (audio.master) audio.master.gain.value = audio.muted ? 0 : 1; if (CW.hud.shown) CW.hud.toast(audio.muted ? 'SOUND OFF' : 'SOUND ON'); } });
+  window.addEventListener('keydown', (e) => { if (e.code === 'KeyK' && !e.repeat) { audio.muted = !audio.muted; if (audio.master) audio.master.gain.value = audio.muted ? 0 : 1; if (CW.hud.shown) CW.hud.toast(audio.muted ? 'SONIDO APAGADO' : 'SONIDO ACTIVADO'); } });
   function squelch() {
     if (!audio.ctx || audio.muted) return;
     try {
@@ -66,28 +67,28 @@
   W.say = function (unit, text, key, cool) {
     const now = W.time;
     if (key) { if (cd[key] && now < cd[key]) return; cd[key] = now + (cool || 8); }
-    if (queue.length < 3) queue.push({ unit, text });
+    if (queue.length < 3) queue.push({ unit, text: CW.es.tr(text) });
   };
   function radio(dt) {
     const box = $('radio'); radioT -= dt;
     if (radioT <= 0) {
-      if (queue.length) { const m = queue.shift(); $('radio-unit').textContent = m.unit; $('radio-text').textContent = m.text; box.style.opacity = 1; radioT = 2.2 + m.text.length * 0.045; squelch(); }
+      if (queue.length) { const m = queue.shift(); $('radio-unit').textContent = m.unit === 'DISPATCH' ? 'CENTRAL' : m.unit; $('radio-text').textContent = m.text; box.style.opacity = 1; radioT = 2.2 + m.text.length * 0.045; squelch(); }
       else box.style.opacity = 0;
     }
   }
 
   // ---- wanted level -----------------------------------------------------------------------------------
   const KIND_LINE = {
-    carjack: (c) => 'All units, carjacking in progress. Driver dragged from a ' + c + '.',
-    theft: (c) => 'Grand theft auto reported. Suspect took a ' + c + '.',
-    runover: (c) => 'Pedestrian struck! Hit and run in a ' + c + '.',
-    assault: () => 'Officer under attack! Suspect rammed a unit.',
-    crime: () => 'Disturbance reported. All units respond.',
-    shots: () => 'Shots fired! Multiple callers report gunfire.',
-    murder: () => 'Homicide reported. Suspect is armed and dangerous.',
-    arson: () => 'Petrol bomb! Someone is torching the street.',
+    carjack: (c) => 'A todas las unidades: robo de vehículo en curso. Sacaron al conductor de un ' + c + '.',
+    theft: (c) => 'Robo de auto denunciado. El sospechoso se llevó un ' + c + '.',
+    runover: (c) => '¡Peatón atropellado! Se dan a la fuga en un ' + c + '.',
+    assault: () => '¡Oficial bajo ataque! El sospechoso embistió una unidad.',
+    crime: () => 'Disturbio reportado. Todas las unidades, respondan.',
+    shots: () => '¡Disparos! Varios vecinos reportan tiroteo.',
+    murder: () => 'Homicidio reportado. Sospechoso armado y peligroso.',
+    arson: () => '¡Bomba molotov! Alguien está incendiando la calle.',
   };
-  function carName() { const p = who(); return p.car ? p.car.type.name : p.heli ? 'stolen helicopter' : 'unknown vehicle'; }
+  function carName() { const p = who(); return p.car ? p.car.type.name : p.heli ? 'helicóptero robado' : 'vehículo desconocido'; }
 
   W.raise = function (sev, kind, src) {
     if (W.ended) return;
@@ -99,9 +100,9 @@
     if (CW.solfeed) CW.solfeed.crime(kind, p, W.level);
     if (W.level > was) {
       CW.sfx.play('star', 0.8);
-      CW.hud.toast(was === 0 ? 'WANTED  ' + '★'.repeat(W.level) : 'WANTED LEVEL ' + '★'.repeat(W.level));
+      CW.hud.toast(was === 0 ? 'BUSCADO  ' + '★'.repeat(W.level) : 'NIVEL DE BÚSQUEDA ' + '★'.repeat(W.level));
       if (was === 0) W.say('DISPATCH', (KIND_LINE[kind] || KIND_LINE.crime)(carName()), 'dispatch', 6);
-      else W.say('DISPATCH', 'Suspect escalating. Raising the response to ' + W.level + ' stars.', 'esc', 6);
+      else W.say('DISPATCH', 'El sospechoso escala. Subimos la respuesta a ' + W.level + ' estrellas.', 'esc', 6);
     }
   };
 
@@ -116,7 +117,7 @@
       if (n >= 2 || p.state === 'dead' || p.state === 'phone' || Math.hypot(p.x - x, p.z - z) > (range || 30) || rnd() > 0.8 || !los(p.x, p.z, x, z)) return;
       p.state = 'phone'; p.t = 2.2 + rnd() * 1.2; p.rep = { sev: sev * 0.8, kind }; p.cancelled = false; n++;
     });
-    if (!n && W.level === 0) CW.hud.toast('NO WITNESSES');
+    if (!n && W.level === 0) CW.hud.toast('SIN TESTIGOS');
   };
   W.report = function (rep) { if (rep) W.raise(rep.sev, rep.kind, null); };
 
@@ -128,7 +129,7 @@
       if (c.officer) { c.officer.on = false; c.officer.model.visible = false; c.officer = null; }
       c.cs = 'leave'; T.attach(c, 13);
     });
-    if (had && !silent) { CW.hud.toast('WANTED LEVEL LOST'); W.say('DISPATCH', 'All units, suspect lost. Return to patrol.', 'clear', 5); }
+    if (had && !silent) { CW.hud.toast('BÚSQUEDA TERMINADA'); W.say('DISPATCH', 'A todas las unidades: sospechoso perdido. Vuelvan a patrullar.', 'clear', 5); }
   };
 
   // ---- cop cars -----------------------------------------------------------------------------------------
@@ -192,7 +193,7 @@
     o.on = true; o.car = c; c.officer = o; o.model.visible = true;
     const lx = Math.cos(c.h), lz = -Math.sin(c.h);
     o.x = c.x + lx * 1.8; o.z = c.z + lz * 1.8; o.vx = o.vz = 0;
-    W.say(c.call, 'Suspect is on foot — moving in!', 'foot', 10);
+    W.say(c.call, '¡El sospechoso va a pie, vamos a por él!', 'foot', 10);
   }
 
   function updateCop(c, dt, p, F) {
@@ -213,7 +214,7 @@
     if (c.cs === 'roadblock') {
       c.aiCtl = { throttle: 0, steer: 0, brake: true };
       c.rbMin = Math.min(c.rbMin || 1e9, d);
-      if (W.level < 3 || d < 13 || d > c.rbMin + 28) { c.cs = W.seen ? 'pursuit' : 'search'; c.rbMin = 0; if (W.level >= 3 && d < 13) W.say(c.call, 'He is breaking through the roadblock!', 'break', 8); }
+      if (W.level < 3 || d < 13 || d > c.rbMin + 28) { c.cs = W.seen ? 'pursuit' : 'search'; c.rbMin = 0; if (W.level >= 3 && d < 13) W.say(c.call, '¡Está rompiendo la barricada!', 'break', 8); }
       return;
     }
     if (c.cs === 'foot') {
@@ -231,7 +232,7 @@
       if (d < 60 && los(c.x, c.z, p.x, p.z)) {
         tx = p.x + p.vx * 0.3; tz = p.z + p.vz * 0.3;
         const ram = d < 24 && c.speed > 9;
-        if (ram && c.cs !== 'ram') W.say(c.call, 'Moving to ram — hold on!', 'ram', 10);
+        if (ram && c.cs !== 'ram') W.say(c.call, '¡Voy a embestirlo, agárrense!', 'ram', 10);
         c.cs = ram ? 'ram' : 'pursuit';
         vt = d < 20 ? Math.max(p.speed + 9, 14) : vmax;
       } else {
@@ -259,7 +260,7 @@
     if (W.dispT <= 0 && chasers < NEED[level]) {
       W.dispT = 2.4;
       const c = W.cops.find((q) => q.cs === 'idle') || W.cops.find((q) => q.cs === 'leave' && Math.hypot(q.x - p.x, q.z - p.z) > 90);
-      if (c && T.relocate(c, p.x, p.z, 95, 175, 0)) { c.cs = W.seen ? 'pursuit' : 'search'; c.hp = 100; c.officer = null; W.say(c.call, 'Responding — en route to the last known position.', 'resp', 12); }
+      if (c && T.relocate(c, p.x, p.z, 95, 175, 0)) { c.cs = W.seen ? 'pursuit' : 'search'; c.hp = 100; c.officer = null; W.say(c.call, 'Respondiendo, en camino a la última posición conocida.', 'resp', 12); }
     }
     if (level >= 3 && W.rbT <= 0 && !W.cops.some((c) => c.cs === 'roadblock')) {
       W.rbT = 4;
@@ -281,7 +282,7 @@
               c.x = sx + px * off; c.z = sz + pz * off; c.h = Math.atan2(px, pz) + (k === 1 ? 0.12 : -0.06 * (k - 1)); c.vx = c.vz = c.fs = c.ls = c.speed = 0; c.hp = 100;
               c.hidden = false; c.awake = true; c.cs = 'roadblock'; c.rbMin = 1e9; c.ai = { cruise: 0, off: 0 }; c.officer = null;
             });
-            W.say('DISPATCH', 'Roadblock going up on the ' + head(sx - p.x, sz - p.z) + 'bound route. Push him into it.', 'rb', 12);
+            W.say('DISPATCH', 'Barricada en la ruta hacia el ' + head(sx - p.x, sz - p.z).toLowerCase() + '. Empújenlo contra ella.', 'rb', 12);
           }
         }
       }
@@ -320,13 +321,13 @@
     if (W.ended) return;
     const st = CW.hud.state, fine = Math.min(st.cash, Math.max(150, Math.round(st.cash * 0.1)));
     W.ended = { kind: 'busted', fine };
-    endScreen('busted', 'BUSTED', 'You were taken in by the Solmara PD.  Fine: $' + fine.toLocaleString('en-US'));
-    W.ended.fine = fine; W.say('DISPATCH', 'Suspect in custody. Good work, everyone.', 'cust', 1);
+    endScreen('busted', 'ARRESTADO', 'La policía de Puerto Marea te detuvo.  Multa: $' + fine.toLocaleString('en-US'));
+    W.ended.fine = fine; W.say('DISPATCH', 'Sospechoso detenido. Buen trabajo, equipo.', 'cust', 1);
   };
   W.wasted = function (cause) {
     if (W.ended) return;
     const st = CW.hud.state, bill = Math.min(st.cash, 200 + Math.round(st.cash * 0.05));
-    endScreen('wasted', 'WASTED', (cause ? cause + '.  ' : '') + 'Hospital bill: $' + bill.toLocaleString('en-US'));
+    endScreen('wasted', 'ABATIDO', (cause ? CW.es.tr(cause) + '.  ' : '') + 'Cuenta del hospital: $' + bill.toLocaleString('en-US'));
     W.ended.fine = bill;
   };
   function respawn() {
@@ -342,7 +343,7 @@
     st.hp = 100; st.armour = 0;
     W.clear(true); W.cops.forEach((c) => { if (c.cs !== 'idle' && c.cs !== 'patrol') hide(c); });
     $('endscreen').style.display = 'none'; W.ended = null; CW.game.state = 'play';
-    CW.hud.toast(kind === 'busted' ? 'RELEASED FROM SOLMARA POLICE STATION' : 'DISCHARGED FROM SOLMARA GENERAL');
+    CW.hud.toast(kind === 'busted' ? 'LIBERADO DE LA COMISARÍA DE PUERTO MAREA' : 'DADO DE ALTA DEL HOSPITAL GENERAL DE PUERTO MAREA');
   }
 
   // a wrecked car you are sat in burns, then blows
@@ -350,12 +351,12 @@
     const car = p.car;
     if (!car || car.hp > 0) return;
     car.burnT = (car.burnT || 0) + dt;
-    if (car.burnT < 0.1) CW.hud.toast('CAR ON FIRE — GET OUT! (E)');
+    if (car.burnT < 0.1) CW.hud.toast('¡AUTO EN LLAMAS — SAL! (E)');
     if (Math.random() < dt * 24) CW.fx.puff(car.x, 1.2, car.z, { color: Math.random() < 0.5 ? 0xff7a1a : 0x222222, size: 0.9, grow: 1.8, vy: 2.4, a: 0.7, life: 1.1 });
     if (car.burnT > 4.5) {
       CW.fx.explode(car.x, car.z, 8, { src: car, noHurt: true });
       car.hidden = true; car.mesh.visible = false;
-      W.wasted('Your car exploded');
+      W.wasted('Tu auto explotó');
     }
   }
 
@@ -372,14 +373,14 @@
       const d = Math.hypot(c.x - p.x, c.z - p.z);
       // "SHOOTING" mirrors enemies.js: roadblock cars and foot units fire within 50 m, pursuit cars from 4 stars within 34 m (sight is approximated by W.seen)
       const shoots = W.seen && W.level >= 2 && ((c.cs === 'roadblock' || c.cs === 'foot') && d < 50 || (W.level >= 4 && c.cs === 'pursuit' && d < 34));
-      units.push({ call: c.call, d, st: shoots ? 'SHOOTING' : STATE_LABEL[c.cs] || 'PURSUING' });
+      units.push({ call: c.call, d, st: shoots ? 'SHOOTING' : STATE_LABEL[c.cs] || 'PURSUING' });   // (ES_STATE turns it into the on-screen label)
     });
     const ph = CW.air && CW.air.policeHeli;
     if (ph && ph.active) { const r = ph.panelRow(p); units.push({ call: r.call, d: r.d, st: 'SPOTLIGHT', air: true }); }
     units.sort((a, b) => a.d - b.d);
-    let h = '<div class="ph"><span>POLICE RESPONSE</span><b>' + units.length + ' UNIT' + (units.length === 1 ? '' : 'S') + '</b></div>';
-    units.slice(0, 5).forEach((u) => { h += '<div class="u' + (u.air ? ' air' : '') + '"><b>' + (u.air ? '&#9992; ' : '') + u.call + '</b><span>' + (u.d >= 1000 ? (u.d / 1000).toFixed(1) + ' km' : Math.round(u.d) + ' m') + '</span><em class="s-' + u.st + '">' + u.st + '</em></div>'; });
-    if (!units.length) h += '<div class="u"><b>—</b><span></span><em>NO UNITS NEARBY</em></div>';
+    let h = '<div class="ph"><span>RESPUESTA POLICIAL</span><b>' + units.length + (units.length === 1 ? ' UNIDAD' : ' UNIDADES') + '</b></div>';
+    units.slice(0, 5).forEach((u) => { h += '<div class="u' + (u.air ? ' air' : '') + '"><b>' + (u.air ? '&#9992; ' : '') + u.call + '</b><span>' + (u.d >= 1000 ? (u.d / 1000).toFixed(1) + ' km' : Math.round(u.d) + ' m') + '</span><em class="s-' + u.st + '">' + (ES_STATE[u.st] || u.st) + '</em></div>'; });
+    if (!units.length) h += '<div class="u"><b>—</b><span></span><em>SIN UNIDADES CERCA</em></div>';
     if (h !== lastHTML) { lastHTML = h; box.innerHTML = h; }
   }
 
@@ -413,8 +414,8 @@
       for (let i = 0; i < W.officers.length && !seen; i++) { const o = W.officers[i]; if (o.on && Math.hypot(o.x - p.x, o.z - p.z) < 70) seen = true; }
       if (CW.air && CW.air.policeSees && CW.air.policeSees(p)) seen = true;
       const spotter = W.cops.find((c) => !c.hidden && c.cs !== 'idle' && c.cs !== 'dead');
-      if (seen && !W.seen && W.level > 0) W.say(spotter ? spotter.call : 'DISPATCH', 'Visual on suspect — ' + carName() + (head(p.vx, p.vz) ? ', heading ' + head(p.vx, p.vz) : ', stationary') + '.', 'vis', 9);
-      if (!seen && W.seen && W.level > 0) W.say('DISPATCH', head(p.vx, p.vz) ? 'Lost visual. Last seen heading ' + head(p.vx, p.vz) + '. Set up a search.' : 'Lost visual. Last seen on foot near the scene. Set up a search.', 'lost', 8);
+      if (seen && !W.seen && W.level > 0) W.say(spotter ? spotter.call : 'DISPATCH', 'Contacto visual con el sospechoso — ' + carName() + (head(p.vx, p.vz) ? ', rumbo ' + head(p.vx, p.vz) : ', detenido') + '.', 'vis', 9);
+      if (!seen && W.seen && W.level > 0) W.say('DISPATCH', head(p.vx, p.vz) ? 'Perdimos contacto visual. Último rumbo: ' + head(p.vx, p.vz) + '. Armen un cerco.' : 'Perdimos contacto visual. Visto por última vez a pie cerca del lugar. Armen un cerco.', 'lost', 8);
       W.seen = seen && W.level > 0;
     }
     // heat bookkeeping
@@ -427,9 +428,9 @@
         if (W.lostT > 9) {
           const near = W.cops.some((c) => !c.hidden && c.cs !== 'idle' && c.cs !== 'patrol' && Math.hypot(c.x - p.x, c.z - p.z) < 70);
           const was = W.level; W.heat -= dt * (near ? 0.11 : 0.2); W.level = Math.min(5, Math.ceil(W.heat - 0.001));
-          if (W.heat <= 0) W.clear(false); else if (W.level < was) { CW.hud.toast('WANTED LEVEL DOWN  ' + '★'.repeat(W.level)); W.say('DISPATCH', 'Suspect still at large — stand by.', 'down', 6); }
+          if (W.heat <= 0) W.clear(false); else if (W.level < was) { CW.hud.toast('BAJA LA BÚSQUEDA  ' + '★'.repeat(W.level)); W.say('DISPATCH', 'El sospechoso sigue suelto — atentos.', 'down', 6); }
           const sr = W.cops.find((c) => !c.hidden && c.cs === 'search');
-          if (Math.floor(W.lostT) % 14 === 0 && Math.floor(W.lostT) !== W.lastSay) { W.lastSay = Math.floor(W.lostT); W.say(sr ? sr.call : 'DISPATCH', 'Nothing yet. Keep checking the side streets.', 'srch', 12); }
+          if (Math.floor(W.lostT) % 14 === 0 && Math.floor(W.lostT) !== W.lastSay) { W.lastSay = Math.floor(W.lostT); W.say(sr ? sr.call : 'DISPATCH', 'Nada todavía. Revisen las calles laterales.', 'srch', 12); }
         }
       }
     }

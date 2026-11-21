@@ -1,4 +1,4 @@
-// Solmara: the whole city built from primitives. Beachfront (east), Downtown (centre/west), Harbour (south).
+// Puerto Marea: the whole city built from primitives. Beachfront (east), Downtown (centre/west), Harbour (south).
 // Static geometry is merged per block (windows / solid / foliage) so culling still works and draw calls stay low.
 (function () {
   const CW = window.CW, C = CW.C, R = CW.rng;
@@ -80,14 +80,14 @@
   world.plate = plate;
 
   const AD = [
-    ['SOLMARA\nTOURISM', { bg: '#0e7c86', fg: '#ffe9a8', stripe: '#ff7a59' }],
-    ['FIZZ COLA\nICE COLD', { bg: '#d6283e', fg: '#ffffff', stripe: '#ffd23f' }],
-    ['LUNA SUN\nSPF 50', { bg: '#ffb24a', fg: '#2a1a3a', stripe: '#e8456f' }],
-    ['HARBOUR\nBREWERY', { bg: '#1c3b5a', fg: '#ffd27a', stripe: '#3fc1c9' }],
-    ['PALMA\nHOTELS', { bg: '#f4ece0', fg: '#d6456f', stripe: '#3fc1c9' }],
-    ['NEON DREAMS\nNIGHTCLUB', { bg: '#1a1033', fg: '#ff4fd8', edge: '#3ff0ff', glow: true }],
+    ['PUERTO MAREA\nTURISMO', { bg: '#0e7c86', fg: '#ffe9a8', stripe: '#ff7a59' }],
+    ['FIZZ COLA\nBIEN FRÍA', { bg: '#d6283e', fg: '#ffffff', stripe: '#ffd23f' }],
+    ['LUNA SOL\nFPS 50', { bg: '#ffb24a', fg: '#2a1a3a', stripe: '#e8456f' }],
+    ['CERVECERÍA\nDEL PUERTO', { bg: '#1c3b5a', fg: '#ffd27a', stripe: '#3fc1c9' }],
+    ['HOTELES\nPALMA', { bg: '#f4ece0', fg: '#d6456f', stripe: '#3fc1c9' }],
+    ['SUEÑOS DE NEÓN\nDISCOTECA', { bg: '#1a1033', fg: '#ff4fd8', edge: '#3ff0ff', glow: true }],
     ['TURBO TACOS', { bg: '#4aa52e', fg: '#fff3b0', stripe: '#d6283e' }],
-    ['SOL FM 99.1\nTHE COAST', { bg: '#2a1a5a', fg: '#7ef0ff', edge: '#ff7ad9', glow: true }],
+    ['SOL FM 99.1\nLA COSTA', { bg: '#2a1a5a', fg: '#7ef0ff', edge: '#ff7ad9', glow: true }],
   ];
   function billboard(x, y, z, ry, idx, w, h) {
     const a = AD[idx % AD.length];
@@ -217,10 +217,10 @@
 
   // landmark blocks: entrance yard faces the road on the side named by 'face' (z-) and the building sits at the back
   function blockLandmark(bt, cx, cz, kind) {
-    const sc = kind === 'garage' ? { w: 36, d: 22, fl: 2, col: 0xf1e4c3, name: "ROXY'S\nREPAINT", st: { bg: '#d6283e', fg: '#fff3d0', stripe: '#ffd23f' } }
-      : kind === 'police' ? { w: 36, d: 24, fl: 4, col: 0xdfe8f2, name: 'SOLMARA\nPOLICE', st: { bg: '#1f3f8f', fg: '#ffffff', stripe: '#e8456f' } }
-        : kind === 'hospital' ? { w: 40, d: 28, fl: 5, col: 0xf5f7f7, name: 'SOLMARA\nGENERAL', st: { bg: '#f5f7f7', fg: '#d6283e', stripe: '#3fc1c9' } }
-          : { w: 40, d: 26, fl: 2, col: 0xb9a88a, name: 'HARBOUR\nFENCE & SALVAGE', st: { bg: '#1c2f3a', fg: '#ffcf5a', stripe: '#ff6a4a' } };
+    const sc = kind === 'garage' ? { w: 36, d: 22, fl: 2, col: 0xf1e4c3, name: 'PINTURA\nROXY', st: { bg: '#d6283e', fg: '#fff3d0', stripe: '#ffd23f' } }
+      : kind === 'police' ? { w: 36, d: 24, fl: 4, col: 0xdfe8f2, name: 'POLICÍA\nPUERTO MAREA', st: { bg: '#1f3f8f', fg: '#ffffff', stripe: '#e8456f' } }
+        : kind === 'hospital' ? { w: 40, d: 28, fl: 5, col: 0xf5f7f7, name: 'HOSPITAL\nGENERAL', st: { bg: '#f5f7f7', fg: '#d6283e', stripe: '#3fc1c9' } }
+          : { w: 40, d: 26, fl: 2, col: 0xb9a88a, name: 'CHATARRERÍA\nEL PUERTO', st: { bg: '#1c2f3a', fg: '#ffcf5a', stripe: '#ff6a4a' } };
     const bz = cz + 29 - sc.d / 2 - 1;      // back of the block
     addBuilding(bt, cx, bz, sc.w, sc.d, sc.fl * FL, sc.col, { noRoof: false });
     yardLines(bt, cx - 28, cz - 28.5, 56, 17, true);
@@ -426,7 +426,7 @@
       bch.sol.box(x, 4.72, 7, 0.03, 0.03, 14, 0x222222);
     }
     [2, 12].forEach((z) => bch.sol.cyl(262, 4.4, z, 0.14, 0.14, 8.8, 6, 0x5a3a22));
-    plate('PASAR MALAM\nBEACH NIGHT MARKET', 10, 2.4, { bg: '#2a1408', fg: '#ffcf3a', edge: '#ff4fd8', glow: true }, 262, 8.9, 7, -Math.PI / 2, true);
+    plate('MERCADO NOCTURNO\nDE LA COSTA', 10, 2.4, { bg: '#2a1408', fg: '#ffcf3a', edge: '#ff4fd8', glow: true }, 262, 8.9, 7, -Math.PI / 2, true);
     // ferris wheel on the sea side of the deck: axis along x, so the disc faces the market
     const FW = { x: 285, y: 13.5, z: 7, R: 11 }, wgrp = new THREE.Group(), wb = new CW.Batch(), wl = new CW.Batch(), cabs = [];
     wgrp.position.set(FW.x, FW.y, FW.z);
@@ -518,7 +518,7 @@
         furn.sol.box(31, 4.62, zz, 42, 0.03, 0.03, 0x222222);
       }
       [10, 31, 52].forEach((x) => furn.sol.cyl(x, 2.4, 9.9, 0.06, 0.06, 4.8, 6, 0x333b41));
-      plate('PASAR MALAM\nNIGHT MARKET', 9, 2.4, { bg: '#2a0a2a', fg: '#ffcf3a', edge: '#ff4fd8', glow: true }, 31, 5.9, 12.6, Math.PI, true);
+      plate('MERCADO\nNOCTURNO', 9, 2.4, { bg: '#2a0a2a', fg: '#ffcf3a', edge: '#ff4fd8', glow: true }, 31, 5.9, 12.6, Math.PI, true);
     })();
     flush(furn, scene);
 
@@ -531,9 +531,9 @@
 
     // title set neon + parking slots
     world.titleSet = { x: 245.0, z: 40, carX: 246.4 };
-    plate('SOLMARA\nHARBOUR CLUB', 9, 3.2, { bg: '#16062e', fg: '#ff5fd2', edge: '#35f2ff', glow: true }, 264, 7.2, 24, -Math.PI / 2, true);
-    plate('SOL BAR', 4.4, 1.5, { bg: '#08213a', fg: '#4ff5e0', edge: '#ffd24a', glow: true }, 261.9, 2.6, 40, -Math.PI / 2, true);
-    plate('HARBOUR\nOPEN 24H', 6, 3, { bg: '#2a0a2a', fg: '#ffcf3a', edge: '#ff5a5a', glow: true }, 264, 7, 58, -Math.PI / 2, true);
+    plate('CLUB DEL\nPUERTO', 9, 3.2, { bg: '#16062e', fg: '#ff5fd2', edge: '#35f2ff', glow: true }, 264, 7.2, 24, -Math.PI / 2, true);
+    plate('BAR SOL', 4.4, 1.5, { bg: '#08213a', fg: '#4ff5e0', edge: '#ffd24a', glow: true }, 261.9, 2.6, 40, -Math.PI / 2, true);
+    plate('PUERTO\nABIERTO 24H', 6, 3, { bg: '#2a0a2a', fg: '#ffcf3a', edge: '#ff5a5a', glow: true }, 264, 7, 58, -Math.PI / 2, true);
     bchPosts(scene);
     // palms that frame the cover shot on both sides, leaning in toward the pair
     const fr = makeBatches();

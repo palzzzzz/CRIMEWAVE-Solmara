@@ -73,7 +73,7 @@
     const len = Math.hypot(mx, mz);
     // sprint costs stamina; run dry and you are winded until it climbs back
     const want = (I.isDown('ShiftLeft') || I.isDown('ShiftRight')) && len > 0, run = want && P.stamina > 0 && !P.winded;
-    if (run) { P.stamina = Math.max(0, P.stamina - 24 * dt); P.staT = 0.8; if (P.stamina <= 0) { P.winded = true; P.toast = 'OUT OF BREATH'; } }
+    if (run) { P.stamina = Math.max(0, P.stamina - 24 * dt); P.staT = 0.8; if (P.stamina <= 0) { P.winded = true; P.toast = 'SIN ALIENTO'; } }
     else { P.staT -= dt; if (P.staT <= 0) P.stamina = Math.min(100, P.stamina + (len > 0 ? 14 : 22) * dt); if (P.winded && P.stamina >= 30) P.winded = false; }
     let sp = len > 0 ? (run ? 6.6 : P.winded && want ? 2.6 : 3.4) : 0;
     if (Wp.aimK > 0.5) sp *= 0.72;
@@ -96,14 +96,14 @@
     o.model.userData.update(dt, 0);
     // enter helicopter / car
     const car = CW.vehicles.nearest(e.x, e.z, 3.6), heli = CW.air.canEnter(e);
-    P.prompt = heli ? 'E  FLY HELICOPTER' : car ? 'E  ' + (car.type.id === 'bike' ? 'RIDE ' : 'ENTER ') + car.type.name : null;
+    P.prompt = heli ? 'E  PILOTAR HELICÓPTERO' : car ? 'E  ' + (car.type.id === 'bike' ? 'MONTAR ' : 'SUBIR A ') + car.type.name : null;
     if (I.pressed('KeyE') && heli) { CW.air.enter(); return; }
     if (I.pressed('KeyE') && car) {
       CW.vehicles.enter(car); P.mode = 'car'; P.car = car; cam.carYaw = car.h; cam.look = 0; P.prompt = null;
       if (car.type.id === 'bike') e.model.userData.setPose('bike'); else e.model.visible = false;
     }
     if (I.pressed('Tab')) {
-      P.active = o; P.toast = 'NOW PLAYING: ' + o.def.name;
+      P.active = o; P.toast = 'AHORA JUEGAS COMO: ' + o.def.name;
       cam.yaw = cam.yaw;
     }
     // camera target / boom
@@ -121,7 +121,7 @@
 
   function inCar(dt) {
     const car = P.car, I = CW.input, e = P.active;
-    P.prompt = car.speed < 6 ? 'E  EXIT' : null;
+    P.prompt = car.speed < 6 ? 'E  BAJAR' : null;
     if (I.mdx || I.mdy) { cam.look -= I.mdx * 0.004; cam.lookIdle = 0; } else cam.lookIdle += dt;
     if (cam.lookIdle > 1.6) cam.look = CW.damp(cam.look, 0, 3, dt);
     cam.look = CW.clamp(cam.look, -2.6, 2.6);
@@ -149,7 +149,7 @@
       e.model.position.set(e.x, 0, e.z);
       cam.yaw = car.h + Math.PI; cam.tx = car.x; cam.tz = car.z; cam.cd = undefined; cam.pitch = 0.3;
       P.mode = 'foot'; P.car = null;
-    } else if (I.pressed('Tab')) P.toast = 'GET OUT OF THE CAR FIRST (E)';
+    } else if (I.pressed('Tab')) P.toast = 'BAJA DEL AUTO PRIMERO (E)';
     P.other().model.userData.update(dt, 0);
   }
 

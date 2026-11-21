@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CRIMEWAVE: Solmara</title>
+<title>MAREA CRIMINAL</title>
 <link rel="icon" href="data:,">
 <style>
   :root { --cream:#fff1d6; --coral:#ff6b4a; --teal:#12a7a0; --deep:#0b2a33; --gold:#ffc83d; --hs:1; --k:1.4; }  /* --hs: HUD panel scale = viewport height / 720 (set in hud.js); --k: readability boost for the three contact-sheet lines (police behaviour + range, NEXT, contact dialogue) */
@@ -14,26 +14,33 @@
 
   /* ---------- title ---------- */
   #title { position: fixed; inset: 0; display: none; flex-direction: column; align-items: center; pointer-events: none; }
-  #title::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(40,10,30,.55) 0%, rgba(40,10,30,.18) 32%, rgba(0,0,0,0) 48%, rgba(20,6,12,.0) 70%, rgba(20,6,12,.7) 100%); }
-  #title::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 200px rgba(30,6,20,.65); }
+  #title::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6,4,24,.72) 0%, rgba(6,4,24,.35) 26%, rgba(0,0,0,0) 46%, rgba(6,4,16,.0) 62%, rgba(4,3,12,.86) 100%); }
+  #title::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 220px rgba(4,2,20,.75); }
   #title .bar { position: absolute; left: 0; right: 0; height: 4vh; background: #14070c; z-index: 2; }
   #title .bar.t { top: 0; } #title .bar.b { bottom: 0; }
   #tcol { position: relative; z-index: 3; margin-top: 6.5vh; text-align: center; }
-  #logo { font-size: min(15vw, 190px); line-height: .86; font-style: italic; margin: 0; color: var(--cream);
-    background: linear-gradient(180deg, #fff6df 8%, #ffd27a 45%, #ff7a4a 78%, #e8456f 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 .035em 0 #7a1d3d) drop-shadow(.04em .07em 0 #12a7a0) drop-shadow(0 0 28px rgba(255,120,60,.45)); transform: skewX(-4deg); }
+  #logo { font-size: min(10.4vw, 150px); line-height: .9; font-style: italic; margin: 0; color: var(--cream); white-space: nowrap;
+    background: linear-gradient(180deg, #ffffff 6%, #ffe3f4 40%, #ff7ad9 74%, #c02aa8 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 .03em 0 #3a0f5a) drop-shadow(.04em .06em 0 #12c7d8) drop-shadow(0 0 30px rgba(255,70,210,.55)); transform: skewX(-4deg); }
   #sub { display: flex; align-items: center; justify-content: center; gap: 1.6vw; margin: .8vh 0 0; }
-  #sub b { font-size: min(3.6vw, 46px); letter-spacing: .6em; margin-right: -.6em; color: #fff; text-shadow: 0 3px 0 #0f6f73, 0 0 18px rgba(18,167,160,.7); font-weight: 400; }
+  #sub b { font-size: min(3.4vw, 44px); letter-spacing: .5em; margin-right: -.5em; color: #fff; text-shadow: 0 3px 0 #0f6f73, 0 0 18px rgba(18,200,220,.9); font-weight: 400; }
   #sub i { flex: 0 0 9vw; height: 5px; background: linear-gradient(90deg, #ffc83d, #ff6b4a, #e8456f); border-radius: 3px; }
   #sub i:last-child { background: linear-gradient(270deg, #ffc83d, #ff6b4a, #e8456f); }
-  #menu { position: absolute; z-index: 3; left: 50%; bottom: 6.6vh; transform: translateX(-50%); display: flex; flex-direction: row; gap: 1.2vw; pointer-events: auto; }
-  .mi { display: flex; flex-direction: column; align-items: center; padding: 1vh 2.2vw .9vh; min-width: 17vw; font-size: min(2.3vw, 30px); color: rgba(255,241,214,.8); border-bottom: 5px solid transparent; background: rgba(20,8,14,.5); cursor: pointer; transition: transform .12s, background .12s; }
-  .mi small { font-family: 'Trebuchet MS', sans-serif; font-size: min(.85vw, 11px); letter-spacing: .16em; opacity: .75; margin-top: .2vh; }
-  .mi.sel { color: #fff; background: linear-gradient(180deg, rgba(255,107,74,.92), rgba(232,69,111,.7)); border-bottom-color: var(--gold); transform: translateY(-6px); text-shadow: 0 2px 0 rgba(90,20,40,.7); }
+  #menu { position: absolute; z-index: 3; left: 50%; bottom: 8.4vh; transform: translateX(-50%); display: flex; flex-direction: row; gap: .9vw; pointer-events: auto; }
+  .mi { display: flex; flex-direction: column; align-items: center; padding: 1.1vh 1.2vw 1vh; min-width: 15.6vw; font-size: min(2.2vw, 30px); color: #fff1d6; border-bottom: 5px solid rgba(255,255,255,.18); background: rgba(8,5,22,.82); border-radius: 6px 6px 0 0; text-shadow: 0 2px 4px rgba(0,0,0,.8); cursor: pointer; transition: transform .12s, background .12s; }
+  .mi small { font-family: 'Trebuchet MS', sans-serif; font-weight: bold; font-size: min(.92vw, 12px); letter-spacing: .1em; color: #cfe9ff; opacity: .95; margin-top: .3vh; text-align: center; }
+  .mi.sel { color: #fff; background: linear-gradient(180deg, rgba(255,60,200,.95), rgba(150,40,220,.85)); border-bottom-color: #2ff0ff; transform: translateY(-6px); text-shadow: 0 2px 0 rgba(90,20,40,.7); }
   .mi.disabled { opacity: .4; cursor: not-allowed; }
-  #hint { position: absolute; left: 3vw; bottom: 5vh; z-index: 3; font-size: min(.95vw, 12px); letter-spacing: .2em; opacity: .75; }
-  #credit { position: absolute; right: 3vw; bottom: 5vh; z-index: 3; font-size: min(.9vw, 11px); letter-spacing: .22em; opacity: .65; text-align: right; }
+  #hint { position: absolute; left: 3vw; bottom: 4.4vh; z-index: 3; font-size: min(.95vw, 12px); letter-spacing: .18em; opacity: .85; text-shadow: 0 1px 3px #000; }
+  #credit { position: absolute; left: 0; right: 0; bottom: 4.6vh; z-index: 3; font-size: min(1vw, 13px); letter-spacing: .3em; opacity: .9; text-align: center; text-shadow: 0 1px 3px #000; }
+  #credit b { color: #ff8be6; }
 
+  #pause, #options, #playchoice { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(4,4,18,.72); z-index: 25; }
+  #pause .card, #options .card, #playchoice .card { width: min(520px, 92vw); padding: 24px 30px 26px; background: linear-gradient(160deg, #1b1840, #0d0b24); border: 3px solid #ff5fd2; border-radius: 14px; box-shadow: 0 0 40px rgba(255,70,210,.35), 0 20px 60px rgba(0,0,0,.6); }
+  #pause h2, #options h2, #playchoice h2 { margin: 0 0 14px; font-size: 44px; color: #fff; text-shadow: 0 0 18px #ff3fd0; font-style: italic; }
+  .pbtn { display: flex; justify-content: space-between; align-items: center; padding: 11px 16px; margin-bottom: 8px; font-family: Impact, 'Arial Black', sans-serif; font-size: 22px; letter-spacing: .06em; background: rgba(255,255,255,.07); border-left: 6px solid #2ff0ff; cursor: pointer; }
+  .pbtn small { font-family: 'Trebuchet MS', sans-serif; font-size: 12px; letter-spacing: .1em; color: #cfe9ff; }
+  .pbtn:hover, .pbtn.sel { background: linear-gradient(90deg, rgba(255,60,200,.85), rgba(150,40,220,.7)); }
   #howto { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(8,20,26,.72); z-index: 20; }
   #howto .card { background: linear-gradient(160deg, #1b3a44, #12262e); border: 3px solid var(--gold); border-radius: 14px; padding: 26px 34px; width: min(760px, 92vw); box-shadow: 0 20px 60px rgba(0,0,0,.6); }
   #howto h2 { margin: 0 0 14px; font-size: 40px; color: var(--gold); }
@@ -54,7 +61,7 @@
   .bar { height: 12px; background: rgba(0,0,0,.45); border-radius: 6px; overflow: hidden; margin-top: 3px; border: 1px solid rgba(255,255,255,.2); }
   .bar i { display: block; height: 100%; width: 100%; border-radius: 6px; }
   #hpbar { background: linear-gradient(90deg, #ff4e4e, #ff8a5c); } #arbar { background: linear-gradient(90deg, #4aa8ff, #7fd4ff); width: 0; } #repbar { background: linear-gradient(90deg, #ffc83d, #fff08a); width: 0; } #carhp { background: linear-gradient(90deg, #ff6b4a, #ffc83d); }
-  #topr { position: absolute; right: 22px; top: 18px; width: 300px; text-align: right; }
+  #topr { position: absolute; right: 22px; top: 18px; width: 330px; text-align: right; }
   #cash { font-size: 44px; color: #8dff9c; line-height: 1; } #clock { font-size: 20px; color: var(--cream); margin-top: 4px; }
   #wanted { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); min-width: 270px; padding: 4px 18px 7px; text-align: center; display: none; border-color: rgba(255,210,63,.55); }
   #stars { font-size: 44px; line-height: 1.05; letter-spacing: 6px; margin-right: -6px; } .star { color: rgba(255,255,255,.2); } .star.on { color: #ffd23f; text-shadow: 0 0 12px #ff9d00, 0 2px 0 #7a3b00; }
@@ -69,7 +76,7 @@
   #carpanel { position: absolute; right: 22px; bottom: 22px; width: 250px; padding: 10px 14px 12px; display: none; text-align: right; }
   #cprow { display: flex; align-items: flex-end; justify-content: flex-end; gap: 8px; }
   #gear { font-size: 26px; line-height: 1; padding: 3px 9px; margin-bottom: 8px; margin-right: auto; border: 2px solid var(--gold); border-radius: 6px; color: var(--gold); background: rgba(0,0,0,.35); min-width: 38px; text-align: center; }
-  #gear::before { content: 'GEAR '; font-family: 'Trebuchet MS', sans-serif; font-size: 9px; letter-spacing: .14em; vertical-align: middle; opacity: .8; }
+  #gear::before { content: 'MARCHA '; font-family: 'Trebuchet MS', sans-serif; font-size: 9px; letter-spacing: .14em; vertical-align: middle; opacity: .8; }
   #carhp { transition: width .25s, background .25s; } #carhp.mid { background: linear-gradient(90deg, #ff8a2a, #ffd23f) !important; } #carhp.low { background: linear-gradient(90deg, #ff2a2a, #ff6b4a) !important; }
   #spd { font-size: 76px; line-height: .95; color: #fff; } #spdu { font-size: 16px; color: var(--gold); letter-spacing: .15em; } #carname { font-size: 22px; color: var(--gold); margin-bottom: 4px; }
   #drift { position: absolute; right: 22px; bottom: 190px; font-size: 26px; color: #ff9bd1; opacity: 0; transition: opacity .2s; }
@@ -94,7 +101,7 @@
   @keyframes blink { 50% { opacity: .35; } }
   #stars.search .star.on { animation: blink .7s steps(2) infinite; }
   #radio { position: absolute; left: 50%; bottom: calc(168px * var(--hs)); transform: translateX(-50%); max-width: min(780px, 90vw); padding: 7px 16px 8px; background: rgba(6,14,24,.82); border: 2px solid rgba(143,182,255,.55); border-radius: 8px; opacity: 0; transition: opacity .25s; font-size: 17px; text-align: center; }
-  #radio #radio-unit { color: #8fb6ff; font-weight: bold; letter-spacing: .14em; margin-right: 8px; font-size: 14px; } #radio::before { content: 'POLICE RADIO'; display: block; font-size: 9px; letter-spacing: .3em; opacity: .55; }
+  #radio #radio-unit { color: #8fb6ff; font-weight: bold; letter-spacing: .14em; margin-right: 8px; font-size: 14px; } #radio::before { content: 'RADIO POLICIAL'; display: block; font-size: 9px; letter-spacing: .3em; opacity: .55; }
   #bustwrap { position: absolute; left: 50%; bottom: 250px; transform: translateX(-50%); width: 300px; text-align: center; opacity: 0; transition: opacity .2s; }
   #bustwrap .lab { color: #8fb6ff; font-size: 14px; } #bustbar { background: linear-gradient(90deg, #3a7bff, #fff); width: 0; }
   #hurt { position: absolute; inset: 0; opacity: 0; box-shadow: inset 0 0 160px 40px rgba(230,20,40,.7); }
@@ -107,9 +114,10 @@
   #end-sub { margin-top: 14px; font-size: 22px; letter-spacing: .08em; } #end-hint { margin-top: 26px; font-size: 16px; letter-spacing: .3em; color: var(--gold); transition: opacity .4s; }
   @keyframes endin { from { transform: scale(1.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   /* ---------- combat + air ---------- */
-  #weap { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; margin-top: 4px; width: 300px; margin-left: auto; }
-  .slot { min-width: 90px; padding: 4px 6px; text-align: center; font-size: 11px; letter-spacing: .06em; background: rgba(10,30,38,.62); border: 2px solid rgba(255,241,214,.2); border-radius: 6px; opacity: .6; }
+  #weap { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; margin-top: 4px; width: 330px; margin-left: auto; }
+  .slot { min-width: 104px; padding: 4px 6px; text-align: center; font-size: 11px; letter-spacing: .06em; background: rgba(10,30,38,.62); border: 2px solid rgba(255,241,214,.2); border-radius: 6px; opacity: .6; }
   .slot b { display: inline-block; margin-right: 5px; font-size: 14px; color: var(--gold); } .slot.on { opacity: 1; border-color: var(--gold); background: rgba(255,107,74,.35); } .slot.na { opacity: .28; }
+  .slot canvas.wic { display: block; width: 80px; height: 40px; margin: 0 auto 3px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.7)); }
   .slot .am { display: block; font-size: 14px; font-weight: bold; color: #fff; font-family: Impact, sans-serif; letter-spacing: .05em; }
   #cross { position: absolute; left: 50%; top: 50%; width: 0; height: 0; opacity: 0; --sp: 14px; transition: opacity .15s; }
   #cross i { position: absolute; background: #fff; box-shadow: 0 0 3px #000; width: 2px; height: 8px; left: -1px; top: calc(var(--sp) * -1 - 8px); }
@@ -131,7 +139,7 @@
   #m-prog { display: flex; justify-content: space-between; align-items: baseline; margin-top: 6px; font-size: 11px; letter-spacing: .16em; font-weight: bold; color: var(--gold); } #m-prog b { font-size: 15px; color: #fff; letter-spacing: .06em; }
   #m-bar { height: 9px; margin-top: 3px; } #m-barfill { background: linear-gradient(90deg, #ffb42e, #ffe27a); width: 0; transition: width .4s; }
   #m-next { margin-top: 6px; font-size: calc(12px * var(--k)); line-height: 1.3; color: #a9e9e2; } #m-next b { color: var(--gold); letter-spacing: .14em; font-size: calc(11px * var(--k)); margin-right: 6px; }
-  #m-timer { font-size: 30px; color: #ff9d7a; margin-top: 3px; display: none; } #m-timer::before { content: 'TIME  '; font-family: 'Trebuchet MS', sans-serif; font-size: 11px; letter-spacing: .2em; color: var(--gold); } #m-timer.low { color: #ff3b3b; animation: blink .5s steps(2) infinite; }
+  #m-timer { font-size: 30px; color: #ff9d7a; margin-top: 3px; display: none; } #m-timer::before { content: 'TIEMPO  '; font-family: 'Trebuchet MS', sans-serif; font-size: 11px; letter-spacing: .2em; color: var(--gold); } #m-timer.low { color: #ff3b3b; animation: blink .5s steps(2) infinite; }
   #solhud { padding: 4px 10px; font-size: 11px; letter-spacing: .16em; font-weight: bold; display: none; background: rgba(60,10,50,.7); border: 2px solid #ff6bd6; border-radius: 6px; color: #ffd6f6; }
   #solhud.hot { border-color: #ffd23f; color: #fff2a8; animation: blink 1s steps(2) infinite; } #solhud.cool { background: rgba(10,50,60,.7); border-color: #7fd4ff; color: #d8f6ff; }
   #radiohud { position: absolute; right: 22px; top: 318px; width: 270px; padding: 7px 14px 8px; text-align: right; opacity: 0; transform: translateX(30px); transition: opacity .35s, transform .35s; border-color: rgba(18,167,160,.8); border-right-width: 5px; }
@@ -141,11 +149,11 @@
   #dlg { position: absolute; left: 41%; top: 36%; transform: translateX(-50%); width: min(640px, 62vw); display: none; gap: 14px; padding: 10px 16px 10px 10px; background: rgba(8,22,30,.9); border: 3px solid var(--gold); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,.55); pointer-events: auto; z-index: 12; }
   #dlg canvas { width: 112px; height: 112px; flex: 0 0 112px; border-radius: 8px; border: 2px solid rgba(255,241,214,.45); background: #123; }
   #dlg-name { font-size: 24px; color: var(--gold); } #dlg-role { font-size: 10px; letter-spacing: .24em; opacity: .7; margin-bottom: 5px; } #dlg-text { font-size: 18px; line-height: 1.4; min-height: 50px; color: var(--cream); } #dlg-hint { font-size: 10px; letter-spacing: .24em; opacity: .6; text-align: right; }
-  #dlg.phone::before { content: '\260E  PHONE'; position: absolute; top: -13px; left: 18px; background: var(--teal); color: #05222a; font-weight: bold; font-size: 11px; letter-spacing: .2em; padding: 1px 10px; border-radius: 4px; }
+  #dlg.phone::before { content: '\260E  TELÉFONO'; position: absolute; top: -13px; left: 18px; background: var(--teal); color: #05222a; font-weight: bold; font-size: 11px; letter-spacing: .2em; padding: 1px 10px; border-radius: 4px; }
   #card { position: absolute; left: 50%; bottom: 16px; width: min(480px, 40vw); zoom: var(--hs); transform: translate(-50%, 24px); opacity: 0; transition: opacity .35s, transform .35s; display: flex; gap: 11px; padding: 8px 14px 8px 8px; border: 2px solid var(--gold); background: rgba(8,22,30,.86); }
   #card.show { opacity: 1; transform: translate(-50%, 0); }
   /* capture/staging only (the body gets .capture / .frozen from ?capture= sessions): a held phone call sits out of the chase's line of sight, and a frozen frame has no CSS animation left running */
-  body.capture #dlg { left: auto; right: 22px; top: 204px; transform: none; width: 372px; gap: 10px; }
+  body.capture #dlg { left: auto; right: 22px; top: 330px; transform: none; width: 372px; gap: 10px; }
   body.capture #radiohud { top: 342px; }
   body.capture #dlg canvas { width: 80px; height: 80px; flex-basis: 80px; }
   body.capture #dlg-text { font-size: 15px; min-height: 0; }
@@ -181,97 +189,120 @@
 </style>
 </head>
 <body>
-<canvas id="game" aria-label="CRIMEWAVE: Solmara, a 3D open-world crime game. WASD to move, E to enter a car, Tab to switch between Ray and Luna."></canvas>
+<canvas id="game" aria-label="MAREA CRIMINAL, un juego de crimen 3D de mundo abierto en Puerto Marea. WASD para moverte, E para subir a un auto, Tab para cambiar entre Ray y Luna."></canvas>
 
 <div id="title">
   <div class="bar t"></div><div class="bar b"></div>
   <div id="tcol">
-    <h1 id="logo" class="imp">CRIMEWAVE</h1>
-    <div id="sub"><i></i><b class="imp">SOLMARA</b><i></i></div>
+    <h1 id="logo" class="imp">MAREA CRIMINAL</h1>
+    <div id="sub"><i></i><b class="imp">PUERTO MAREA</b><i></i></div>
   </div>
   <div id="menu" class="imp">
-    <div class="mi" id="m-new">NEW GAME<small>RAY &amp; LUNA ARRIVE IN SOLMARA</small></div>
-    <div class="mi" id="m-continue">CONTINUE<small>NO SAVE YET</small></div>
-    <div class="mi" id="m-how">HOW TO PLAY<small>CONTROLS</small></div>
+    <div class="mi" id="m-new">JUGAR<small>RAY Y LUNA LLEGAN A PUERTO MAREA</small></div>
+    <div class="mi" id="m-missions">MISIONES<small>MAPA Y PROGRESO  ·  M</small></div>
+    <div class="mi" id="m-options">OPCIONES<small>SONIDO  ·  LLUVIA</small></div>
+    <div class="mi" id="m-how">CÓMO JUGAR<small>CONTROLES</small></div>
+    <div class="mi" id="m-quit">SALIR<small>HASTA LUEGO</small></div>
   </div>
-  <div id="hint">&#8593; &#8595; SELECT &nbsp;&middot;&nbsp; ENTER CONFIRM &nbsp;&middot;&nbsp; OR CLICK</div>
-  <div id="credit">AN ORIGINAL OPEN-WORLD CRIME STORY<br>SET IN SUN-SOAKED SOLMARA</div>
+  <div id="hint">&#8592; &#8594; ELEGIR &nbsp;&middot;&nbsp; ENTER CONFIRMAR &nbsp;&middot;&nbsp; O HAZ CLIC &nbsp;&middot;&nbsp; M MAPA</div>
+  <div id="credit">Hecho para <b>make.fun</b></div>
 </div>
 
 <div id="howto"><div class="card">
-  <h2 class="imp">HOW TO PLAY</h2>
+  <h2 class="imp">CÓMO JUGAR</h2>
   <table>
-    <tr><td>W A S D</td><td>Walk / run (hold SHIFT). Mouse (click to capture) or drag to look; arrows also turn the camera</td></tr>
-    <tr><td>E</td><td>Enter the nearest car / get out</td></tr>
-    <tr><td>W / S &middot; A / D</td><td>Driving: accelerate &amp; brake / reverse, steer</td></tr>
-    <tr><td>SPACE</td><td>Handbrake &mdash; slide round corners for drift cash</td></tr>
-    <tr><td>E on a moving car</td><td>Carjack it &mdash; the driver is dragged out. Witnessed crimes raise your WANTED level; break line of sight and hide in the red search zone to shake the police</td></tr>
-    <tr><td>LEFT MOUSE &middot; RIGHT MOUSE</td><td>Fire / throw / swing &middot; hold to aim (camera goes over the shoulder). R reloads</td></tr>
-    <tr><td>HOLD Q &middot; 1-6</td><td>Weapon wheel (time slows) &middot; or pick directly: fists, knife, pistol, SMG, shotgun, molotov</td></tr>
-    <tr><td>SPACE (on foot)</td><td>Jump. Sprinting (SHIFT) drains stamina</td></tr>
-    <tr><td>HELICOPTER</td><td>Walk to the pad in the harbour (marked H) and press E. SPACE up, SHIFT down, W/S, A/D, arrows strafe</td></tr>
-    <tr><td>P</td><td>Phone: SolFeed (citizens post about your crimes, go viral and the heat climbs faster), messages and the mission log</td></tr>
-    <tr><td>ENTER</td><td>Answer a phone call / advance dialogue. Missions arrive as calls from Luna, Teo and Roxy</td></tr>
-    <tr><td>E at a shop counter</td><td>Walk into the boutique, gun store or minimart on the boardwalk and buy. REP unlocks the big guns</td></tr>
-    <tr><td>G in a car</td><td>In Roxy's yard: repaint (clears stars), upgrades, store your personal car. In the harbour Fence yard: sell a stolen car</td></tr>
-    <tr><td>R in a car</td><td>Next radio station (four stations, track titles on the HUD). M mutes</td></tr>
-    <tr><td>N</td><td>Full city map. Click it (or arrows + ENTER) to set a checkpoint: the route shows on the map and the minimap. C clears it</td></tr>
-    <tr><td>L</td><td>Call or clear the rain</td></tr>
-    <tr><td>M</td><td>Mute sound</td></tr>
-    <tr><td>TAB</td><td>Switch between Ray and Luna (on foot)</td></tr>
-    <tr><td>MOUSE WHEEL</td><td>Camera distance on foot</td></tr>
-    <tr><td>ESC</td><td>Release the mouse</td></tr>
+    <tr><td>W A S D</td><td>Camina / corre (mantén SHIFT). Mira con el mouse (haz clic para capturarlo) o arrastrando; las flechas también giran la cámara</td></tr>
+    <tr><td>E</td><td>Subir al auto más cercano / bajar</td></tr>
+    <tr><td>W / S &middot; A / D</td><td>Conducir: acelerar y frenar / reversa, girar</td></tr>
+    <tr><td>SPACE</td><td>Freno de mano &mdash; derrapa en las curvas para ganar dinero</td></tr>
+    <tr><td>E en un auto en marcha</td><td>Róbalo &mdash; sacan al conductor. Los delitos con testigos suben tu nivel de BUSCADO; rompe la línea de visión y escóndete en la zona roja para despistar a la policía</td></tr>
+    <tr><td>CLIC IZQUIERDO &middot; CLIC DERECHO</td><td>Disparar / lanzar / golpear &middot; mantén para apuntar (cámara sobre el hombro). R recarga</td></tr>
+    <tr><td>MANTÉN Q &middot; 1-6</td><td>Rueda de armas (el tiempo se ralentiza) &middot; o elige directo: puños, cuchillo, pistola, subfusil, escopeta, molotov</td></tr>
+    <tr><td>ESPACIO (a pie)</td><td>Saltar. Correr (SHIFT) gasta resistencia</td></tr>
+    <tr><td>HELICÓPTERO</td><td>Camina hasta la plataforma del puerto (marcada con H) y presiona E. ESPACIO sube, SHIFT baja, W/S, A/D, flechas para desplazarte</td></tr>
+    <tr><td>P</td><td>Teléfono: SolFeed (los vecinos publican tus delitos, te vuelves viral y la búsqueda sube más rápido), mensajes y el registro de misiones</td></tr>
+    <tr><td>ENTER</td><td>Contestar una llamada / avanzar el diálogo. Las misiones llegan como llamadas de Luna, Teo y Roxy</td></tr>
+    <tr><td>E en el mostrador</td><td>Entra a la boutique, la armería o el minimercado del malecón y compra. La REP desbloquea las armas grandes</td></tr>
+    <tr><td>G en un auto</td><td>En el patio de Roxy: repintar (borra las estrellas), mejoras, guardar tu auto personal. En la chatarrería del puerto: vender un auto robado</td></tr>
+    <tr><td>R en un auto</td><td>Siguiente emisora (cuatro emisoras, títulos en pantalla). K silencia el sonido</td></tr>
+    <tr><td>N</td><td>Mapa completo de la ciudad. Haz clic (o flechas + ENTER) para marcar un destino: la ruta se ve en el mapa y el minimapa. C lo borra</td></tr>
+    <tr><td>L</td><td>Llamar o despejar la lluvia</td></tr>
+    <tr><td>M</td><td>Mapa de Puerto Marea: distritos, misiones y tu progreso</td></tr>
+    <tr><td>TAB</td><td>Cambiar entre Ray y Luna (a pie)</td></tr>
+    <tr><td>RUEDA DEL MOUSE</td><td>Distancia de la cámara a pie</td></tr>
+    <tr><td>ESC</td><td>Pausa / soltar el mouse</td></tr>
   </table>
-  <button id="howto-close">BACK</button>
+  <button id="howto-close">VOLVER</button>
 </div></div>
 
+<div id="pause"><div class="card">
+  <h2 class="imp">PAUSA</h2>
+  <div class="pbtn" id="p-resume">REANUDAR<small>ESC</small></div>
+  <div class="pbtn" id="p-map">MAPA Y MISIONES<small>M</small></div>
+  <div class="pbtn" id="p-how">CÓMO JUGAR<small>CONTROLES</small></div>
+  <div class="pbtn" id="p-sound">SONIDO: ACTIVADO<small>K</small></div>
+  <div class="pbtn" id="p-menu">SALIR AL MENÚ<small>GUARDA TU PARTIDA</small></div>
+</div></div>
+<div id="options"><div class="card">
+  <h2 class="imp">OPCIONES</h2>
+  <div class="pbtn" id="o-sound">SONIDO: ACTIVADO<small>K</small></div>
+  <div class="pbtn" id="o-rain">LLUVIA EN EL MENÚ: SÍ<small>AMBIENTE</small></div>
+  <div class="pbtn" id="o-reset">BORRAR PARTIDA GUARDADA<small>NO SE PUEDE DESHACER</small></div>
+  <div class="pbtn" id="o-back">VOLVER<small>ESC</small></div>
+</div></div>
+<div id="playchoice"><div class="card">
+  <h2 class="imp">JUGAR</h2>
+  <div class="pbtn" id="c-continue">CONTINUAR<small>RETOMA TU ÚLTIMA PARTIDA</small></div>
+  <div class="pbtn" id="c-new">PARTIDA NUEVA<small>EMPIEZA DESDE EL CAPÍTULO 1</small></div>
+  <div class="pbtn" id="c-back">VOLVER<small>ESC</small></div>
+</div></div>
 <div id="hud">
   <div id="lcol">
-    <div id="topl" class="panel"><span class="lab">PLAYING AS</span><span id="who" class="imp">RAY</span><span class="lab" style="float:right;margin-top:6px">TAB SWITCH</span><div id="obj">FREE ROAM. Find a car and press E. Cruise the boulevard, drift the junctions, find the harbour.</div></div>
-    <div id="mission" class="panel"><div class="lab" id="m-chapter">CHAPTER 1</div><div id="m-title" class="imp"></div><div id="m-obj"></div><div id="m-prog"><span>PROGRESS</span><b id="m-pt">0/0</b></div><div class="bar" id="m-bar"><i id="m-barfill"></i></div><div id="m-next"></div><div id="m-timer" class="imp"></div></div>
+    <div id="topl" class="panel"><span class="lab">JUGANDO COMO</span><span id="who" class="imp">RAY</span><span class="lab" style="float:right;margin-top:6px">TAB CAMBIAR</span><div id="obj">MODO LIBRE. Busca un auto y presiona E. Recorre el bulevar, derrapa en los cruces, encuentra el puerto.</div></div>
+    <div id="mission" class="panel"><div class="lab" id="m-chapter">CAPÍTULO 1</div><div id="m-title" class="imp"></div><div id="m-obj"></div><div id="m-prog"><span>PROGRESO</span><b id="m-pt">0/0</b></div><div class="bar" id="m-bar"><i id="m-barfill"></i></div><div id="m-next"></div><div id="m-timer" class="imp"></div></div>
     <div id="solhud"></div>
     <div id="police" class="panel"></div>
   </div>
   <div id="topr">
-    <div class="lab">CASH</div><div id="cash" class="imp">$2,500</div>
+    <div class="lab">EFECTIVO</div><div id="cash" class="imp">$2,500</div>
     <div id="clock" class="imp">17:00</div>
-    <div class="lab" style="margin-top:6px">WEAPONS &middot; HOLD Q FOR WHEEL</div>
+    <div class="lab" style="margin-top:6px">ARMAS &middot; MANTÉN Q PARA LA RUEDA</div>
     <div id="weap"></div>
   </div>
-  <div id="wanted" class="panel"><div class="lab">WANTED</div><div id="stars"></div><div id="wstat"></div><div id="wsub"></div></div>
-  <div id="mmwrap"><canvas id="mm" width="214" height="214"></canvas><span id="dname" class="imp">BEACHFRONT</span></div>
+  <div id="wanted" class="panel"><div class="lab">BUSCADO</div><div id="stars"></div><div id="wstat"></div><div id="wsub"></div></div>
+  <div id="mmwrap"><canvas id="mm" width="214" height="214"></canvas><span id="dname" class="imp">COSTANERA</span></div>
   <div id="bars" class="panel">
-    <div class="row"><div class="lab">HEALTH</div><div class="bar"><i id="hpbar"></i></div></div>
-    <div class="row"><div class="lab">ARMOUR</div><div class="bar"><i id="arbar"></i></div></div>
-    <div class="row"><div class="lab" id="replv">REP LV 1</div><div class="bar"><i id="repbar"></i></div></div>
-    <div class="row"><div class="lab">STAMINA &middot; SPACE JUMPS</div><div class="bar"><i id="stbar"></i></div></div>
+    <div class="row"><div class="lab">SALUD</div><div class="bar"><i id="hpbar"></i></div></div>
+    <div class="row"><div class="lab">ARMADURA</div><div class="bar"><i id="arbar"></i></div></div>
+    <div class="row"><div class="lab" id="replv">NIVEL DE REP 1</div><div class="bar"><i id="repbar"></i></div></div>
+    <div class="row"><div class="lab">RESISTENCIA &middot; ESPACIO SALTA</div><div class="bar"><i id="stbar"></i></div></div>
   </div>
   <div id="cross"><i></i><i></i><i></i><i></i><u></u></div>
   <div id="hitm">&#10006;</div>
-  <div id="reloadbar"><div class="lab imp">RELOADING</div><div class="bar"><i></i></div></div>
-  <div id="heli" class="panel"><div id="h-title" class="imp">SOLMARA AIR  ·  HELICOPTER</div>
+  <div id="reloadbar"><div class="lab imp">RECARGANDO</div><div class="bar"><i></i></div></div>
+  <div id="heli" class="panel"><div id="h-title" class="imp">AIRE PUERTO MAREA  ·  HELICÓPTERO</div>
     <div class="hrow"><div><span id="h-alt" class="imp">0</span><small>ALT M</small></div><div><span id="h-spd" class="imp">0</span><small>KM/H</small></div><div><span id="h-rpm" class="imp">0%</span><small>ROTOR</small></div></div>
-    <div class="lab" id="h-state">SPINNING UP…</div><div class="bar"><i id="h-hp"></i></div>
-    <div class="hkeys">SPACE up &middot; SHIFT down &middot; W/S fwd/back &middot; A/D turn &middot; &larr;/&rarr; strafe &middot; E exit (landed)</div></div>
-  <div id="carpanel" class="panel"><div id="carname" class="imp">VESPER GT</div><div id="cprow"><span id="gear" class="imp">N</span><span id="spd" class="imp">0</span><span id="spdu">KM/H</span></div><div class="lab" id="carcond" style="margin-top:6px">CONDITION GOOD</div><div class="bar"><i id="carhp"></i></div></div>
-  <div id="drift" class="imp">DRIFT!</div>
+    <div class="lab" id="h-state">ARRANCANDO…</div><div class="bar"><i id="h-hp"></i></div>
+    <div class="hkeys">ESPACIO sube &middot; SHIFT baja &middot; W/S adelante/atrás &middot; A/D gira &middot; &larr;/&rarr; desplaza &middot; E bajar (en tierra)</div></div>
+  <div id="carpanel" class="panel"><div id="carname" class="imp">VESPER GT</div><div id="cprow"><span id="gear" class="imp">N</span><span id="spd" class="imp">0</span><span id="spdu">KM/H</span></div><div class="lab" id="carcond" style="margin-top:6px">ESTADO BUENO</div><div class="bar"><i id="carhp"></i></div></div>
+  <div id="drift" class="imp">¡DERRAPE!</div>
   <div id="bannerwrap"><div id="banner" class="imp"></div><div id="bannersub"></div></div>
   <div id="prompt" class="imp"></div>
   <div id="toast"></div>
-  <div id="radio"><span id="radio-unit">DISPATCH</span><span id="radio-text"></span></div>
-  <div id="bustwrap"><div class="lab imp">BUSTED  &mdash;  ESCAPE OR BE ARRESTED</div><div class="bar"><i id="bustbar"></i></div></div>
+  <div id="radio"><span id="radio-unit">CENTRAL</span><span id="radio-text"></span></div>
+  <div id="bustwrap"><div class="lab imp">ARRESTO EN CURSO  &mdash;  ESCAPA O TE DETIENEN</div><div class="bar"><i id="bustbar"></i></div></div>
   <div id="hurt"></div>
   <div id="radiohud" class="panel"></div>
-  <div id="callin" class="panel"><small>INCOMING CALL</small><b id="call-name"></b> &nbsp; <span>ENTER TO ANSWER</span></div>
-  <div id="card" class="panel"><canvas id="card-pt" width="128" height="128"></canvas><div class="cb"><div class="ct"><span id="card-tag">NEW JOB</span><b id="card-name" class="imp"></b><i id="card-role"></i></div><div id="card-text"></div></div></div>
-  <div id="dlg"><canvas id="portrait" width="128" height="128"></canvas><div style="flex:1"><div id="dlg-name" class="imp"></div><div id="dlg-role"></div><div id="dlg-text"></div><div id="dlg-hint">ENTER  ·  CONTINUE</div></div></div>
+  <div id="callin" class="panel"><small>LLAMADA ENTRANTE</small><b id="call-name"></b> &nbsp; <span>ENTER PARA CONTESTAR</span></div>
+  <div id="card" class="panel"><canvas id="card-pt" width="128" height="128"></canvas><div class="cb"><div class="ct"><span id="card-tag">NUEVO TRABAJO</span><b id="card-name" class="imp"></b><i id="card-role"></i></div><div id="card-text"></div></div></div>
+  <div id="dlg"><canvas id="portrait" width="128" height="128"></canvas><div style="flex:1"><div id="dlg-name" class="imp"></div><div id="dlg-role"></div><div id="dlg-text"></div><div id="dlg-hint">ENTER  ·  CONTINUAR</div></div></div>
 </div>
-<div id="phone"><div id="ph-top"><span id="ph-clock">17:00</span><span>SOLMARA 5G &#9679;&#9679;&#9679;&#9679;</span></div><div id="ph-app" class="imp">SolFeed</div>
-  <div id="ph-tabs"><div data-t="0" class="on">1 FEED</div><div data-t="1">2 MESSAGES</div><div data-t="2">3 MISSION</div></div><div id="ph-body"></div><div id="ph-foot">P OR ESC TO CLOSE</div></div>
-<div id="modbay"><h2 class="imp">CAR MOD BAY</h2><div class="sub">THE LIFT SHOWS YOUR CAR  ·  CHANGES APPLY TO IT IN THE CITY TOO</div><div id="mb-rows"></div><div class="foot">CLICK TO APPLY  ·  Z X C V CYCLE PAINT / SPOILER / NEON / WHEELS</div></div>
-<div id="shopui"><h2 id="shop-title" class="imp"></h2><div id="shop-sub"></div><div id="shop-cash" class="imp"></div><div id="shop-list"></div><div id="shop-foot">PRESS A NUMBER OR CLICK  ·  ESC / E TO LEAVE</div></div>
-<div id="wheel"><canvas id="wheelc" width="600" height="600"></canvas><div id="wheeldot"></div><div id="wheelhint">MOVE THE MOUSE &middot; 1-6 PICKS &middot; RELEASE Q TO EQUIP</div></div>
-<div id="endscreen"><h1 id="end-title" class="imp">BUSTED</h1><div id="end-sub"></div><div id="end-hint" class="imp">PRESS ENTER TO CONTINUE</div></div>
+<div id="phone"><div id="ph-top"><span id="ph-clock">17:00</span><span>PUERTO MAREA 5G &#9679;&#9679;&#9679;&#9679;</span></div><div id="ph-app" class="imp">SolFeed</div>
+  <div id="ph-tabs"><div data-t="0" class="on">1 FEED</div><div data-t="1">2 MENSAJES</div><div data-t="2">3 MISIÓN</div></div><div id="ph-body"></div><div id="ph-foot">P O ESC PARA CERRAR</div></div>
+<div id="modbay"><h2 class="imp">TALLER DE PERSONALIZACIÓN</h2><div class="sub">LA PLATAFORMA MUESTRA TU AUTO  ·  LOS CAMBIOS SE VEN TAMBIÉN EN LA CIUDAD</div><div id="mb-rows"></div><div class="foot">HAZ CLIC PARA APLICAR  ·  Z X C V CAMBIAN PINTURA / ALERÓN / NEÓN / LLANTAS</div></div>
+<div id="shopui"><h2 id="shop-title" class="imp"></h2><div id="shop-sub"></div><div id="shop-cash" class="imp"></div><div id="shop-list"></div><div id="shop-foot">PRESIONA UN NÚMERO O HAZ CLIC  ·  ESC / E PARA SALIR</div></div>
+<div id="wheel"><canvas id="wheelc" width="600" height="600"></canvas><div id="wheeldot"></div><div id="wheelhint">MUEVE EL MOUSE &middot; 1-6 ELIGE &middot; SUELTA Q PARA EQUIPAR</div></div>
+<div id="endscreen"><h1 id="end-title" class="imp">ARRESTADO</h1><div id="end-sub"></div><div id="end-hint" class="imp">PRESIONA ENTER PARA CONTINUAR</div></div>
 <p id="status" role="status" aria-live="polite"></p>
 
 <script>
@@ -287,6 +318,7 @@
 </script>
 <script src="vendor/three.min.js"></script>
 <script src="src/config.js"></script>
+<script src="src/brand.js"></script>
 <script src="src/input.js"></script>
 <script src="src/gfx.js"></script>
 <script src="src/models.js"></script>
@@ -310,6 +342,8 @@
 <script src="src/gunner.js"></script>
 <script src="src/explosions.js"></script>
 <script src="src/map.js"></script>
+<script src="src/staging.js"></script>
+<script src="src/mapscreen.js"></script>
 <script src="src/title.js"></script>
 <script src="src/main.js"></script>
 </body>

@@ -1,10 +1,10 @@
-# CRIMEWAVE: Solmara
+# MAREA CRIMINAL: Puerto Marea
 
 [![make.fun gta6-01](https://make.fun/badge/gta6-01.svg)](https://make.fun/bounty/gta6-01)
 [![rank](https://make.fun/badge/gta6-01/palzzzzz/CRIMEWAVE-Solmara/rank.svg)](https://make.fun/bounty/gta6-01)
 [![reward](https://make.fun/badge/gta6-01/palzzzzz/CRIMEWAVE-Solmara/reward.svg)](https://make.fun/bounty/gta6-01)
 
-An original 3D low-poly open-world crime game set in Solmara, a sun-soaked tropical coastal city (beach, downtown, harbour). Built with three.js, plain JavaScript, no build step, no network at runtime. Entry for the [make.fun gta6-01 bounty](https://make.fun/bounty/gta6-01).
+An original 3D low-poly open-world crime game set in Puerto Marea, a sun-soaked tropical coastal city (beach, downtown, harbour). The whole UI is in Spanish. Built with three.js, plain JavaScript, no build step, no network at runtime. Entry for the [make.fun gta6-01 bounty](https://make.fun/bounty/gta6-01).
 
 ## Run
 
@@ -16,7 +16,7 @@ Then open http://localhost:8080 in desktop Chrome (keyboard + mouse).
 
 ## Features
 
-- Solmara: three districts, road grid, beach and animated sea, day cycle with lit windows and rain
+- Puerto Marea: three districts, road grid, beach and animated sea, day cycle with lit windows and rain
 - On foot and driving: arcade car physics, motorcycle, pickup, car theft and jacking, a flyable helicopter
 - Traffic and pedestrians that react to danger
 - Line-of-sight wanted system (1-5 stars), pursuit, ramming, roadblocks, police helicopter with searchlight

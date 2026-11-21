@@ -233,7 +233,7 @@
     }
     if (jack) {
       T.spawnDriver(car); T.jacked++; T.danger(car.x, car.z, 24, 5);
-      CW.hud.toast('CARJACKED  ' + car.type.name);
+      CW.hud.toast('AUTO ROBADO  ' + car.type.name);
       car.rev = 0; car.hold = 0;
       if (CW.police) CW.police.crime('carjack', car.x, car.z, 1.0, 40);
     } else if (!car.stolen) {
@@ -303,7 +303,7 @@
           if (cs.some(([cx, cz, r]) => Math.hypot(p.x - cx, p.z - cz) < r + 0.35)) {
             const heavy = c.speed > 6;
             T.hurtPed(p, heavy ? 80 : 6, c.vx * 0.55, c.vz * 0.55);
-            if (heavy) { T.danger(p.x, p.z, 18, 4); if (CW.police && c.driven) CW.police.crime('runover', p.x, p.z, 1.6, 45); if (c.driven) CW.hud.toast('PEDESTRIAN HIT'); }
+            if (heavy) { T.danger(p.x, p.z, 18, 4); if (CW.police && c.driven) CW.police.crime('runover', p.x, p.z, 1.6, 45); if (c.driven) CW.hud.toast('PEATÓN ATROPELLADO'); }
             break;
           }
         }
@@ -319,7 +319,7 @@
         if (c.hidden || c.driven || c.speed < 5 || P.hitCd > 0 || Math.abs(c.x - e.x) > 6 || Math.abs(c.z - e.z) > 6) return;
         if (c.circles().some(([cx, cz, r]) => Math.hypot(e.x - cx, e.z - cz) < r + 0.5)) {
           P.hitCd = 1; e.vx += c.vx * 0.5; e.vz += c.vz * 0.5;
-          if (CW.police) CW.police.hurt(c.speed * 2.4, 'RUN OVER');
+          if (CW.police) CW.police.hurt(c.speed * 2.4, 'Atropellado');
         }
       });
     }

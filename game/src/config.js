@@ -1,4 +1,4 @@
-// CRIMEWAVE: Solmara — shared constants, helpers and data tables.
+// MAREA CRIMINAL: Puerto Marea — shared constants, helpers and data tables.
 // Every game script attaches itself to the single global CW (plain <script> tags, no modules).
 (function () {
   const CW = (window.CW = window.CW || {});
@@ -43,13 +43,13 @@
     SEA_Y: -0.35,
     DAY_SECONDS_PER_HOUR: 70,
     START_HOUR: 17.0,
-    TITLE_HOUR: 18.05,
+    TITLE_HOUR: 22.6,
   };
 
   CW.DISTRICTS = [
-    { id: 0, name: 'BEACHFRONT', sub: 'Palms, pastel hotels and the boardwalk' },
-    { id: 1, name: 'DOWNTOWN', sub: 'Towers, neon and traffic' },
-    { id: 2, name: 'SOLMARA HARBOUR', sub: 'Docks, warehouses and cranes' },
+    { id: 0, name: 'COSTANERA', loc: 'en la costanera', sub: 'Palmeras, hoteles pastel y el malecón' },
+    { id: 1, name: 'CENTRO', loc: 'en el centro', sub: 'Torres, neón y tráfico' },
+    { id: 2, name: 'EL PUERTO', loc: 'en el puerto', sub: 'Muelles, almacenes y grúas' },
   ];
 
   CW.districtAt = function (x, z) {
@@ -64,13 +64,13 @@
   CW.CAR_TYPES = {
     sports: { id: 'sports', name: 'VESPER GT', l: 4.6, w: 2.08, bh: 0.42, ch: 0.38, cz: -0.35, cl: 2.0, max: 54, acc: 22, steer: 1.95, grip: 7.0, mass: 1.1, colors: [0xff5a3c, 0xffc23a, 0x2fd0c4, 0xf2f0e6, 0xe0407a] },
     sedan: { id: 'sedan', name: 'MARLIN LX', l: 4.6, w: 1.9, bh: 0.62, ch: 0.55, cz: -0.2, cl: 2.4, max: 41, acc: 14, steer: 1.8, grip: 6.0, mass: 1.3, colors: [0x3aa6a0, 0xe9d9b0, 0xd9604a, 0x4f6fb5, 0xbfc7c9, 0x8b3f58] },
-    hatch: { id: 'hatch', name: 'PICO RUNABOUT', l: 3.6, w: 1.75, bh: 0.58, ch: 0.58, cz: -0.15, cl: 2.0, max: 34, acc: 13, steer: 2.15, grip: 6.5, mass: 0.9, colors: [0xffb347, 0x7fc8e8, 0xff7a8a, 0xa5d56a, 0xf6efe0] },
+    hatch: { id: 'hatch', name: 'PICO CITADINO', l: 3.6, w: 1.75, bh: 0.58, ch: 0.58, cz: -0.15, cl: 2.0, max: 34, acc: 13, steer: 2.15, grip: 6.5, mass: 0.9, colors: [0xffb347, 0x7fc8e8, 0xff7a8a, 0xa5d56a, 0xf6efe0] },
     suv: { id: 'suv', name: 'BULWARK 4X4', l: 4.8, w: 2.05, bh: 0.8, ch: 0.72, cz: -0.35, cl: 2.9, max: 37, acc: 12, steer: 1.5, grip: 5.5, mass: 1.7, colors: [0x2c4a52, 0xd7c9a3, 0x7a2e2e, 0x33373d, 0x5f8f6d] },
-    taxi: { id: 'taxi', name: 'SOL CAB', l: 4.6, w: 1.9, bh: 0.62, ch: 0.55, cz: -0.2, cl: 2.4, max: 39, acc: 14, steer: 1.8, grip: 6.0, mass: 1.3, colors: [0xffd21f] },
-    cruiser: { id: 'cruiser', name: 'SOLMARA PD CRUISER', l: 4.7, w: 1.95, bh: 0.62, ch: 0.55, cz: -0.2, cl: 2.4, max: 50, acc: 21, steer: 2.0, grip: 6.8, mass: 1.5, colors: [0xf2f6f8] },
+    taxi: { id: 'taxi', name: 'TAXI SOL', l: 4.6, w: 1.9, bh: 0.62, ch: 0.55, cz: -0.2, cl: 2.4, max: 39, acc: 14, steer: 1.8, grip: 6.0, mass: 1.3, colors: [0xffd21f] },
+    cruiser: { id: 'cruiser', name: 'PATRULLA MAREA', l: 4.7, w: 1.95, bh: 0.62, ch: 0.55, cz: -0.2, cl: 2.4, max: 50, acc: 21, steer: 2.0, grip: 6.8, mass: 1.5, colors: [0xf2f6f8] },
     bike: { id: 'bike', name: 'ZIPPER 250', l: 2.1, w: 0.85, bh: 0.5, ch: 0.4, cz: 0, cl: 0.6, max: 60, acc: 27, steer: 2.7, grip: 8.5, mass: 0.45, colors: [0xe0407a, 0x2fd0c4, 0xffc23a, 0x2c2f33, 0xf2f0e6] },
-    pickup: { id: 'pickup', name: 'DUSTER PICKUP', l: 5.1, w: 2.0, bh: 0.78, ch: 0.66, cz: 0.9, cl: 1.9, max: 40, acc: 14, steer: 1.65, grip: 5.6, mass: 1.5, colors: [0xc2523a, 0x3d7e91, 0xd9b84a, 0xf2f0e6, 0x5f8f6d] },
-    van: { id: 'van', name: 'HAULER VAN', l: 5.3, w: 2.05, bh: 1.0, ch: 0.95, cz: -0.1, cl: 4.0, max: 31, acc: 8.5, steer: 1.35, grip: 5.0, mass: 2.0, colors: [0xf2f0e6, 0x3d7e91, 0xc2523a, 0xd9b84a] },
+    pickup: { id: 'pickup', name: 'CAMIONETA DUSTER', l: 5.1, w: 2.0, bh: 0.78, ch: 0.66, cz: 0.9, cl: 1.9, max: 40, acc: 14, steer: 1.65, grip: 5.6, mass: 1.5, colors: [0xc2523a, 0x3d7e91, 0xd9b84a, 0xf2f0e6, 0x5f8f6d] },
+    van: { id: 'van', name: 'FURGÓN HAULER', l: 5.3, w: 2.05, bh: 1.0, ch: 0.95, cz: -0.1, cl: 4.0, max: 31, acc: 8.5, steer: 1.35, grip: 5.0, mass: 2.0, colors: [0xf2f0e6, 0x3d7e91, 0xc2523a, 0xd9b84a] },
   };
 
   // ---- protagonists --------------------------------------------------------
@@ -88,7 +88,7 @@
   };
 
   CW.save = {
-    key: 'crimewave-solmara-save-v1',
+    key: 'marea-criminal-save-v1',
     read() { try { const s = localStorage.getItem(this.key); return s ? JSON.parse(s) : null; } catch (e) { return null; } },
     write(o) { try { localStorage.setItem(this.key, JSON.stringify(o)); } catch (e) { /* storage blocked */ } },
   };

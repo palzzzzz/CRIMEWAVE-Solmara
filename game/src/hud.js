@@ -121,8 +121,9 @@
     market(c, g) { c.beginPath(); c.moveTo(-g, -g * 0.05); c.lineTo(g, -g * 0.05); c.lineTo(g * 0.62, g * 0.88); c.lineTo(-g * 0.62, g * 0.88); c.closePath(); c.fill(); c.beginPath(); c.arc(0, -g * 0.05, g * 0.56, Math.PI, 0); c.stroke(); },
     fence(c, g) { c.font = '900 ' + Math.round(g * 2.1) + 'px Impact, "Arial Black", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('$', 0, g * 0.1); },
     garage(c, g) { c.beginPath(); c.moveTo(-g, g * 0.05); c.lineTo(-g * 0.55, g * 0.05); c.lineTo(-g * 0.3, -g * 0.55); c.lineTo(g * 0.4, -g * 0.55); c.lineTo(g * 0.65, g * 0.05); c.lineTo(g, g * 0.05); c.lineTo(g, g * 0.62); c.lineTo(-g, g * 0.62); c.closePath(); c.fill(); c.beginPath(); c.arc(-g * 0.52, g * 0.66, g * 0.27, 0, 7); c.arc(g * 0.52, g * 0.66, g * 0.27, 0, 7); c.fill(); },
-    mission(c, g) { c.fillStyle = INK; c.fillRect(-g * 0.16, -g * 0.85, g * 0.32, g * 1.1); c.beginPath(); c.arc(0, g * 0.62, g * 0.2, 0, 7); c.fill(); },
-    heli(c, g) { c.fillStyle = INK; c.font = '900 ' + Math.round(g * 2.2) + 'px Impact, "Arial Black", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('H', 0, g * 0.1); },
+    // the active mission's own icon (key / boat / spray / car / pistol / money / diamond); a plain "!" when no chapter is live
+    mission(c, g) { const i = CW.story ? CW.story.idx : -1; if (i >= 0 && i < 7 && CW.brand.missionIcon) { c.save(); CW.brand.missionIcon(c, i, g * 1.3, '#ffffff', INK); c.restore(); return; } c.fillStyle = INK; c.fillRect(-g * 0.16, -g * 0.85, g * 0.32, g * 1.1); c.beginPath(); c.arc(0, g * 0.62, g * 0.2, 0, 7); c.fill(); },
+    heli(c, g) { c.save(); CW.brand.missionIcon(c, 'heli', g * 1.3, '#ffffff', INK); c.restore(); },
   };
   // a white-edged badge (thin dark outer line so the white edge also reads on the pale roads) with a white glyph
   function badge(c, shape, x, y, r, fill, glyph) {
@@ -226,7 +227,7 @@
         c.lineWidth = 5.5 * u; c.strokeStyle = INK; c.beginPath(); c.arc(s.x, s.y, ir * 2.0, 0, 7); c.stroke();
         c.lineWidth = 3 * u; c.strokeStyle = YELLOW; c.beginPath(); c.arc(s.x, s.y, ir * 2.0, 0, 7); c.stroke();
         c.strokeStyle = 'rgba(255,210,63,' + (0.85 * (1 - ph2)) + ')'; c.lineWidth = 3.4 * u; c.beginPath(); c.arc(s.x, s.y, ir * (1.6 + ph2 * 1.6), 0, 7); c.stroke();
-        badge(c, 'circle', s.x, s.y, ir * 1.6 * pulse, YELLOW, 'mission');
+        badge(c, 'circle', s.x, s.y, ir * 1.85 * pulse, YELLOW, 'mission');
       }
     }
     // checkpoint marker: magenta diamond, pinned to the rim as an arrow when out of view

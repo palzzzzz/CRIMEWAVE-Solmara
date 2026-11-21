@@ -213,6 +213,7 @@
     if (p.style.display !== (on ? 'block' : 'none')) p.style.display = on ? 'block' : 'none';
     if (on) {
       const m = MISSIONS[S.idx], o = S.obj;
+      if (S.iconIdx !== S.idx) { S.iconIdx = S.idx; const ic = $('m-icon'), g = ic.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, 100, 100); g.translate(50, 50); CW.brand.missionIcon(g, S.idx, 30, '#ffffff', '#0f1236'); }   // this chapter's own icon
       set('m-chapter', 'ch', 'CAPÍTULO ' + (S.idx + 1) + '/' + MISSIONS.length + '  ·  ' + CAST[m.who].name);
       set('m-title', 'mt', m.t); set('m-obj', 'mo', o.text);
       set('m-pt', 'pt', o.of ? o.n + '/' + o.of : '');

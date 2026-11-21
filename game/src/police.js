@@ -133,25 +133,52 @@
   };
 
   // ---- cop cars -----------------------------------------------------------------------------------------
+  // three police models: 0 cruiser (white + blue doors), 1 interceptor SUV (black, white doors, push bar), 2 unmarked sedan (grey, hidden strobes)
+  const COPKINDS = [['cruiser', 0xf2f6f8], ['copsuv', 0x14161c], ['unmarked', 0x3a3f48]];
+  const decalTex = {};
+  const decal = (k, text, w, h, st) => decalTex[k] || (decalTex[k] = CW.makeSignTexture(text, w, h, st));
   function makeCop(idx) {
-    const car = CW.vehicles.add('cruiser', 0xf2f6f8, 0, 0, 0);
-    car.cop = true; car.hidden = true; car.cs = 'idle'; car.owned = true;
+    const kind = idx % 3, K = COPKINDS[kind];
+    const car = CW.vehicles.add(K[0], K[1], 0, 0, 0);
+    car.cop = true; car.hidden = true; car.cs = 'idle'; car.owned = true; car.copKind = kind;
     const num = NUMS[idx % NUMS.length]; Object.defineProperty(car, 'call', { get() { return DCODE[CW.districtAt(car.x, car.z)] + '-' + num; } });
     const t = car.type, m = car.mesh, roof = 0.3 + t.bh + t.ch + 0.1;
-    const red = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.14, 0.34), new THREE.MeshBasicMaterial({ color: 0xff2a2a }));
-    const blue = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.14, 0.34), new THREE.MeshBasicMaterial({ color: 0x2a6bff }));
-    red.position.set(0.36, roof, t.cz); blue.position.set(-0.36, roof, t.cz);
-    const base = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.07, 0.4), new THREE.MeshLambertMaterial({ color: 0x1a1d22 })); base.position.set(0, roof - 0.09, t.cz);
-    const stripeMat = new THREE.MeshLambertMaterial({ color: 0x1f3f8f });
-    [-1, 1].forEach((s) => { const st = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.3, t.l * 0.7), stripeMat); st.position.set(s * (t.w / 2 + 0.005), 0.3 + t.bh * 0.5, 0); m.add(st); });
-    const gr = new THREE.Sprite(new THREE.SpriteMaterial({ map: CW.glowTex, color: 0xff3030, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })), gb = new THREE.Sprite(new THREE.SpriteMaterial({ map: CW.glowTex, color: 0x3070ff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-    gr.scale.setScalar(3.4); gb.scale.setScalar(3.4); gr.position.copy(red.position); gb.position.copy(blue.position); gr.position.y += 0.2; gb.position.y += 0.2;
-    m.add(red); m.add(blue); m.add(base); m.add(gr); m.add(gb);
+    const lamp = (col) => new THREE.MeshBasicMaterial({ color: col });
+    const dark = new THREE.MeshLambertMaterial({ color: 0x15181d });
+    const add = (geo, mat, x, y, z) => { const o = new THREE.Mesh(geo, mat); o.position.set(x, y, z); m.add(o); return o; };
+    let red, blue, gr, gb, gy = roof, gs = 3.4;
+    if (kind === 2) {
+      // unmarked: small strobes behind the windscreen and in the grille, plus a tiny roof beacon
+      red = add(new THREE.BoxGeometry(0.3, 0.07, 0.12), lamp(0xff2a2a), 0.4, 0.3 + t.bh + t.ch * 0.8, t.cz + t.cl * 0.5 - 0.1);
+      blue = add(new THREE.BoxGeometry(0.3, 0.07, 0.12), lamp(0x2a6bff), -0.4, 0.3 + t.bh + t.ch * 0.8, t.cz + t.cl * 0.5 - 0.1);
+      add(new THREE.BoxGeometry(0.22, 0.07, 0.05), lamp(0xff2a2a), 0.5, 0.3 + t.bh * 0.35, t.l / 2 + 0.045); add(new THREE.BoxGeometry(0.22, 0.07, 0.05), lamp(0x2a6bff), -0.5, 0.3 + t.bh * 0.35, t.l / 2 + 0.045);
+      add(new THREE.CylinderGeometry(0.1, 0.12, 0.08, 10), dark, 0.0, roof - 0.02, t.cz - 0.5);
+      gy = 0.3 + t.bh + t.ch * 0.8 + 0.2; gs = 2.4;
+    } else {
+      // full roof light bar: black base, two clear domes (red / blue), end caps and a white take-down centre
+      const w = kind ? 1.55 : 1.4, hh = 0.08;
+      add(new THREE.BoxGeometry(w, hh, 0.42), dark, 0, roof - 0.1, t.cz);
+      red = add(new THREE.BoxGeometry(w * 0.45, 0.15, 0.34), lamp(0xff2a2a), w * 0.25, roof, t.cz); blue = add(new THREE.BoxGeometry(w * 0.45, 0.15, 0.34), lamp(0x2a6bff), -w * 0.25, roof, t.cz);
+      add(new THREE.BoxGeometry(0.1, 0.13, 0.32), new THREE.MeshBasicMaterial({ color: 0xf4fbff }), 0, roof, t.cz);
+      [1, -1].forEach((s) => add(new THREE.BoxGeometry(0.05, 0.16, 0.36), dark, s * (w / 2 + 0.01), roof, t.cz));
+      if (kind === 1) { [1, -1].forEach((s) => add(new THREE.BoxGeometry(0.2, 0.08, 0.05), lamp(s > 0 ? 0xff2a2a : 0x2a6bff), s * 0.6, 0.3 + t.bh * 0.62, t.l / 2 + 0.055)); }   // grille strobes
+      gy = roof + 0.2;
+    }
+    const mk = (col, x, y, z) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: CW.glowTex, color: col, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); sp.scale.setScalar(gs); sp.position.set(x, y, z); m.add(sp); return sp; };
+    gr = mk(0xff3030, red.position.x, gy, red.position.z); gb = mk(0x3070ff, blue.position.x, gy, blue.position.z);
+    // POLICÍA lettering: both doors + tailgate on the marked cars (flat decal planes just off the paint)
+    if (kind < 2) {
+      const door = kind === 1 ? decal('d1', 'POLICÍA', 512, 112, { bg: '#f2f6f8', fg: '#14224a', edge: '#e8456f' }) : decal('d0', 'POLICÍA', 512, 112, { bg: '#1f3f8f', fg: '#ffffff', edge: '#ffffff' });
+      const dm = () => new THREE.MeshLambertMaterial({ map: door, emissive: 0x666a70, emissiveMap: door, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+      [1, -1].forEach((s) => { const p = new THREE.Mesh(new THREE.PlaneGeometry(1.55, 0.34), dm()); p.position.set(s * (t.w / 2 + 0.032), 0.3 + t.bh * 0.5, 0); p.rotation.y = s * Math.PI / 2; m.add(p); });
+      const tail = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 0.28), dm()); tail.position.set(0, 0.3 + t.bh * 0.62, -t.l / 2 - 0.02); tail.rotation.y = Math.PI; m.add(tail);
+      const hood = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.3), dm()); hood.position.set(0, 0.3 + t.bh + 0.025, t.l / 2 - 0.9); hood.rotation.set(-Math.PI / 2, 0, Math.PI); m.add(hood);
+    }
     car.bar = { red, blue, gr, gb };
     return car;
   }
   function makeOfficer() {
-    const model = CW.makePerson({ id: 'cop', skin: 0xd9a070, hair: 0x14202f, shirt: 0x1f3f8f, pants: 0x161d33, shoes: 0x101010, female: false, shades: true });
+    const model = CW.makePerson({ id: 'cop', cop: true, skin: 0xd9a070, hair: 0x14202f, shirt: 0x1f3f8f, pants: 0x161d33, shoes: 0x101010, female: false, shades: true });
     CW.world.scene.add(model); model.visible = false;
     return { model, x: 0, z: 0, h: 0, on: false, car: null, vx: 0, vz: 0 };
   }

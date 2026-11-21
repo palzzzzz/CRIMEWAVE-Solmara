@@ -208,7 +208,7 @@
   // ---- garage + fence ------------------------------------------------------------------------------------------------------------------------
   const gZone = () => { const l = CW.world.landmarks.garage; return { x: l.x, z: l.z + 7 }; };
   const fZone = () => { const l = CW.world.landmarks.fence; return { x: l.x, z: l.z + 7 }; };
-  const VALUE = { sports: 1500, sedan: 700, hatch: 450, suv: 950, taxi: 520, van: 640, pickup: 700, bike: 520 };
+  const VALUE = { sports: 1500, sedan: 700, hatch: 450, suv: 950, taxi: 520, van: 640, pickup: 700, bike: 520, coupe: 900, wagon: 640, minivan: 680, buggy: 600 };
   const salePrice = (c) => Math.round((VALUE[c.type.id] || 600) * (0.35 + 0.65 * c.hp / 100) / 10) * 10;
   function ejectPlayer() {
     const P = CW.player, e = P.active, V = CW.vehicles, car = P.car; if (!car) return;

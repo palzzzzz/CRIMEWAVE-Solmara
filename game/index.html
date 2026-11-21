@@ -134,7 +134,9 @@
   .hrow { display: flex; justify-content: space-around; } .hrow span { font-size: 42px; line-height: 1; color: #fff; } .hrow small { display: block; font-size: 10px; letter-spacing: .2em; color: var(--gold); }
   #h-state { margin: 6px 0 4px; color: #d8f6f0; } #h-hp { background: linear-gradient(90deg, #ff6b4a, #ffc83d); } .hkeys { font-size: 11px; letter-spacing: .06em; opacity: .85; margin-top: 7px; }
   /* ---------- story: mission panel, dialogue, phone, shops, radio ---------- */
-  #mission { padding: 8px 13px 10px; display: none; border-color: rgba(255,200,61,.7); }
+  #mission { padding: 8px 13px 10px; display: none; border-color: rgba(255,200,61,.7); position: relative; }
+  #m-icon { position: absolute; right: 10px; top: 8px; width: 50px; height: 50px; border-radius: 50%; background: #ffd23f; box-shadow: 0 0 0 2px #0f1236, 0 0 0 4px #fff; }
+  #mission #m-title { padding-right: 62px; }
   #m-chapter { color: var(--gold); } #m-title { font-size: 22px; color: #fff; margin: 1px 0 3px; } #m-obj { font-size: 13px; line-height: 1.4; color: #d8f6f0; }
   #m-prog { display: flex; justify-content: space-between; align-items: baseline; margin-top: 6px; font-size: 11px; letter-spacing: .16em; font-weight: bold; color: var(--gold); } #m-prog b { font-size: 15px; color: #fff; letter-spacing: .06em; }
   #m-bar { height: 9px; margin-top: 3px; } #m-barfill { background: linear-gradient(90deg, #ffb42e, #ffe27a); width: 0; transition: width .4s; }
@@ -259,7 +261,7 @@
 <div id="hud">
   <div id="lcol">
     <div id="topl" class="panel"><span class="lab">JUGANDO COMO</span><span id="who" class="imp">RAY</span><span class="lab" style="float:right;margin-top:6px">TAB CAMBIAR</span><div id="obj">MODO LIBRE. Busca un auto y presiona E. Recorre el bulevar, derrapa en los cruces, encuentra el puerto.</div></div>
-    <div id="mission" class="panel"><div class="lab" id="m-chapter">CAPÍTULO 1</div><div id="m-title" class="imp"></div><div id="m-obj"></div><div id="m-prog"><span>PROGRESO</span><b id="m-pt">0/0</b></div><div class="bar" id="m-bar"><i id="m-barfill"></i></div><div id="m-next"></div><div id="m-timer" class="imp"></div></div>
+    <div id="mission" class="panel"><canvas id="m-icon" width="100" height="100"></canvas><div class="lab" id="m-chapter">CAPÍTULO 1</div><div id="m-title" class="imp"></div><div id="m-obj"></div><div id="m-prog"><span>PROGRESO</span><b id="m-pt">0/0</b></div><div class="bar" id="m-bar"><i id="m-barfill"></i></div><div id="m-next"></div><div id="m-timer" class="imp"></div></div>
     <div id="solhud"></div>
     <div id="police" class="panel"></div>
   </div>

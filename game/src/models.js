@@ -24,7 +24,7 @@
     const keepWheels = () => { if (!wheelGeoCache[typeId]) wheelGeoCache[typeId] = { tyre: tb.build(CW.mats.tyre).geometry, rim: rb.build(CW.mats.chrome).geometry }; };
     const y0 = 0.3, top = y0 + t.bh, roof = top + t.ch;
     const hw = t.w / 2, hl = t.l / 2;
-    const isVan = typeId === 'van', isSuv = typeId === 'suv', isPick = typeId === 'pickup';
+    const isVan = typeId === 'van', isSuv = typeId === 'suv' || typeId === 'copsuv', isPick = typeId === 'pickup';
     if (typeId === 'bike') {
       const bl = t.l / 2, wr0 = 0.36;
       [1, -1].forEach((s) => { tb.cyl(0, wr0, s * (bl - 0.4), wr0, wr0, 0.16, 12, 0x15181a, 0, 0, Math.PI / 2); rb.cyl(0, wr0, s * (bl - 0.4), wr0 * 0.55, wr0 * 0.55, 0.18, 12, 0xffffff, 0, 0, Math.PI / 2); });
@@ -111,6 +111,18 @@
       b.box(hw * 0.5, roof + 0.12, t.cz, 0.08, 0.06, t.cl * 0.8, dark);
       b.box(-hw * 0.5, roof + 0.12, t.cz, 0.08, 0.06, t.cl * 0.8, dark);
     }
+    if (typeId === 'wagon' || typeId === 'minivan') {   // roof rails / rear hatch line
+      b.box(hw * 0.55, roof + 0.12, t.cz, 0.05, 0.05, t.cl * 0.85, dark); b.box(-hw * 0.55, roof + 0.12, t.cz, 0.05, 0.05, t.cl * 0.85, dark);
+      if (typeId === 'minivan') [1, -1].forEach((s) => b.box(s * (hw + 0.01), y0 + t.bh * 0.55, -0.1, 0.02, t.bh * 0.7, 0.04, dark));   // sliding-door seams
+    }
+    if (typeId === 'coupe') { b.box(0, y0 + t.bh + 0.2, -hl + 0.2, t.w * 0.8, 0.05, 0.3, dark); [1, -1].forEach((s) => b.box(s * t.w * 0.3, y0 + t.bh + 0.12, -hl + 0.22, 0.05, 0.14, 0.08, dark)); }   // ducktail spoiler
+    if (typeId === 'buggy') { b.box(0, roof + 0.08, t.cz, t.w * 0.9, 0.05, t.cl * 0.9, 0x2a2e32); [1, -1].forEach((s) => b.box(s * hw * 0.55, y0 + 0.35, -hl - 0.12, 0.2, 0.2, 0.18, dark)); b.box(0, roof + 0.2, t.cz + t.cl * 0.45, t.w * 0.6, 0.08, 0.08, 0xffd34a); }   // roof panel, spare, light bar
+    if (typeId === 'cruiser' || typeId === 'copsuv') {
+      // black-and-white livery: dark-blue door panels + roof, "POLICÍA" lettering comes from the decal planes added in police.js
+      [1, -1].forEach((s) => { b.box(s * (hw + 0.012), y0 + t.bh * 0.45, 0, 0.03, t.bh * 0.62, t.l * 0.48, typeId === 'copsuv' ? 0xf2f6f8 : 0x1f3f8f); b.box(s * (hw + 0.013), y0 + t.bh * 0.82, 0, 0.03, 0.05, t.l * 0.86, 0xe8456f); });
+      if (typeId === 'copsuv') { b.box(0, y0 + 0.28, hl + 0.14, t.w * 0.85, 0.5, 0.1, 0x0c0e12); [0.5, 0, -0.5].forEach((k) => b.box(k * t.w * 0.6, y0 + 0.28, hl + 0.2, 0.08, 0.55, 0.05, 0x2a2e33)); }   // push bar
+    }
+    if (typeId === 'unmarked') { b.box(0, y0 + t.bh * 0.3, hl + 0.03, t.w * 0.42, 0.12, 0.05, 0x0a0b0d); }
     keepWheels();
     const g = b.build(CW.mats.car).geometry;
     carGeoCache[key] = g;
@@ -131,58 +143,68 @@
   };
 
   // ---- people --------------------------------------------------------------
-  const matCache = {};
+  // Round, human proportions: sphere head, capsule torso / arms, cylinder legs, sphere hands + feet (no boxes). Joint pivots are unchanged, so every pose still works.
+  const matCache = {}, geoCache = {};
   const mat = (c) => matCache[c] || (matCache[c] = new THREE.MeshLambertMaterial({ color: c }));
-  const bx = (w, h, d, c, x, y, z) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(c)); m.position.set(x || 0, y || 0, z || 0); m.castShadow = true; return m; };
+  const geo = (k, f) => geoCache[k] || (geoCache[k] = f());
+  const fin = (m, x, y, z, sx, sy, sz) => { m.position.set(x || 0, y || 0, z || 0); if (sx) m.scale.set(sx, sy === undefined ? sx : sy, sz === undefined ? sx : sz); m.castShadow = true; return m; };
+  const sph = (r, c, x, y, z, sx, sy, sz) => fin(new THREE.Mesh(geo('s' + r, () => new THREE.SphereGeometry(r, 16, 12)), mat(c)), x, y, z, sx, sy, sz);
+  const cap = (r, len, c, x, y, z, sx, sy, sz) => fin(new THREE.Mesh(geo('c' + r + ':' + len, () => new THREE.CapsuleGeometry(r, len, 4, 12)), mat(c)), x, y, z, sx, sy, sz);
+  const cyl = (rt, rb, h, c, x, y, z, sx, sy, sz) => fin(new THREE.Mesh(geo('y' + rt + ':' + rb + ':' + h, () => new THREE.CylinderGeometry(rt, rb, h, 14)), mat(c)), x, y, z, sx, sy, sz);
+  const dome = (r, c, x, y, z, th) => fin(new THREE.Mesh(geo('d' + r + ':' + th, () => new THREE.SphereGeometry(r, 16, 10, 0, Math.PI * 2, 0, th)), mat(c)), x, y, z);
 
   CW.makePerson = function (def) {
     const root = new THREE.Group();
     const body = new THREE.Group(); root.add(body);
     const f = def.female;
-    const tw = f ? 0.42 : 0.5;
-    // legs
+    const tr = f ? 0.17 : 0.2;   // torso radius
+    // legs: tapered cylinders, round knee-less thigh-to-shoe, sphere shoe
     const mkLeg = (sx) => {
-      const hip = new THREE.Group(); hip.position.set(sx * 0.12, 0.92, 0);
-      hip.add(bx(0.19, 0.82, 0.21, def.pants, 0, -0.43, 0));
-      hip.add(bx(0.21, 0.1, 0.32, def.shoes, 0, -0.87, 0.05));
+      const hip = new THREE.Group(); hip.position.set(sx * 0.11, 0.92, 0);
+      hip.add(cyl(0.095, 0.075, 0.8, def.pants, 0, -0.43, 0));
+      hip.add(sph(0.1, def.pants, 0, -0.02, 0));
+      hip.add(sph(0.1, def.shoes, 0, -0.86, 0.05, 1, 0.62, 1.6));
       body.add(hip); return hip;
     };
     const legL = mkLeg(1), legR = mkLeg(-1);
-    // torso, hips
-    body.add(bx(tw, 0.62, 0.27, def.shirt, 0, 1.22, 0));
-    body.add(bx(tw * 0.96, 0.2, 0.26, def.pants, 0, 0.98, 0));
-    // arms
+    // torso: a capsule squashed front-to-back, pelvis cylinder, round shoulders
+    body.add(cap(tr, 0.34, def.shirt, 0, 1.2, 0, 1, 1, 0.72));
+    body.add(cyl(tr * 0.95, tr * 0.88, 0.2, def.pants, 0, 0.98, 0, 1, 1, 0.78));
+    if (def.cop) { body.add(cyl(tr * 0.97, tr * 0.97, 0.06, 0x14110e, 0, 1.0, 0, 1, 1, 0.8)); body.add(sph(0.045, 0xffd34a, 0.1, 1.34, 0.14)); }
+    // arms: shoulder ball + upper-arm capsule, forearm capsule, hand ball
     const mkArm = (sx) => {
-      const sh = new THREE.Group(); sh.position.set(sx * (tw / 2 + 0.08), 1.46, 0);
-      sh.add(bx(0.13, 0.3, 0.14, def.shirt, 0, -0.14, 0));
+      const sh = new THREE.Group(); sh.position.set(sx * (tr + 0.075), 1.46, 0);
+      sh.add(sph(0.088, def.shirt, 0, 0, 0)); sh.add(cap(0.066, 0.2, def.shirt, 0, -0.15, 0));
       const el = new THREE.Group(); el.position.set(0, -0.3, 0);
-      el.add(bx(0.11, 0.3, 0.12, def.skin, 0, -0.14, 0));
+      el.add(sph(0.058, def.skin, 0, 0, 0)); el.add(cap(0.052, 0.2, def.skin, 0, -0.15, 0)); el.add(sph(0.06, def.skin, 0, -0.31, 0));
       sh.add(el); body.add(sh); return { sh, el };
     };
     const armL = mkArm(1), armR = mkArm(-1);
-    // head
+    // head: sphere on a neck, hair as a cap + back mass
     const head = new THREE.Group(); head.position.set(0, 1.62, 0);
-    head.add(bx(0.2, 0.06, 0.2, def.skin, 0, -0.06, 0));
-    head.add(bx(0.24, 0.26, 0.25, def.skin, 0, 0.1, 0));
-    head.add(bx(0.27, 0.1, 0.29, def.hair, 0, 0.26, -0.01));
-    if (f) { head.add(bx(0.27, 0.46, 0.1, def.hair, 0, -0.03, -0.14)); head.add(bx(0.06, 0.3, 0.2, def.hair, 0.14, 0.05, -0.03)); head.add(bx(0.06, 0.3, 0.2, def.hair, -0.14, 0.05, -0.03)); }
-    else if (def.id === 'ray') {
-      // afro: a rounded stack of dark boxes, with a coral bandana band and a knot at the back
-      head.add(bx(0.4, 0.2, 0.4, def.hair, 0, 0.3, -0.03));
-      head.add(bx(0.34, 0.14, 0.34, def.hair, 0, 0.45, -0.03));
-      head.add(bx(0.44, 0.16, 0.3, def.hair, 0, 0.26, -0.05));
-      head.add(bx(0.3, 0.1, 0.1, def.hair, 0, 0.3, -0.2));
+    head.add(cyl(0.05, 0.06, 0.12, def.skin, 0, -0.05, 0));
+    head.add(sph(0.155, def.skin, 0, 0.11, 0, 1, 1.08, 1));
+    head.add(sph(0.03, def.skin, 0, 0.1, 0.15, 1, 0.9, 0.8));    // nose
+    if (def.cop) {
+      // peaked cap: crown, band, flat brim, gold badge
+      head.add(cyl(0.17, 0.18, 0.1, 0x1f3f8f, 0, 0.27, -0.005)); head.add(cyl(0.185, 0.185, 0.035, 0x0e1830, 0, 0.225, -0.005)); head.add(cyl(0.19, 0.19, 0.02, 0x0b0f1c, 0, 0.215, 0.07, 1, 1, 0.75)); head.add(sph(0.03, 0xffd34a, 0, 0.255, 0.18, 1, 1, 0.5));
+    } else if (f) {
+      head.add(dome(0.168, def.hair, 0, 0.115, -0.01, Math.PI * 0.56));
+      head.add(sph(0.17, def.hair, 0, 0.05, -0.07, 1, 1.15, 0.85));
+      head.add(cap(0.075, 0.24, def.hair, 0, -0.14, -0.13)); head.add(cap(0.045, 0.22, def.hair, 0.15, -0.02, -0.02)); head.add(cap(0.045, 0.22, def.hair, -0.15, -0.02, -0.02));
+    } else if (def.id === 'ray') {
+      // afro: a cluster of round masses, coral bandana, knot with two tails at the back
+      head.add(sph(0.26, def.hair, 0, 0.3, -0.04, 1, 0.95, 1)); head.add(sph(0.2, def.hair, 0.13, 0.22, -0.04)); head.add(sph(0.2, def.hair, -0.13, 0.22, -0.04)); head.add(sph(0.18, def.hair, 0, 0.18, -0.15));
       const band = def.bandana;
-      head.add(bx(0.47, 0.115, 0.4, band, 0, 0.24, -0.03));     // wide band that clears the afro on every side
-      head.add(bx(0.2, 0.1, 0.05, 0xfff1d0, 0, 0.24, 0.18));    // cream front patch so it reads from the front
-      head.add(bx(0.14, 0.14, 0.1, band, 0, 0.24, -0.26));
-      head.add(bx(0.08, 0.26, 0.04, band, 0.08, 0.08, -0.3));
-      head.add(bx(0.08, 0.22, 0.04, band, -0.08, 0.09, -0.3));
-    } else { head.add(bx(0.26, 0.14, 0.1, def.hair, 0, 0.2, -0.12)); }
-    if (def.shades) head.add(bx(0.27, 0.06, 0.05, 0x0c0c10, 0, 0.12, 0.13));
-    else { head.add(bx(0.05, 0.04, 0.03, 0x1a1210, 0.06, 0.12, 0.13)); head.add(bx(0.05, 0.04, 0.03, 0x1a1210, -0.06, 0.12, 0.13)); }
+      head.add(cyl(0.208, 0.208, 0.085, band, 0, 0.215, -0.01, 1, 1, 1.02));
+      head.add(sph(0.05, 0xfff1d0, 0, 0.215, 0.2, 1.5, 0.9, 0.35));
+      head.add(sph(0.065, band, 0, 0.215, -0.22));
+      head.add(cap(0.03, 0.14, band, 0.07, 0.1, -0.27)); head.add(cap(0.03, 0.12, band, -0.07, 0.11, -0.27));
+    } else if (!def.cop) { head.add(dome(0.165, def.hair, 0, 0.115, -0.01, Math.PI * 0.5)); head.add(sph(0.15, def.hair, 0, 0.1, -0.06, 1, 1, 0.9)); }
+    if (def.shades) head.add(sph(0.08, 0x0c0c10, 0, 0.13, 0.115, 1.9, 0.5, 0.6));
+    else { head.add(sph(0.022, 0x1a1210, 0.06, 0.13, 0.145)); head.add(sph(0.022, 0x1a1210, -0.06, 0.13, 0.145)); }
     body.add(head);
-    if (def.id === 'ray') head.add(bx(0.2, 0.06, 0.05, 0x2a1c14, 0, 0.0, 0.12)); // stubble
+    if (def.id === 'ray') head.add(sph(0.06, 0x2a1c14, 0, 0.0, 0.1, 1.3, 0.55, 0.8)); // stubble
     root.userData = { body, legL, legR, armL, armR, head, phase: 0, swing: 0 };
     root.userData.update = function (dt, speed) {
       const u = root.userData;
@@ -193,6 +215,7 @@
       legL.rotation.x = s * 0.9 * u.swing; legR.rotation.x = -s * 0.9 * u.swing;
       armL.sh.rotation.x = -s * 0.8 * u.swing; armR.sh.rotation.x = s * 0.8 * u.swing;
       armL.el.rotation.x = -0.25 - 0.5 * u.swing * (speed > 4 ? 1 : 0.3); armR.el.rotation.x = armL.el.rotation.x;
+      if (u.panic && speed > 2.5) { const w = Math.sin(u.phase * 1.3) * 0.35; armL.sh.rotation.set(-2.5 + w, 0, 0.35); armR.sh.rotation.set(-2.5 - w, 0, -0.35); armL.el.rotation.x = armR.el.rotation.x = -0.3; }   // fleeing in terror: both arms flung up
       body.position.y = Math.abs(s) * 0.05 * u.swing;
       body.rotation.x = 0.03 + 0.12 * (speed > 4 ? u.swing : 0);
     };

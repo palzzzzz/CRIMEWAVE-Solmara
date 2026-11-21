@@ -82,6 +82,25 @@
     plane(1.25, 0.244, 0, 0.664, 0.95, -Math.PI / 2, 0, Math.PI);            // bonnet
     plane(1.15, 0.224, 0, 1.133, -0.2, -Math.PI / 2, 0, Math.PI);            // roof
   };
+
+  // "POLICE" lettering on the police helicopter: belly (read from the street), both flanks and the tail boom. Transparent plates, white letters with a dark rim.
+  B.policeTexture = function (text) {
+    text = text || 'POLICÍA'; B._pols = B._pols || {}; if (B._pols[text]) return B._pols[text];
+    const W = 1024, H = 256, c = canvas(W, H), x = c.getContext('2d'), px = fitFont(x, text, W * 0.92, 230, FAM);
+    x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = '900 ' + px + 'px ' + FAM; x.lineJoin = 'round';
+    x.strokeStyle = '#0a1226'; x.lineWidth = 22; x.strokeText(text, W / 2, H / 2 + 4); x.fillStyle = '#ffffff'; x.fillText(text, W / 2, H / 2 + 4);
+    const t = new THREE.CanvasTexture(c); t.anisotropy = 8; return (B._pols[text] = t);
+  };
+  B.markPoliceHeli = function () {
+    const A = CW.air && CW.air.policeHeli; if (!A || A.mk.logo) return; A.mk.logo = true;
+    const g = A.mk.root.children[0], tex = B.policeTexture(); A.mk.logoMats = [];
+    const mat = () => { const m = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3, side: THREE.DoubleSide, fog: false }); A.mk.logoMats.push(m); return m; };
+    const plane = (w, h, x, y, z, rx, ry, rz) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat()); m.position.set(x, y, z); m.rotation.set(rx, ry, rz); m.renderOrder = 5; g.add(m); };
+    plane(3.0, 0.75, 0, 0.428, 0.1, Math.PI / 2, 0, 0);                              // belly, readable from below (text runs along the fuselage)
+    plane(3.0, 0.75, 0, 0.428, 0.1, Math.PI / 2, 0, Math.PI);
+    [1, -1].forEach((s) => { plane(2.6, 0.4, s * 0.965, 0.96, 0.25, 0, s * Math.PI / 2, 0); plane(2.0, 0.3, s * 0.236, 1.56, -3.9, 0, s * Math.PI / 2, 0); });
+  };
+  B.setPoliceHeliText = function (text) { const A = CW.air && CW.air.policeHeli; if (!A || !A.mk.logoMats) return; const tex = B.policeTexture(text); A.mk.logoMats.forEach((m) => { m.map = tex; m.needsUpdate = true; }); };
 })();
 
 // ---- siluetas vectoriales de las armas (rueda de armas + ranuras del HUD) ------------------------------------------------------------
@@ -128,6 +147,50 @@
       rr(c, -0.38, -0.1, 0.76, 0.78, 0.2); F();                                  // botella
       c.beginPath(); c.moveTo(0, -1.0); c.quadraticCurveTo(0.26, -0.78, 0.1, -0.55); c.lineTo(-0.1, -0.55); c.quadraticCurveTo(-0.28, -0.76, 0, -1.0); c.closePath(); c.lineWidth = lw; c.strokeStyle = ink; c.stroke(); c.fillStyle = '#ffb43a'; c.fill();   // llama
       c.fillStyle = 'rgba(8,12,24,.35)'; c.fillRect(-0.38, 0.12, 0.76, 0.2);
+    }
+    c.restore();
+  };
+})();
+
+// ---- iconos de misión (uno distinto por misión) ---------------------------------------------------------------------------------------
+// missionIcon dibuja en el ctx, centrado en (0,0), con media anchura = s px. 0 llave (bienvenida) · 1 barco (entrega al puerto) · 2 aerosol (pintura)
+// 3 coche (carrera) · 4 pistola (bandas) · 5 bolsa de dinero (bolsa caliente) · 6 diamante (Piedra del Sol); 'heli' = helipuerto / vuelo.
+(function () {
+  const CW = window.CW, B = CW.brand;
+  B.MISSION_ICON_NAMES = ['LLAVE', 'BARCO', 'AEROSOL', 'COCHE', 'PISTOLA', 'DINERO', 'DIAMANTE'];
+  function rr(c, x, y, w, h, r) { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h); }
+  function poly(c, pts) { c.beginPath(); pts.forEach((p, i) => c[i ? 'lineTo' : 'moveTo'](p[0], p[1])); c.closePath(); }
+  B.missionIcon = function (c, id, s, fill, rim) {
+    if (id === 4) return B.weaponIcon(c, 'pistol', s * 0.95, fill, rim);
+    c.save(); c.scale(s, s); c.lineJoin = 'round'; c.lineCap = 'round';
+    const ink = rim || 'rgba(8,12,24,.9)', lw = 0.12;
+    const F = () => { c.lineWidth = lw; c.strokeStyle = ink; c.stroke(); c.fillStyle = fill; c.fill(); };
+    const hole = (x, y, r) => { c.beginPath(); c.arc(x, y, r, 0, 7); c.fillStyle = ink; c.fill(); };
+    if (id === 0) {          // key
+      c.beginPath(); c.arc(-0.5, 0, 0.46, 0, 7); F(); hole(-0.5, 0, 0.17);
+      rr(c, -0.1, -0.13, 1.05, 0.26, 0.08); F(); rr(c, 0.55, 0.1, 0.16, 0.34, 0.04); F(); rr(c, 0.78, 0.1, 0.16, 0.26, 0.04); F();
+    } else if (id === 1) {   // boat
+      poly(c, [[-0.95, 0.18], [0.95, 0.18], [0.65, 0.66], [-0.65, 0.66]]); F();
+      rr(c, -0.2, -0.18, 0.62, 0.36, 0.05); F(); rr(c, -0.1, -0.5, 0.34, 0.34, 0.05); F();
+      c.beginPath(); c.moveTo(-0.55, 0.18); c.lineTo(-0.55, -0.7); c.lineWidth = 0.1; c.strokeStyle = ink; c.stroke(); poly(c, [[-0.5, -0.66], [-0.5, 0.1], [-0.05, 0.1]]); F();
+    } else if (id === 2) {   // spray can
+      rr(c, -0.34, -0.42, 0.68, 1.05, 0.14); F(); rr(c, -0.24, -0.72, 0.48, 0.34, 0.08); F(); rr(c, 0.0, -0.9, 0.3, 0.2, 0.04); F();
+      c.fillStyle = ink; c.fillRect(-0.34, 0.0, 0.68, 0.14); [[0.62, -0.62], [0.86, -0.44], [0.66, -0.3], [0.9, -0.72]].forEach((p) => { c.beginPath(); c.arc(p[0], p[1], 0.07, 0, 7); c.fill(); });
+    } else if (id === 3) {   // car, side view
+      poly(c, [[-0.95, 0.2], [-0.85, -0.05], [-0.35, -0.12], [-0.12, -0.5], [0.5, -0.5], [0.72, -0.12], [0.98, -0.02], [0.98, 0.2]]); F();
+      poly(c, [[-0.05, -0.4], [0.42, -0.4], [0.58, -0.12], [-0.2, -0.12]]); c.fillStyle = ink; c.fill();
+      [-0.52, 0.55].forEach((x) => { c.beginPath(); c.arc(x, 0.24, 0.24, 0, 7); F(); hole(x, 0.24, 0.09); });
+    } else if (id === 5) {   // money bag
+      c.beginPath(); c.moveTo(-0.28, -0.5); c.quadraticCurveTo(-0.7, -0.05, -0.75, 0.3); c.quadraticCurveTo(-0.7, 0.8, 0, 0.8); c.quadraticCurveTo(0.7, 0.8, 0.75, 0.3); c.quadraticCurveTo(0.7, -0.05, 0.28, -0.5); c.closePath(); F();
+      rr(c, -0.32, -0.62, 0.64, 0.2, 0.08); F();
+      c.fillStyle = ink; c.font = '900 0.9px Impact, "Arial Black", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('$', 0, 0.28);
+    } else if (id === 6) {   // diamond
+      poly(c, [[-0.55, -0.55], [0.55, -0.55], [0.95, -0.12], [0, 0.88], [-0.95, -0.12]]); F();
+      c.lineWidth = 0.07; c.strokeStyle = ink; c.beginPath(); c.moveTo(-0.95, -0.12); c.lineTo(0.95, -0.12); c.moveTo(-0.55, -0.55); c.lineTo(-0.3, -0.12); c.lineTo(0, 0.88); c.moveTo(0.55, -0.55); c.lineTo(0.3, -0.12); c.lineTo(0, 0.88); c.moveTo(-0.3, -0.12); c.lineTo(0, -0.55); c.lineTo(0.3, -0.12); c.stroke();
+    } else if (id === 'heli') {
+      c.beginPath(); c.ellipse(-0.05, 0.12, 0.55, 0.36, 0, 0, 7); F(); poly(c, [[0.4, 0.04], [1.0, -0.08], [1.0, 0.1], [0.4, 0.26]]); F();
+      c.beginPath(); c.moveTo(-1.0, -0.42); c.lineTo(0.9, -0.42); c.moveTo(-0.05, -0.42); c.lineTo(-0.05, -0.18); c.lineWidth = 0.12; c.strokeStyle = ink; c.stroke();
+      c.beginPath(); c.moveTo(-0.55, 0.62); c.lineTo(0.45, 0.62); c.stroke();
     }
     c.restore();
   };

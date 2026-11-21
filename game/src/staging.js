@@ -62,7 +62,8 @@
     shop.props.forEach((o) => { o.visible = false; });
     [shop.walls[0], shop.walls[flip ? 2 : 1]].forEach((o) => { if (o) o.visible = false; });
     // cases along the south wall
-    caseAt(g, -4.1, 4.3 * -FV, false); caseAt(g, -0.6, 4.3 * -FV, true); caseAt(g, 2.9, 4.3 * -FV, false);
+    caseAt(g, -4.1, 4.3 * -FV, true); caseAt(g, -0.6, 4.3 * -FV, true); caseAt(g, 2.9, 4.3 * -FV, false);
+    { const tc = caseAt(g, -2.6, 1.9 * -FV, true); tc.rotation.set(0.0, 0.5, 0.0); tc.position.y = 0.0; const tp = caseAt(g, 4.9, -3.2 * -FV, true); tp.rotation.z = 1.25; tp.position.y = 1.4; }   // a case knocked over, one tipped against the wall
     // cases along the east side of the counter's end and a pair on the far wall
     // jewellery bag on the counter + loose stones (counter top is y 1.15, spans u 2.5..3.7, v -2.7..2.7)
     const bag = new THREE.Group(); bag.position.set(3.1, 1.17, 1.7 * FV); g.add(bag);
@@ -86,22 +87,37 @@
     out.clerk = cl;
     // hostages: existing person model, transforms only
     const mk = (id, o) => { const p = CW.makePerson(Object.assign({ id, hair: 0x2a1c14, pants: 0x2a3036, shoes: 0x1a1a1a, female: false, shades: false }, o)); scene.add(p); out.npcs.push(p); return p; };
-    out.cust = [
-      { p: mk('c1', { skin: 0xd9a070, shirt: 0xe8456f, pants: 0x3b4a6b, female: true, hair: 0x7a3a2a }), u: 0.8, v: 1.1, kneel: false },
-      { p: mk('c2', { skin: 0x8d5a3b, shirt: 0xf6f1e6, pants: 0x2a3036, hair: 0x120c08 }), u: -1.0, v: 3.0, kneel: false },
-      { p: mk('c3', { skin: 0xb9805a, shirt: 0x12a7a0, pants: 0xefe3c8, female: true, hair: 0x1a1018 }), u: -0.1, v: 2.0, kneel: true },
+    // crowd inside, all in a panic: [skin, shirt, pants, female, hair, u, v, behaviour, faces] ; behaviour: up / kneel / run / duck / sit
+    const defs = [
+      [0xd9a070, 0xe8456f, 0x3b4a6b, true, 0x7a3a2a, 2.0, -0.6, 'up', 'lens'], [0x8d5a3b, 0xf6f1e6, 0x2a3036, false, 0x120c08, -1.6, 1.6, 'kneel', 'lens'],
+      [0xb9805a, 0x12a7a0, 0xefe3c8, true, 0x1a1018, 0.4, 2.5, 'kneel', 'door'], [0xe2b48a, 0xf2c94c, 0x2f3b45, false, 0x4a3020, -3.0, -1.4, 'run', 'door'],
+      [0xd9a070, 0x8f6fd1, 0x6a5a48, true, 0xb8864a, -2.2, -3.2, 'duck', 'door'], [0x8d5a3b, 0xc9593f, 0x3b4a6b, false, 0x20160f, 3.6, 3.3, 'up', 'door'],
+      [0xf0c8a0, 0x6fa3d8, 0x8aa0a8, true, 0x7a3b22, -4.4, 2.2, 'run', 'lens'],
     ];
+    out.cust = defs.map(([skin, shirt, pants, female, hair, u, v, kind, face], i) => ({ p: mk('c' + i, { skin, shirt, pants, female, hair }), u, v, kind, face }));
+    // loose loot: cash bundles + stones strewn across the floor, a few bills mid-air
+    const bills = [];
+    for (let i = 0; i < 26; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.05, 0.16), new THREE.MeshLambertMaterial({ color: i % 3 ? 0x2fae5a : 0x7fd08a, emissive: 0x0a3a1a })); const a2 = i * 2.399, r2 = 0.8 + (i % 9) * 0.5; b.position.set(-1 + Math.cos(a2) * r2 * 0.8, i % 5 === 0 ? 0.9 + (i % 3) * 0.5 : 0.1, 0.4 + Math.sin(a2) * r2 * 0.55); b.rotation.set((i % 5 === 0) ? i : 0, i * 1.7, (i % 5 === 0) ? i * 0.6 : 0); g.add(b); bills.push(b); }
+    for (let i = 0; i < 16; i++) { const a2 = i * 1.9 + 0.5, r2 = 0.6 + (i % 7) * 0.55; diamond(g, GEMS[i % GEMS.length], 0.09 + (i % 3) * 0.03, -1.2 + Math.cos(a2) * r2, 0.1, 0.2 + Math.sin(a2) * r2 * 0.7, i); }
+    [[-3.4, 0.4], [-3.0, 0.9], [-2.6, 1.3]].forEach(([u, v], i) => { const stack = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.2 + i * 0.05, 0.28), new THREE.MeshLambertMaterial({ color: 0x2fae5a, emissive: 0x0a3a1a })); stack.position.set(u, 0.12, v); stack.rotation.y = i; g.add(stack); });
     return out;
   };
 
-  // aim every pose at the lens; called every staged frame
-  S.pose = function (J, camX, camZ, rayPos) {
-    const { cx, cz } = J.shop;
-    J.cust.forEach((c) => {
-      const x = cx + c.u, z = cz + c.v; c.p.position.set(x, 0, z); c.p.rotation.y = FACING(x, z, camX, camZ) + (c.kneel ? 0.1 : 0);
-      c.p.visible = true; handsUp(c.p, 0.3); if (c.kneel) kneel(c.p);
+  // aim every pose; called every staged frame. face: 'lens' (towards the camera) or 'door' (towards the police at the door)
+  S.pose = function (J, camX, camZ, doorX, doorZ) {
+    const { cx, cz } = J.shop, dX = doorX === undefined ? cx - 6.5 : doorX, dZ = doorZ === undefined ? cz : doorZ;
+    J.cust.forEach((c, i) => {
+      const x = cx + c.u, z = cz + c.v, u = c.p.userData; c.p.position.set(x, 0, z); c.p.visible = true;
+      c.p.rotation.y = c.face === 'lens' ? FACING(x, z, camX, camZ) : FACING(x, z, dX, dZ) + (i % 2 ? 0.25 : -0.2);
+      u.setPose('');
+      if (c.kind === 'up') handsUp(c.p, 0.34);
+      else if (c.kind === 'kneel') { handsUp(c.p, 0.3); kneel(c.p); }
+      else if (c.kind === 'run') {   // bolting for the back corner: mid-stride, leaning, hands thrown up
+        u.body.rotation.x = 0.22; u.legL.rotation.x = 0.9; u.legR.rotation.x = -0.8; u.body.position.y = 0.06; handsUp(c.p, 0.55); u.head.rotation.x = -0.15;
+      } else if (c.kind === 'duck') {   // crouched, arms over the head
+        u.body.position.y = -0.38; u.body.rotation.x = 0.35; u.legL.rotation.x = 1.0; u.legR.rotation.x = 1.0; u.armL.sh.rotation.set(-2.7, 0, 0.5); u.armR.sh.rotation.set(-2.7, 0, -0.5); u.armL.el.rotation.x = -1.3; u.armR.el.rotation.x = -1.3; u.head.rotation.x = 0.35;
+      }
     });
-    const cl = J.clerk, cx0 = cl.position.x, cz0 = cl.position.z; cl.rotation.y = FACING(cx0, cz0, camX, camZ) * 0.5 + (-Math.PI / 2) * 0.5; cl.visible = true; handsUp(cl, 0.2);
-    void rayPos;
+    const cl = J.clerk, cx0 = cl.position.x, cz0 = cl.position.z; cl.rotation.y = FACING(cx0, cz0, dX, dZ) + 0.3; cl.visible = true; handsUp(cl, 0.25);
   };
 })();

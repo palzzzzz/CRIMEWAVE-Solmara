@@ -2,7 +2,7 @@
 // con su perro, menú de 5 opciones (JUGAR, MISIONES, OPCIONES, CÓMO JUGAR, SALIR).
 (function () {
   const CW = window.CW;
-  const T = (CW.title = { active: false, t: 0, sel: 0, howto: false, modal: null, rain: true, items: [] });
+  const T = (CW.title = { fix: (function () { const v = parseFloat(new URLSearchParams(location.search).get('tt')); return isFinite(v) ? v : null; })(), active: false, t: 0, sel: 0, howto: false, modal: null, rain: true, items: [] });
   const ITEMS = ['m-new', 'm-missions', 'm-options', 'm-how', 'm-quit'];
   const $ = (id) => document.getElementById(id);
   const CX = 189, CZ = 0.6;
@@ -26,6 +26,53 @@
     [[0.12, 0.3], [-0.12, 0.3], [0.12, -0.3], [-0.12, -0.3]].forEach((p) => { box(0.09, 0.4, 0.09, tan, p[0], 0.2, p[1]); box(0.1, 0.08, 0.12, white, p[0], 0.04, p[1] + 0.02); });
     g.userData = { head, tail };
     return g;
+  }
+
+  // ---- menu-scene dressing: rainy-night pedestrians, a police helicopter pacing behind the crew with its searchlight on them, a small make.fun board ----
+  const SH = [0xff7b54, 0x37c9b8, 0xf2c94c, 0xe0407a, 0x6fa3d8, 0xa5d56a, 0xf5f1e6, 0x8f6fd1, 0xc9593f], PN = [0xefe3c8, 0x3b4a6b, 0x6a5a48, 0x2f3b45, 0x8aa0a8], SK = [0xd9a070, 0xb9805a, 0xf0c8a0, 0x8d5a3b, 0xe2b48a], HR = [0x20160f, 0x4a3020, 0x1a1018, 0xb8864a, 0x7a3b22];
+  function umbrella(col) {
+    const g = new THREE.Group(), m = new THREE.MeshLambertMaterial({ color: col, side: THREE.DoubleSide });
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(0.62, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.48), m); dome.scale.y = 0.62; dome.position.y = 2.3; dome.castShadow = true; g.add(dome);
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.2, 6), new THREE.MeshLambertMaterial({ color: 0x15151a })); pole.position.y = 1.75; g.add(pole);
+    return g;
+  }
+  function buildCrowd() {
+    const out = [];
+    // [x, z, direction (+1 east / -1 west), speed, umbrella]  : pavements on both sides + a few people crossing the avenue further down
+    const spec = [[184, 7.4, -1, 1.3, 1], [181, -7.6, 1, 1.5, 0], [176, 8.6, -1, 1.2, 0], [174, -8.8, 1, 1.6, 1], [170, 9.4, 1, 1.4, 0], [166, -9.2, -1, 1.2, 1], [161, 8.9, -1, 1.5, 0], [158, -9.4, 1, 1.3, 0], [152, 9.2, 1, 1.4, 1], [149, -8.6, -1, 1.5, 0], [143, 8.8, -1, 1.3, 0], [138, -9.1, 1, 1.4, 1], [132, 9, 1, 1.2, 0], [129, -8.8, -1, 1.5, 0], [178, 4.5, 0, 1.6, 0], [169, -4, 0, 1.7, 1], [162, 3, 0, 1.5, 0], [155, -3.5, 0, 1.6, 1], [173, 0, 0, 1.4, 0], [148, 2, 0, 1.7, 0]];
+    spec.forEach(([x, z, dir, sp, um], i) => {
+      const m = CW.makePerson({ id: 'npc', skin: SK[i % 5], hair: HR[i % 5], shirt: SH[i % 9], pants: PN[(i * 3) % 5], shoes: 0x1c1c22, female: i % 2 === 1, shades: false });
+      CW.scene.add(m); if (um) { const u = umbrella([0xe8456f, 0x2ff0ff, 0xffd34a, 0x8f6fd1][i % 4]); m.add(u); m.userData.umb = u; }
+      out.push({ m, x, z, dir, sp, cross: dir === 0, x0: x, z0: z, k: i });
+    });
+    return out;
+  }
+  function updateCrowd(dt) {
+    T.crowd.forEach((p) => {
+      // positions are a pure function of the menu clock (T.t), so a fixed &tt=<s> staging gives the same frame every run
+      if (p.cross) { const sg = p.k % 2 ? 1 : -1, span = 18, u = (((p.z0 + 9) / span + sg * p.sp * T.t / span) % 1 + 1) % 1; p.z = -9 + u * span; p.m.rotation.y = sg > 0 ? 0 : Math.PI; }
+      else { const span = 70, u = ((((p.x0 - 115) / span + p.dir * p.sp * T.t / span) % 1) + 1) % 1; p.x = 115 + u * span; p.m.rotation.y = p.dir > 0 ? Math.PI / 2 : -Math.PI / 2; }
+      p.m.position.set(p.x, 0, p.z); p.m.userData.update(dt, p.sp * 1.3);
+      if (p.m.userData.umb) { p.m.userData.armR.sh.rotation.set(-2.5, 0, 0.1); p.m.userData.armR.el.rotation.x = -0.4; }
+    });
+  }
+  const HELI = { x: 0, z: 0, hx: 0, hz: 0, sx: 0, sz: 0, h: 0 };
+  function updateHeli(dt) {
+    const A = CW.air.policeHeli, e = T.t * 0.42, tx = CX - 22 + Math.sin(e * 0.7) * 3, tz = CZ + Math.sin(e) * 14;
+    const px = HELI.x, pz = HELI.z; HELI.x = tx; HELI.z = tz;
+    const vx = (tx - px) / Math.max(dt, 1e-3), vz = (tz - pz) / Math.max(dt, 1e-3), spd = Math.hypot(vx, vz);
+    if (spd > 0.5) HELI.h = CW.dampAngle(HELI.h, Math.atan2(vx, vz), 3, dt);
+    A.x = tx; A.z = tz; A.y = 7.2 + Math.sin(T.t * 0.9) * 0.4; A.t = (A.t || 0) + dt;
+    const mk = A.mk; mk.root.visible = true; mk.root.position.set(A.x, A.y, A.z); mk.root.rotation.set(0.08, HELI.h, Math.sin(T.t * 0.8) * 0.05);
+    mk.rotor.rotation.y += dt * 38; mk.blur.material.opacity = 0.16; mk.tail.rotation.x += dt * 55;
+    const fl = Math.floor(A.t * 6) % 2 === 0; mk.red.visible = fl; mk.blue.visible = !fl;
+    // the searchlight: sweeps a little around the crew, never leaves them
+    const cxm = CX + T.crewMid.x, czm = CZ + T.crewMid.z; HELI.sx = cxm + Math.sin(T.t * 1.3) * 1.2; HELI.sz = czm + Math.cos(T.t * 1.1) * 1.0;
+    const dxs = HELI.sx - A.x, dzs = HELI.sz - A.z, len = Math.hypot(dxs, A.y, dzs);
+    A.cone.visible = A.disc.visible = true;
+    A.cone.position.set(A.x, A.y - 1.4, A.z); A.cone.lookAt(HELI.sx, 0, HELI.sz); A.cone.scale.set(3.6, 3.6, len); A.cone.material.opacity = 0.2;
+    A.disc.position.set(HELI.sx, 0.24, HELI.sz); A.disc.scale.set(3.6, 1, 3.6); A.disc.material.opacity = 0.5;
+    T.spot.position.set(A.x, A.y - 1.4, A.z); T.spot.target.position.set(HELI.sx, 1.0, HELI.sz); T.spot.target.updateMatrixWorld();
   }
 
   T.enter = function () {
@@ -58,6 +105,15 @@
       T.warm = new THREE.PointLight(0xffd9a8, 2.4, 12, 1.6); T.warm.position.set(CX + 2.5, 1.9, CZ + 6.2); CW.scene.add(T.warm);
     }
     T.fill.visible = T.pink.visible = T.cyan.visible = T.warm.visible = true;
+    // dressing
+    T.crewMid = { x: CX + fx * 0 + lx * 1.95 - CX, z: lz * 1.95 };
+    if (!T.crowd) T.crowd = buildCrowd();
+    T.crowd.forEach((p) => { p.m.visible = true; });
+    if (!T.spot) { T.spot = new THREE.SpotLight(0xeaf6ff, 3.2, 60, 0.2, 0.5, 1.0); CW.scene.add(T.spot); CW.scene.add(T.spot.target); }
+    T.spot.visible = true;
+    const A = CW.air.policeHeli; CW.brand.markPoliceHeli(); CW.brand.setPoliceHeliText('POLICE'); A.mk.root.visible = true; A.cone.visible = A.disc.visible = true; HELI.x = CX - 25; HELI.z = CZ; HELI.h = 0;
+    if (!T.board) { T.board = CW.brand.buildWall(CW.scene, 168, 11.4, Math.PI, 8.4, 3.0); }
+    T.board.visible = true;
     // very heavy rain: the existing rain system pinned at its maximum intensity (wet = 1), no auto-clear while the title is up
     const rn = T.rain ? 1 : 0; Wx.mode = rn ? 'rain' : 'clear'; Wx.target = rn; Wx.wet = rn; Wx.next = 1e9;
     CW.sky.hour = CW.C.TITLE_HOUR; CW.sky.frozen = true;
@@ -70,6 +126,10 @@
     T.active = false; CW.sky.frozen = false;
     if (T.fill) T.fill.visible = T.pink.visible = T.cyan.visible = T.warm.visible = false;
     if (T.dog) T.dog.visible = false;
+    if (T.crowd) T.crowd.forEach((p) => { p.m.visible = false; });
+    if (T.spot) T.spot.visible = false;
+    if (T.board) T.board.visible = false;
+    { const A = CW.air.policeHeli; CW.brand.setPoliceHeliText('POLICÍA'); A.mk.root.visible = false; A.cone.visible = A.disc.visible = false }
     ['ray', 'luna'].forEach((id) => { const gs = CW.player.crew[id].model.userData.guns; if (gs) Object.keys(gs).forEach((k) => { gs[k].visible = false; }); });
     CW.weather.wet = 0; CW.weather.target = 0; CW.weather.mode = 'clear';
     const car = CW.vehicles.hero; if (T.carHome) { car.x = T.carHome.x; car.z = T.carHome.z; car.h = T.carHome.h; }
@@ -122,7 +182,7 @@
 
   T.update = function (dt) {
     const I = CW.input;
-    T.t += dt;
+    T.t = T.fix !== null ? T.fix : T.t + dt;   // &tt=<s> (staging only) freezes the menu clock
     if (CW.mapscreen.open) { /* the map screen owns the keys */ }
     else if (T.howto) {
       if (I.pressed('Escape') || I.pressed('Enter') || I.pressed('Space')) { T.howto = false; $('howto').style.display = 'none'; }
@@ -149,6 +209,8 @@
     const br = Math.sin(T.t * 1.7) * 0.012;
     r.body.position.y = br; l2.body.position.y = -br;
     r.head.rotation.y = -0.15 + Math.sin(T.t * 0.5) * 0.12; l2.head.rotation.y = 0.2 + Math.sin(T.t * 0.4 + 2) * 0.08;
+    if (T.crowd) updateCrowd(dt);
+    if (T.spot) updateHeli(dt);
     if (T.dog) { const d = T.dog.userData; d.tail.rotation.y = Math.sin(T.t * 7) * 0.5; d.head.rotation.z = Math.sin(T.t * 0.8) * 0.1; }
   };
 })();

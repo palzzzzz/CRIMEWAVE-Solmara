@@ -72,8 +72,8 @@
   V.spawnParked = function () {
     const r = CW.makeRng(4242), slots = CW.world.parkSlots.slice();
     for (let i = slots.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); const t = slots[i]; slots[i] = slots[j]; slots[j] = t; }
-    const weights = [['sedan', 26], ['hatch', 18], ['suv', 12], ['taxi', 8], ['van', 8], ['sports', 10], ['pickup', 12], ['bike', 8]];
-    const pick = () => { let n = r() * 102; for (const [k, w] of weights) { n -= w; if (n <= 0) return k; } return 'sedan'; };
+    const weights = [['sedan', 16], ['hatch', 12], ['suv', 9], ['taxi', 6], ['van', 6], ['sports', 8], ['pickup', 9], ['bike', 6], ['coupe', 9], ['wagon', 8], ['minivan', 7], ['buggy', 5]];
+    const pick = () => { let n = r() * 101; for (const [k, w] of weights) { n -= w; if (n <= 0) return k; } return 'sedan'; };
     // the cover car, and a couple of rides near the on-foot spawn
     const hero = V.add('sports', 0xff5a3c, 246.4, 40, Math.PI); V.hero = hero;
     V.add('sports', 0xffc23a, 233.6, 44, 0);

@@ -206,34 +206,49 @@
     ['bannerwrap'].forEach((id) => { document.getElementById(id).style.visibility = 'hidden'; });
   }
   function robberyStep(dt) {
-    const J = capture.rob, shop = capture.shop, W = CW.police, st = CW.hud.state, P = CW.player, c = CW.camera, cx = shop.cx, cz = shop.cz;
+    const J = capture.rob, shop = capture.shop, W = CW.police, st = CW.hud.state, P = CW.player, c = CW.camera, cx = shop.cx, cz = shop.cz, Wp = CW.weapons;
     capture.t += dt;
-    const lk = (capQ.get('look') || '-1.2,0.9,1.2').split(',').map(Number), FV0 = capture.FV; FV = capture.FV, cu = qn('cu', 8.6), cv = qn('cv', -4.4) * FV, ch = qn('camh', 3.0);
-    const IN = qn('in', 1), camX = IN ? cx + qn('iu', -1.9) : cx + cu, camZ = IN ? cz + qn('iv', -1.0) : cz + cv;   // &in=1 (default): the lens stands inside the shop, behind Ray
+    const FV = capture.FV, IN = qn('in', 1);
     if (IN && !capture.sealed) {   // a closed interior: every wall back on, and a ceiling, so no frame ever shows the void or the sky beyond the dollhouse cut
       capture.sealed = true; shop.walls.forEach((o) => { if (o) o.visible = true; });
       const ce = new THREE.Mesh(new THREE.BoxGeometry(14, 0.2, 12), new THREE.MeshLambertMaterial({ color: 0x1c1426 })); ce.position.set(cx, 3.5, cz); CW.scene.add(ce);   // child of the scene, not the shop group: the near-lens clean-up below must not hide it
+      shop.group.children.forEach((o) => { if (o.isMesh && o.geometry.type === 'BoxGeometry' && o.geometry.parameters.height < 0.11 && o.geometry.parameters.width >= 13) { o.material = o.material.clone(); o.material.color.setHex(0x2b2339); } });   // dark marble: the floor must not blow out under the patrol lights
+      // the doorway stays open on the street side: red / blue patrol light pours in over the floor
+      capture.rl = new THREE.PointLight(0xff2a2a, 4.2, 20, 1.3); capture.rl.position.set(cx - 8.6, 2.2, cz - 2.4); CW.scene.add(capture.rl);
+      capture.bl = new THREE.PointLight(0x2a6bff, 4.2, 20, 1.3); capture.bl.position.set(cx - 8.6, 2.2, cz + 2.6); CW.scene.add(capture.bl);
     }
     st.hp = 100; P.mode = 'foot'; P.car = null;
     W.heat = capture.wl; W.level = capture.wl; W.lostT = 0; W.bust = 0; W.seen = true; st.wanted = capture.wl;
-    // the protagonist: Ray with the pistol out, aimed at the clerk behind the counter
-    const ray = P.crew.ray, ru = ray.model.userData, rx = cx + qn('ru', 0.3), rz = cz + qn('rv', 0.2) * FV;
+    const doorX = cx - 6.5, doorZ = cz;
+    // Ray: pistol out and levelled at the police in the doorway, seen from behind-right so the gun reads
+    const ray = P.crew.ray, ru = ray.model.userData, rx = cx + qn('ru', 0.2), rz = cz + qn('rv', -1.7);
     P.active = ray; ray.model.visible = true; P.crew.luna.model.visible = false;
-    ray.x = rx; ray.z = rz; ray.vx = ray.vz = 0; ray.h = Math.atan2(cx + 4.4 - rx, cz + 0.2 * FV - rz); ray.model.position.set(rx, 0, rz); ray.model.rotation.y = ray.h;
-    ru.setPose('ray-pistol'); if (ru.guns) { ru.guns.pistol.visible = true; if (ru.guns.pistol.userData.flash) ru.guns.pistol.userData.flash.visible = false; }
+    ray.x = rx; ray.z = rz; ray.vx = ray.vz = 0; ray.h = Math.atan2(doorX + 1 - rx, doorZ - rz); ray.model.position.set(rx, 0, rz); ray.model.rotation.y = ray.h;
+    ru.setPose('ray-pistol'); ru.armR.sh.rotation.set(-1.55, 0, 0.08); ru.armR.el.rotation.x = -0.05; ru.armL.sh.rotation.set(-1.4, 0, -0.35); ru.armL.el.rotation.x = -0.5; ru.head.rotation.set(-0.02, -0.05, 0);
+    if (ru.guns) { ru.guns.pistol.visible = true; if (ru.guns.pistol.userData.flash) ru.guns.pistol.userData.flash.visible = false; }
     ray.cig.visible = false;
-    CW.stage.pose(J, camX, camZ);
-    // the cruiser pulls up outside the door (existing cop car, flashing)
-    const fleet = W.cops.slice(0, qn('cops', 2)); capture.fleet = fleet;
+    const camX = cx + qn('iu', 2.2), camZ = cz + qn('iv', -4.4);
+    CW.stage.pose(J, camX, camZ, doorX, doorZ);
+    // the law arrives: two cruisers slewed across the street outside, bars flashing, three officers in the doorway aiming in
+    const fleet = W.cops.slice(0, 2); capture.fleet = fleet;
     W.cops.forEach((q) => { if (!fleet.includes(q) && !q.hidden) { q.hidden = true; q.cs = 'idle'; } });
-    const pos = [[qn('pu', -8.8), qn('pv', 0.3) * FV, qn('ph', 1.45)], [-12.6, -3.4 * FV, 1.2]];
-    fleet.forEach((q, i) => { q.hidden = false; q.awake = true; q.cs = 'roadblock'; q.rbMin = 1e9; q.hp = 100; q.ai = q.ai || { cruise: 0, off: 0 }; q.x = cx + pos[i][0]; q.z = cz + pos[i][1]; q.h = pos[i][2]; q.vx = q.vz = 0; q.speed = 0; q.mesh.position.set(q.x, 0, q.z); q.mesh.rotation.y = q.h; });
+    const pos = [[-11.4, -1.6, 0.35], [-12.2, 3.4, -0.4]], on = [true, false];
+    fleet.forEach((q, i) => { q.hidden = false; q.awake = true; q.cs = 'roadblock'; q.rbMin = 1e9; q.hp = 100; q.ai = q.ai || { cruise: 0, off: 0 }; q.x = cx + pos[i][0]; q.z = cz + pos[i][1]; q.h = pos[i][2] + Math.PI / 2; q.vx = q.vz = 0; q.speed = 0; q.mesh.position.set(q.x, 0, q.z); q.mesh.rotation.y = q.h; q.bar.red.visible = q.bar.gr.visible = on[i]; q.bar.blue.visible = q.bar.gb.visible = !on[i]; });
+    const op = [[-7.9, -1.5], [-8.1, 1.6], [-9.3, 0.1]];
+    W.officers.slice(0, 3).forEach((o, i) => {
+      o.on = false; const m = o.model, u = m.userData; m.visible = true; o.x = cx + op[i][0]; o.z = cz + op[i][1]; m.position.set(o.x, 0, o.z); m.rotation.y = Math.atan2(rx - o.x, rz - o.z);
+      if (!o.gun) o.gun = Wp.attachGun(m, 'pistol'); o.gun.visible = true;
+      u.setPose(''); u.armR.sh.rotation.set(-1.55, 0, 0.05); u.armR.el.rotation.x = -0.1; u.armL.sh.rotation.set(-1.45, 0, -0.35); u.armL.el.rotation.x = -0.45; u.body.rotation.x = 0.06;
+      if (o.gun.userData.flash) o.gun.userData.flash.visible = false;
+    });
+    capture.rl.intensity = 3.6; capture.bl.intensity = 3.6;
+    // the loot: cash on the counter plus whatever is on the floor (staging.js)
     capture.cash.forEach((p, i) => { p.on = true; p.life = 99; if (p.mesh.children[1]) p.mesh.children[1].visible = false; if (p.mesh.children[2]) p.mesh.children[2].visible = false; if (i && p.mesh.children[3]) p.mesh.children[3].visible = false; p.mesh.position.set(cx + [3.0, 3.2, 2.9][i], 1.55, cz + [-1.4, -0.2, 0.9][i] * 1); });
-    if (IN) { c.position.set(camX, qn('ih', 1.7), camZ); c.fov = qn('fov', 68); c.updateProjectionMatrix(); c.lookAt(cx + qn('lu', 4.2), qn('ly', 1.1), cz + qn('lv', 1.4)); } else { c.position.set(camX, ch, camZ); c.fov = qn('fov', 56); c.updateProjectionMatrix(); c.lookAt(cx + lk[0], lk[2], cz + lk[1] * FV0); }
-    shop.group.children.forEach((o) => { if (o.isMesh && o.visible && Math.hypot(cx + o.position.x - c.position.x, cz + o.position.z - c.position.z) < 2.6 && Math.abs(o.position.y - c.position.y) < 2.6) o.visible = false; });   // nothing between the lens and the scene
+    if (IN) { c.position.set(camX, qn('ih', 1.7), camZ); c.fov = qn('fov', 70); c.updateProjectionMatrix(); c.lookAt(cx + qn('lu', -4.2), qn('ly', 1.15), cz + qn('lv', 0.5)); } else { c.position.set(cx + qn('cu', 8.6), qn('camh', 3.0), cz + qn('cv', -4.4) * FV); c.fov = qn('fov', 56); c.updateProjectionMatrix(); c.lookAt(cx - 1.2, 1.2, cz + 0.9 * FV); }
+    shop.group.children.forEach((o) => { if (o.isMesh && o.visible && Math.hypot(cx + o.position.x - c.position.x, cz + o.position.z - c.position.z) < 1.6 && Math.abs(o.position.y - c.position.y) < 2.6) o.visible = false; });   // nothing between the lens and the scene
     document.getElementById('prompt').style.visibility = 'hidden';
-    CW.traffic.peds.forEach((p) => { if (Math.hypot(p.x - c.position.x, p.z - c.position.z) < 30) p.model.visible = false; });
-    CW.vehicles.list.forEach((v) => { if (!fleet.includes(v) && Math.hypot(v.x - c.position.x, v.z - c.position.z) < 9) v.mesh.visible = false; });
+    CW.traffic.peds.forEach((p) => { if (Math.hypot(p.x - cx, p.z - cz) < 30) p.model.visible = false; });
+    CW.vehicles.list.forEach((v) => { if (!fleet.includes(v) && Math.hypot(v.x - cx, v.z - cz) < 22) v.mesh.visible = false; });
   }
   // ?capture=heli: el helicóptero policial sobre la costanera de noche, con el reflector, mirando al letrero de make.fun
   function heliStart() {
@@ -257,51 +272,99 @@
     A.hp = 400; A.state = 'orbit'; A.x = qn('hx', 229); A.z = qn('hz', -212); A.y = qn('hy', 25); A.vx = A.vz = A.vy = 0; A.h = qn('hh', 0.5); A.spot.x = A.x + 1; A.spot.z = A.z + 8; A.sees = true;
     A.mk.root.position.set(A.x, A.y, A.z); A.mk.root.rotation.set(0, A.h, 0);
     c.position.set(qn('cx', 236), qn('ch', 2.2), qn('cz', -170)); c.fov = qn('fov', 60); c.updateProjectionMatrix(); c.lookAt(qn('tx', 246), qn('ty', 17), qn('tz', -240));
+    if (qn('fire', 0)) { heliFire(A); return; }
     CW.traffic.peds.forEach((p) => { if (Math.hypot(p.x - c.position.x, p.z - c.position.z) < 25) p.model.visible = false; });
     CW.vehicles.list.forEach((v) => { if (Math.hypot(v.x - c.position.x, v.z - c.position.z) < 10) v.mesh.visible = false; });
-    if (qn('fire', 0)) heliFire(A);
   }
-  // &fire=1 (staging only): Ray rides in the player helicopter, hanging out of the side door and shooting down at the avenue, which is going up in fireballs
-  // (the real fx.explode); the camera sits off the open door with the make.fun sign behind. All numbers are overridable from the URL.
+  // &fire=1 (staging only): THE KEY SHOT. A close, level lens a little in front of and to the left of our black helicopter, which fills the left half of the frame
+  // with its side door wide open and the rotor in view; Ray and Luna both lean out of the doorway and fire down-right (small flashes, a few converging tracers);
+  // below-right: the neon palm avenue at night, patrol cars (one blown up in a big fireball, the rest with lightbars flashing), officers aiming up, civilians
+  // running along the pavements; far behind, a POLICÍA helicopter pins our heli with its searchlight cone. Everything is overridable from the URL.
   function heliFire(A) {
-    const Wp = CW.weapons, X = CW.explosions, t = capture.t, H = CW.air.heli, c = CW.camera, P = CW.player;
+    const Wp = CW.weapons, X = CW.explosions, t = capture.t, H = CW.air.heli, c = CW.camera, P = CW.player, W = CW.police, T = CW.traffic;
     let f = capture.fire;
-    const hx = qn('fx', 241), hy = qn('fy', 9), hz = qn('fz', -186), hh = qn('fh', -1.5708);
+    const hx = qn('fx', 240), hy = qn('fy', 10.5), hz = qn('fz', -172), hh = qn('fh', 0);
     if (!f) {
-      f = capture.fire = { n: 0, boom: [] };
+      f = capture.fire = { n: 0, boom: false };
+      // the heli goes black (cloned materials, so the police heli and the shared cache keep their colours)
+      const RE = { 0xf4efe2: 0x121418, 0xff6b4a: 0x3a1f55 }, seen = {};
+      H.mk.root.traverse((o) => { if (o.isMesh && o.material && o.material.type === 'MeshLambertMaterial') { const h = o.material.color.getHex(); if (RE[h] !== undefined) { o.material = seen[h] || (seen[h] = new THREE.MeshLambertMaterial({ color: RE[h] })); } } });
       const g = H.mk.root.children[0], B = (w, h, d, col, x, y, z) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshLambertMaterial({ color: col })); m.position.set(x, y, z); g.add(m); return m; };
-      B(0.05, 0.95, 1.25, 0x14171b, 0.975, 1.2, 0.55); B(0.18, 0.1, 0.5, 0x2a2f33, 1.0, 0.72, 0.3);   // the open door: dark cavity + the sill
-      const pivot = new THREE.Group(); pivot.position.set(qn('px2', 1.08), qn('py2', 1.02), qn('pz2', 0.6)); g.add(pivot);
-      const m = CW.makePerson(P.crew.ray.def); m.position.y = -0.95; m.rotation.y = Math.PI / 2; pivot.add(m);
-      const u = m.userData; u.setPose('');
-      const lean = qn('lean', -0.85); pivot.rotation.z = lean;
-      u.legL.rotation.x = -lean * 0.0; u.legR.rotation.x = 0;   // legs counter-rotated below (model frame: the lean axis is its -x)
-      u.legL.rotation.x = lean; u.legR.rotation.x = lean;
-      const gun = Wp.attachGun(m, 'pistol');
-      u.armR.sh.rotation.set(qn('ar', -0.55), 0, 0.05); u.armR.el.rotation.x = -0.1;
-      u.armL.sh.rotation.set(qn('al', 0.9), 0, -0.1); u.armL.el.rotation.x = -0.4;   // the other hand holds the door frame
-      u.head.rotation.set(0.45, 0, 0);
-      f.gun = gun; f.fl = gun.userData.flash; f.pivot = pivot; f.m = m;
+      B(0.05, 0.95, 2.35, 0x07080a, 0.975, 1.2, -0.05); B(0.2, 0.1, 2.5, 0x2a2f33, 1.0, 0.72, -0.05); B(0.1, 1.05, 0.1, 0x2a2f33, 1.02, 1.2, 1.15); B(0.1, 1.05, 0.1, 0x2a2f33, 1.02, 1.2, -1.27); B(0.1, 0.1, 2.5, 0x2a2f33, 1.02, 1.72, -0.05);   // open doorway: dark cavity, sill, frame
+      B(0.06, 0.9, 0.7, 0x16181d, 1.12, 1.2, -1.75);   // the sliding door, pushed back along the flank
+      const lt = new THREE.PointLight(0xffe2b8, 3.2, 16, 1.4); lt.position.set(2.6, 1.6, 0.2); g.add(lt);   // muzzle-flash glow + spill from the police searchlight: the duo and the black hull read against the night
+      const lt2 = new THREE.PointLight(0xbcd4ff, 2.0, 14, 1.3); lt2.position.set(3.0, 3.4, 2.8); g.add(lt2);
+      const mkGun = (def, gunId, z, lean, aim, spread) => {
+        const pivot = new THREE.Group(); pivot.position.set(1.08, 1.02, z); g.add(pivot);
+        const m = CW.makePerson(def); m.position.y = -0.95; m.rotation.y = Math.PI / 2 + aim; pivot.add(m);
+        const u = m.userData; u.setPose(''); pivot.rotation.z = lean; u.legL.rotation.x = u.legR.rotation.x = lean;
+        const gun = Wp.attachGun(m, gunId);
+        u.armR.sh.rotation.set(qn('ar', -1.25), 0, 0.05); u.armR.el.rotation.x = qn('ae', -0.12);
+        u.armL.sh.rotation.set(qn('al', -1.15) , 0, spread); u.armL.el.rotation.x = -0.5;   // support hand on the foregrip
+        u.head.rotation.set(0.35, 0, 0);
+        return { pivot, m, gun, fl: gun.userData.flash };
+      };
+      f.ray = mkGun(P.crew.ray.def, 'shotgun', 0.62, qn('lean', -0.62), qn('aimr', 0.42), -0.25);
+      f.luna = mkGun(P.crew.luna.def, 'smg', -0.72, qn('lean2', -0.5), qn('aiml', 0.58), -0.3);
+      // the road: patrol cars (cruiser / interceptor SUV / unmarked / a second cruiser that blows up), officers, running civilians
+      f.cars = [[238.6, -188, 0.4, 0], [244.6, -196, -0.5, 1], [237.2, -206, 2.7, 2]].map(([x, z, h, k]) => { const q = W.cops[k]; q.x = x; q.z = z; q.h = h; return q; });
+      const bq = W.cops[3]; bq.x = 241.5; bq.z = -184.5; bq.h = 1.9; f.cars.push(bq); f.boomCar = bq;
+      f.cars.forEach((q) => { q.hidden = false; q.awake = false; q.cs = 'roadblock'; q.rbMin = 1e9; q.ai = q.ai || { cruise: 0, off: 0 }; q.mesh.position.set(q.x, 0, q.z); q.mesh.rotation.y = q.h; });
+      f.offs = [[235.4, -192.4], [246.6, -188.8], [240.4, -199.6], [248.4, -201.6]].map(([x, z], i) => { const o = W.officers[i]; o.on = false; o.model.visible = true; o.x = x; o.z = z; o.gun = Wp.attachGun(o.model, 'pistol'); return o; });
+      f.polHeli = 1;
     }
-    A.mk.root.visible = false; A.cone.visible = false; A.disc.visible = false; A.hp = 400;
-    H.dead = false; H.hp = 100; H.x = hx; H.y = hy; H.z = hz; H.h = hh; H.vx = H.vy = H.vz = 0; H.rs = 1; H.pitch = 0.05; H.roll = 0;
-    H.mk.root.visible = true; H.mk.root.position.set(hx, hy, hz); H.mk.root.rotation.set(H.pitch, hh, 0);
+    W.dispT = 1e9; W.rbT = 1e9;
+    // ---- our helicopter ----
+    A.mk.root.visible = true; A.hp = 400;
+    H.dead = false; H.hp = 100; H.x = hx; H.y = hy; H.z = hz; H.h = hh; H.vx = H.vy = H.vz = 0; H.rs = 1; H.pitch = 0.07; H.roll = 0.05;
+    H.mk.root.visible = true; H.mk.root.position.set(hx, hy, hz); H.mk.root.rotation.set(H.pitch, hh, H.roll);
     H.mk.rotor.rotation.y += 0.7; H.mk.tail.rotation.x += 1.1; H.mk.blur.material.opacity = 0.17;
-    c.position.set(qn('cx', 245), qn('ch', 6.5), qn('cz', -176)); c.fov = qn('fov', 52); c.updateProjectionMatrix(); c.lookAt(qn('tx', 240), qn('ty', 8.6), qn('tz', -190));
-    const bx = [[hx + 22, hz - 14], [hx - 8, hz - 24], [hx + 8, hz - 12]];   // fireballs on the avenue below the heli and beyond it, toward the neon sign
-    [qn('b1', 0.6), qn('b2', 0.76), qn('b3', 0.9)].forEach((at, i) => { if (t >= at && !f.boom[i]) { f.boom[i] = 1; X.explode(bx[i][0], bx[i][1], i ? 5 : 8, { noHurt: true }); } });
-    f.fl.visible = true; f.fl.rotation.z = f.n * 1.7; f.fl.scale.setScalar(2.4);   // muzzle flash, always lit in the frozen frame
     H.mk.root.updateMatrixWorld(true);
-    const mp = new THREE.Vector3(); f.fl.getWorldPosition(mp);
-    for (let i = 0; i < 3; i++) {
-      Wp.tracer(mp.x, mp.y, mp.z, bx[i][0] + (f.n % 3 - 1), 0.5, bx[i][1] + 1, 0xffe9a0, 0.09, 2.4);
-      Wp.tracer(hx - 18 + i * 18 + (f.n % 4), 1.0, hz - 10 - i * 4, hx + (i - 1) * 1.8, hy - 0.5, hz, 0xffa56a, 0.09, 1.8);   // patrol fire climbing to the heli
+    // ---- the police helicopter far behind, marked POLICÍA, its searchlight cone on our heli ----
+    CW.brand.markPoliceHeli(); CW.brand.setPoliceHeliText('POLICÍA');
+    const px = qn('px', 229), py = qn('py', 17), pz = qn('pz', -204);
+    A.active = true; A.state = 'orbit'; A.hp = 400; A.x = px; A.y = py; A.z = pz; A.vx = A.vz = A.vy = 0; A.h = Math.atan2(hx - px, hz - pz); A.sees = true; A.leaveT = 0;
+    A.mk.root.visible = true; A.mk.root.position.set(px, py, pz); A.mk.root.rotation.set(0.1, A.h, 0.06); A.mk.rotor.rotation.y += 0.9; A.mk.tail.rotation.x += 1.3;
+    const fl = Math.floor(f.n / 3) % 2 === 0; A.mk.red.visible = fl; A.mk.blue.visible = !fl;
+    A.cone.visible = true; A.disc.visible = false;
+    const dl = Math.hypot(hx - px, hy - py, hz - pz); A.cone.position.set(px, py - 1.4, pz); A.cone.lookAt(hx, hy + 0.8, hz); A.cone.scale.set(qn('cone', 3.4), qn('cone', 3.4), dl); A.cone.material.opacity = 0.2;
+    A.spot.x = hx; A.spot.z = hz;
+    // ---- the street ----
+    f.cars.forEach((q) => { q.hidden = false; q.hp = 100; q.vx = q.vz = 0; q.speed = 0; q.awake = false; q.cs = 'roadblock'; q.rbMin = 1e9; q.mesh.visible = true; q.mesh.position.set(q.x, 0, q.z); q.mesh.rotation.set(0, q.h, 0); });
+    const bq = f.boomCar;
+    if (t >= qn('wt', 0.95)) {
+      if (!f.boom) { f.boom = true; X.explode(bq.x, bq.z, qn('br', 17)); X.explode(bq.x + 4.5, bq.z + 3, 9); }
+      const k = Math.min(1, (t - qn('wt', 0.95)) / 0.5);   // the hull is thrown up, burnt and tumbling
+      bq.mesh.position.y = 2.6 * Math.sin(k * 2.6) + 0.5; bq.mesh.rotation.set(0.7 * k, bq.h + 0.9 * k, 0.55 * k);
+      if (!bq.charred) { bq.charred = 1; bq.mesh.traverse((o) => { if (o.isMesh && o.material && !o.material.isSpriteMaterial) { o.material = o.material.clone(); o.material.color.multiplyScalar(0.18); } }); }
     }
-    if (f.n % 2 === 0) Wp.spark(hx - 0.6, hy + 0.5, hz + 1.2);
+    f.offs.forEach((o, i) => {
+      const m = o.model, u = m.userData; m.visible = true; m.position.set(o.x, 0, o.z); m.rotation.y = Math.atan2(hx - o.x, hz - o.z);
+      u.setPose(''); u.armR.sh.rotation.set(-2.3, 0, 0.05); u.armR.el.rotation.x = -0.1; u.armL.sh.rotation.set(-2.15, 0, -0.35); u.armL.el.rotation.x = -0.3; u.head.rotation.x = -0.55;
+      o.gun.visible = true; if (o.gun.userData.flash) { o.gun.userData.flash.visible = (f.n + i) % 3 === 0; o.gun.userData.flash.scale.setScalar(1.2); }
+    });
+    // civilians bolting along both pavements and across the avenue, arms up
+    const spots = [[251.2, -180], [250.8, -188], [250.4, -197], [251, -206], [228.8, -183], [229.4, -192], [229, -201], [228.6, -210], [243, -178], [236.5, -179.5], [250.6, -215], [229.2, -218]];
+    T.peds.forEach((p, i) => {
+      if (i >= spots.length) { p.model.visible = false; p.state = 'dead'; p.t = 99; return; }
+      const [x, z] = spots[i], fz = -1, fx = x > 240 ? 0.25 : -0.25;
+      p.state = 'flee'; p.t = 60; p.hp = 100; p.model.visible = true; p.model.rotation.x = 0; p.model.userData.panic = 1;
+      p.fx = fx; p.fz = fz; p.vx = fx * 4; p.vz = fz * 4; p.h = Math.atan2(fx, fz); p.x = x; p.z = z;
+      p.model.position.set(x, 0, z); p.model.rotation.y = p.h; p.model.userData.update(0.016, 6);
+    });
+    // ---- muzzle flashes + a few converging tracers (they all go to the blast and to the nearest cruiser) ----
+    [f.ray, f.luna].forEach((s) => { s.fl.visible = true; s.fl.rotation.z = f.n * 1.7; s.fl.scale.setScalar(s === f.ray ? 1.5 : 1.3); });
+    const mp = new THREE.Vector3(), mp2 = new THREE.Vector3(); f.ray.fl.getWorldPosition(mp); f.luna.fl.getWorldPosition(mp2);
+    const tg = [[bq.x, 1.0, bq.z], [bq.x - 2.5, 0.8, bq.z + 1.5], [f.cars[0].x, 1.0, f.cars[0].z]];
+    Wp.tracer(mp.x, mp.y, mp.z, tg[0][0], tg[0][1], tg[0][2], 0xffe9a0, 0.09, 1.6); Wp.tracer(mp.x, mp.y, mp.z, tg[1][0], tg[1][1], tg[1][2], 0xffe9a0, 0.09, 1.2);
+    Wp.tracer(mp2.x, mp2.y, mp2.z, tg[0][0], tg[0][1], tg[0][2], 0xffd27a, 0.09, 1.4); Wp.tracer(mp2.x, mp2.y, mp2.z, tg[2][0], tg[2][1], tg[2][2], 0xffd27a, 0.09, 1.2);
+    Wp.tracer(f.offs[0].x, 1.6, f.offs[0].z, hx - 1, hy - 0.4, hz + 0.5, 0xffa56a, 0.09, 1.2); Wp.tracer(f.offs[3].x, 1.6, f.offs[3].z, hx + 0.5, hy - 0.4, hz - 0.6, 0xffa56a, 0.09, 1.2);
+    // ---- the lens ----
+    c.position.set(qn('cx', 248.2), qn('ch', 10.3), qn('cz', -164.2)); c.fov = qn('fov', 58); c.updateProjectionMatrix(); c.lookAt(qn('tx', 236.2), qn('ty', 11.4), qn('tz', -179));
     f.n++;
   }
   // ?stage=map&idx=<0-7>: pantalla de mapa con el progreso de ese capítulo
-  function stageMap() { game.start(false); CW.hud.state.cash = 486250; CW.story.idx = CW.clamp(Math.round(qn('idx', 5)), 0, CW.story.missions.length); CW.story.state = 'idle'; CW.story.wait = 1e9; CW.sky.hour = qn('hr', 21); CW.mapscreen.toggle(true); }
+  function stageMap() { game.start(false); { const f = CW.world.landmarks.fence, e = CW.player.active; if (f && qn('atfence', 1)) { e.x = f.x; e.z = f.z + 12; e.model.position.set(e.x, 0, e.z); } } CW.hud.state.cash = 486250; CW.story.idx = CW.clamp(Math.round(qn('idx', 5)), 0, CW.story.missions.length); CW.story.state = 'idle'; CW.story.wait = 1e9; CW.sky.hour = qn('hr', 21); CW.mapscreen.toggle(true); }
 
   function captureStart() {
     if (capType === 'robbery') return robberyStart();
@@ -479,6 +542,7 @@
   $p('p-menu').addEventListener('click', () => { save(); location.reload(); });
   $p('howto-close').addEventListener('click', () => { $p('howto').style.display = 'none'; });
 
+  CW.brand.markPoliceHeli();
   game.state = 'title';
   CW.title.enter();
   requestAnimationFrame(frame);

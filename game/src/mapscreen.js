@@ -94,8 +94,22 @@
     // districts still closed: a dark silhouette (the street grid barely shows through) with a hatch
     DIST.forEach((d, id) => {
       if (op[id]) return; const x0 = X(d.x0), y0 = Y(d.z0), w = X(d.x1) - x0, h = Y(d.z1) - y0;
-      c.fillStyle = 'rgba(5,7,22,.90)'; c.fillRect(x0, y0, w, h);
-      c.save(); c.beginPath(); c.rect(x0, y0, w, h); c.clip(); c.strokeStyle = 'rgba(120,140,220,.13)'; c.lineWidth = 2 * U; for (let q = -h; q < w; q += 22 * U) { c.beginPath(); c.moveTo(x0 + q, y0 + h); c.lineTo(x0 + q + h, y0); c.stroke(); } c.restore();
+      // soft scattered fog: a few jittered blobs over the district, drawn at low resolution (pixel mosaic of the real map, darkened)
+      const cell = 8 * U, lw = Math.max(2, Math.ceil(w / cell)), lh = Math.max(2, Math.ceil(h / cell)), s = 1 / cell;
+      const lo = document.createElement('canvas'); lo.width = lw; lo.height = lh; const l = lo.getContext('2d');
+      if (base) { l.imageSmoothingEnabled = true; l.drawImage(base, (ox - (A.E + CX) * k - x0) * s, (oy - (A.E + CZ) * k - y0) * s, A.E * 2 * k * s, A.E * 2 * k * s); }
+      l.fillStyle = 'rgba(14,18,52,.36)'; l.fillRect(0, 0, lw, lh);
+      l.globalCompositeOperation = 'destination-in';
+      const m = document.createElement('canvas'); m.width = lw; m.height = lh; const q = m.getContext('2d');
+      const hs = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7 + id * 74.7) * 43758.5453; return v - Math.floor(v); };
+      const gx = 3, gy = id === 2 ? 2 : 4;
+      for (let i = 0; i < gx; i++) for (let j = 0; j < gy; j++) {
+        if (!(i === 1 && j === Math.floor(gy / 2)) && hs(i, j) < 0.3) continue;
+        const bx = (i + 0.2 + hs(i + 5, j) * 0.6) / gx * lw, by = (j + 0.2 + hs(i, j + 9) * 0.6) / gy * lh, br = Math.min(lw / gx, lh / gy) * (0.62 + hs(i + 2, j + 2) * 0.4);
+        const g = q.createRadialGradient(bx, by, br * 0.25, bx, by, br); g.addColorStop(0, 'rgba(0,0,0,.95)'); g.addColorStop(1, 'rgba(0,0,0,0)'); q.fillStyle = g; q.fillRect(0, 0, lw, lh);
+      }
+      l.drawImage(m, 0, 0);
+      c.save(); c.beginPath(); c.rect(x0, y0, w, h); c.clip(); c.imageSmoothingEnabled = false; c.drawImage(lo, x0, y0, lw * cell, lh * cell); c.restore();
     });
     c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = 3 * U; c.setLineDash([12 * U, 8 * U]);
     c.beginPath(); c.moveTo(X(80), Y(-296)); c.lineTo(X(80), Y(160)); c.moveTo(X(-296), Y(160)); c.lineTo(X(288), Y(160)); c.stroke(); c.setLineDash([]);
@@ -105,7 +119,7 @@
     DIST.forEach((d, id) => {
       const x = X(d.cx);
       if (op[id]) { const y = Y(id === 2 ? 276 : -276); c.font = '900 ' + Math.round(40 * U) + 'px ' + FONT; c.lineWidth = 9 * U; c.strokeStyle = 'rgba(255,255,255,.95)'; c.strokeText(d.n, x, y); c.fillStyle = ['#7a2f06', '#14336f', '#065a4a'][id]; c.fillText(d.n, x, y); }
-      else { const cy = Y(id === 2 ? 228 : -70); padlock(c, x, cy - 30 * U, 30 * U, '#9aa6d4'); c.font = '900 ' + Math.round(34 * U) + 'px ' + FONT; c.fillStyle = '#8f9bc8'; c.fillText('SIN EXPLORAR', x, cy + 26 * U); c.font = '700 ' + Math.round(16 * U) + 'px ' + BODY; c.fillStyle = '#6e7aa6'; c.fillText(d.n + '  ·  avanza en las misiones', x, cy + 52 * U); }
+      else { const cy = Y(id === 2 ? 228 : -70); c.globalAlpha = 0.8; padlock(c, x, cy - 18 * U, 17 * U, '#aab4dc'); c.font = '900 ' + Math.round(20 * U) + 'px ' + FONT; c.fillStyle = '#b4bde0'; c.lineWidth = 4 * U; c.strokeStyle = 'rgba(15,18,54,.85)'; c.strokeText('SIN EXPLORAR', x, cy + 12 * U); c.fillText('SIN EXPLORAR', x, cy + 12 * U); c.font = '700 ' + Math.round(12 * U) + 'px ' + BODY; c.fillStyle = '#98a3cf'; c.lineWidth = 3 * U; c.strokeText(d.n, x, cy + 30 * U); c.fillText(d.n, x, cy + 30 * U); c.globalAlpha = 1; }
     });
     // places: garage, fence, helipad, shops (only in open districts)
     const lm = CW.world.landmarks, ir = 15 * U, show = (x, z) => op[CW.districtAt(x, z)];

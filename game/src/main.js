@@ -534,7 +534,7 @@
   // ---- pausa (ESC en juego): REANUDAR, MAPA Y MISIONES, CÓMO JUGAR, SONIDO, SALIR AL MENÚ -----------------------------------
   const PZ = (CW.pause = { open: false });
   const $p = (id) => document.getElementById(id);
-  function setPause(v) { PZ.open = v; $p('pause').style.display = v ? 'flex' : 'none'; if (v) { if (document.exitPointerLock) document.exitPointerLock(); CW.title.refreshOptions(); } }
+  function setPause(v) { PZ.open = v; $p('pause').style.display = v ? 'flex' : 'none'; if (v) { const s = CW.hud.state; $p('p-stats').textContent = 'EFECTIVO $' + s.cash.toLocaleString('en-US') + '  ·  REP ' + s.rep + '  ·  BUSCADO ' + s.wanted + '/5'; } if (v) { if (document.exitPointerLock) document.exitPointerLock(); CW.title.refreshOptions(); } }
   $p('p-resume').addEventListener('click', () => setPause(false));
   $p('p-map').addEventListener('click', () => CW.mapscreen.toggle(true));
   $p('p-how').addEventListener('click', () => { $p('howto').style.display = 'flex'; });
